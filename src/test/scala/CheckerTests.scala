@@ -6,11 +6,12 @@ import scala.meta._
 
 class CheckerTests {
 
+  // TODO test requiring to load a file
+
   @Test
   def nullInstanceOfCheckerTest(): Unit = {
     val checker = Checker(Rule.NoNull, Rule.NoCast)
-    val parsed = sourceCode.parse[Source].get
-    val detectedViolations = checker.check(parsed)
+    val detectedViolations = checker.check(sourceCode).get
     val expected = List(
       (11, 48),
       (12, 51),
@@ -23,8 +24,7 @@ class CheckerTests {
   @Test
   def varWhileCheckerTest(): Unit = {
     val checker = Checker(Rule.NoVar, Rule.NoWhile)
-    val parsed = sourceCode.parse[Source].get
-    val detectedViolations = checker.check(parsed)
+    val detectedViolations = checker.check(sourceCode).get
     val expected = List(
       (2, 2),
       (3, 2),

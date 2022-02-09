@@ -1,5 +1,8 @@
 import Rule._
+
+import java.io.File
 import scala.meta._
+import scala.util.{Try, Using}
 
 /**
  * @param rules rules to be checked
@@ -26,6 +29,28 @@ class Checker(rules: List[Rule]) {
    */
   def check(source: Source): List[Violation] = {
     source.collect(combinedCheckFunc).flatten
+  }
+
+  /**
+   * Parses the input program and applies the rules to it
+   * @param sourceCode program to parse and check
+   * @return a list of the violations of the checker rules
+   */
+  def check(sourceCode: String): Try[List[Violation]] = Try {
+    val source = sourceCode.parse[Source].get
+    check(source)
+  }
+
+  /**
+   * Loads the program from the file described by the given name and applies the rules to it
+   * @param filename name/path of the file to be checked
+   * @return a list of the violations of the checker rules
+   */
+  def checkFile(filename: String): Try[List[Violation]] = {
+    val content = Using(scala.io.Source.fromFile(filename)) { bufferedSource =>
+      bufferedSource.getLines().mkString
+    }
+    content.flatMap(check)
   }
 
 }
