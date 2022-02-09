@@ -1,0 +1,10 @@
+# Sbt
+target/
+project/target
+
+
+# Bloop
+.bsp/
+
+# Intellij
+.idea/
