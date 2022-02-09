@@ -1,10 +1,14 @@
 import Rule._
 import scala.meta._
 
-class Checker private(rules: List[Rule]) {
+/**
+ * @param rules rules to be checked
+ */
+class Checker(rules: List[Rule]) {
   require(rules.nonEmpty, "checker must have at least 1 rule")
 
-  private val defaultRule: PartialFunction[Tree, Option[Violation]] = {
+  // matches trees that do not match any rule
+  private val defaultPartFunc: PartialFunction[Tree, Option[Violation]] = {
     case _ => None
   }
 
@@ -12,9 +16,14 @@ class Checker private(rules: List[Rule]) {
     val checkFuncs = rules.map(_.checkFunc.andThen(Some(_)))
     checkFuncs.tail
       .foldLeft[PartialFunction[Tree, Option[Violation]]](checkFuncs.head)(_.orElse(_))
-      .orElse(defaultRule)
+      .orElse(defaultPartFunc)
   }
 
+  /**
+   * Apply the rules to the input program
+   * @param source input program
+   * @return a list of the violations of the checker rules
+   */
   def check(source: Source): List[Violation] = {
     source.collect(combinedCheckFunc).flatten
   }
@@ -24,6 +33,5 @@ class Checker private(rules: List[Rule]) {
 object Checker {
 
   def apply(rule: Rule, rules: Rule*): Checker = new Checker(rule :: rules.toList)
-  def apply(rules: List[Rule]): Checker = new Checker(rules)
 
 }
