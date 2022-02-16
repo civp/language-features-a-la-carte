@@ -1,6 +1,5 @@
 import Rule._
 
-import java.io.File
 import scala.meta._
 import scala.util.{Try, Using}
 
@@ -17,8 +16,8 @@ class Checker(rules: List[Rule]) {
 
   private val combinedCheckFunc = {
     val checkFuncs = rules.map(_.checkFunc.andThen(Some(_)))
-    checkFuncs.tail
-      .foldLeft[PartialFunction[Tree, Option[Violation]]](checkFuncs.head)(_.orElse(_))
+    checkFuncs
+      .reduceLeft(_.orElse(_))
       .orElse(defaultPartFunc)
   }
 
