@@ -8,7 +8,7 @@ trait Feature {
 
 object Feature {
 
-  case class CompositeFeature(features: Feature*) extends Feature {
+  class CompositeFeature(features: Feature*) extends Feature {
     override def check(tree: Tree): Boolean = features.exists(_.check(tree))
   }
 
