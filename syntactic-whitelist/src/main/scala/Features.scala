@@ -5,9 +5,8 @@ object Features {
 
   // TODO restrictions on modifiers
 
-  case class AllowLiterals(allowNull: Boolean = false) extends Feature {
+  case object AllowLiteralsAndExpressions extends Feature {
     override def check(tree: Tree): Boolean = tree match {
-      case _ : Lit.Null => allowNull
       case _ : Lit.Boolean => true
       case _ : Lit.Unit => true
       case _ : Lit.Int => true
@@ -19,17 +18,18 @@ object Features {
       case _ : Lit.Char => true
       case _ : Lit.Symbol => true
       case _ : Lit.String => true
+      case _ : Term.Select => true
+      case _ : Term.ApplyUnary => true
+      case _ : Term.Apply => true
+      case _ : Term.ApplyInfix => true
+      case _ : Term.If => true
+      case _ : Term.Interpolate => true
       case _ => false
     }
   }
 
-  case object AllowExpressions extends AtomicFeature({
-    case _ : Term.Select => true
-    case _ : Term.ApplyUnary => true
-    case _ : Term.Apply => true
-    case _ : Term.ApplyInfix => true
-    case _ : Term.If => true
-    case _ : Term.Interpolate => true
+  case object AllowNull extends AtomicFeature({
+    case _ : Lit.Null => true
   })
 
   case object AllowVals extends AtomicFeature({
@@ -48,8 +48,17 @@ object Features {
   })
 
   case object AllowADTs extends AtomicFeature({
-    case Defn.Class((modLs, name, paramLs, primaryCtor, template)) => modLs.contains(Mod.Case)
-    case Defn.Object((modLs, name, template)) => modLs.contains(Mod.Case)
+    case Defn.Class((modLs, name, paramLs, primaryCtor, template)) => {
+      modLs.contains(Mod.Case) || modLs.contains(Mod.Sealed)
+    }
+    case Defn.Trait((modLs, name, paramLs, primaryCtor, template)) => {
+      modLs.contains(Mod.Sealed)
+    }
+    case Defn.Object((modLs, name, template)) => {
+      modLs.contains(Mod.Case)
+    }
+    case _ : Term.Name => true
+    case _ : Term.Super => true
     case _ : Defn.Enum => true
     case _ : Defn.EnumCase => true
     case _ : Defn.RepeatedEnumCase => true
@@ -98,21 +107,15 @@ object Features {
   })
 
   private case object BasicOopAddition extends AtomicFeature({
-    case Defn.Class((modLs, name, paramLs, primaryCtor, template)) => {
-      modLs.contains(Mod.Case) || modLs.contains(Mod.Sealed)
-    }
-    case Defn.Trait((modLs, name, paramLs, primaryCtor, template)) => {
-      modLs.contains(Mod.Sealed)
-    }
-    case Defn.Object((modLs, name, template)) => {
-      modLs.contains(Mod.Case)
-    }
+    case Defn.Class((modLs, name, paramLs, primaryCtor, template)) => true
+    case Defn.Trait((modLs, name, paramLs, primaryCtor, template)) => true
+    case Defn.Object((modLs, name, template)) => true
     case _ : Term.Super => true
-
   })
 
   private case object AdvancedOOPAddition extends AtomicFeature({
     case _ : Term.NewAnonymous => true
+      // TODO
   })
 
   case object AllowBasicOop extends CompositeFeature(AllowADTs, BasicOopAddition)
@@ -139,16 +142,6 @@ object Features {
   })
 
   /*
-  Should always be allowed:
-    Term.Ascribe
-    Term.Param
-    Term.Block
-    Term.Placeholder
-    Term.EndMarker
-    Type.Placeholder
-    Type.Bounds
-    Type.Name
-
   Not implemented:
     Defn.Macro
     Defn.ExtensionGroup

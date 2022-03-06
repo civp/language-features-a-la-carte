@@ -1,17 +1,42 @@
-import Checker.AlwaysAllowed
+import Checker._
 import Feature.AtomicFeature
 
+import scala.meta.Name.Anonymous
 import scala.meta._
+import scala.util.{Failure, Success, Using}
 
 class Checker private(allowedFeatures: List[Feature]) {
+  import Checker.AlwaysAllowed
   private val allAllowedFeatures = AlwaysAllowed :: allowedFeatures
 
-  def check(src: Source): Boolean = {  // idea is to return trees that violate the rules
-    src.collect((t: Tree) => check(t)).forall(identity)
+  def checkTree(tree: Tree): Option[Violation] = {
+    if (allAllowedFeatures.exists(ft => ft.check(tree))) None
+    else Some(Violation(tree))
   }
 
-  def check(tree: Tree): Boolean = {
-    allAllowedFeatures.exists(ft => ft.check(tree))
+  def checkSource(src: Source): CheckResult = {
+    val violations = src.collect((t: Tree) => checkTree(t)).flatten
+    if (violations.isEmpty) CheckResult.Valid
+    else CheckResult.Invalid(violations)
+  }
+
+  def checkCodeString(sourceCode: String): CheckResult = {
+    try {
+      val source = sourceCode.parse[Source].get
+      checkSource(source)
+    } catch {
+      case e: Throwable => CheckResult.CompileError(e)
+    }
+  }
+
+  def checkFile(filename: String): CheckResult = {
+    val content = Using(scala.io.Source.fromFile(filename)) { bufferedSource =>
+      bufferedSource.getLines().mkString
+    }
+    content.map(checkCodeString) match {
+      case Failure(exception) => CheckResult.CompileError(exception)
+      case Success(checkRes) => checkRes
+    }
   }
 
 }
@@ -21,7 +46,24 @@ object Checker {
   def apply(features: List[Feature]): Checker = new Checker(features)
   def apply(feature: Feature, features: Feature*): Checker = new Checker(feature :: features.toList)
 
+  case class Violation private(tree: Tree, tpe: Class[_])
+  object Violation {
+    def apply(tree: Tree): Violation = new Violation(tree, tree.getClass)
+  }
+
+  sealed trait CheckResult
+  object CheckResult {
+    case object Valid extends CheckResult
+    case class Invalid(val violations: List[Violation]) extends CheckResult
+    case class CompileError(val cause: Throwable) extends CheckResult
+  }
+
   private object AlwaysAllowed extends AtomicFeature({
+    // TODO check this list
+    case _ : Source => true
+    case _ : Template => true
+    case _ : Self => true
+    case _ : Anonymous => true
     case _ : Term.Ascribe => true
     case _ : Term.Param => true
     case _ : Term.Block => true
