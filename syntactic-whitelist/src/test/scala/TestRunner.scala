@@ -9,7 +9,7 @@ class TestRunner private(matcher: CheckResult => Unit, filename: String, feature
 
   def run(): Unit = {
     testController.unregisterTest(uid)
-    val checker = Checker(features.toList)
+    val checker = Checker(features)
     val actualRes = checker.checkFile(s"src/test/res/$filename.scala")
     matcher(actualRes)
   }
@@ -26,8 +26,14 @@ object TestRunner {
     private var features: Option[List[Feature]] = None
     private val uid = uidGenerator.incrementAndGet()
 
+    private val TEST_METHOD_FRAME_IDX = 1
+
     {
-      testController.registerTest(uid)
+      val testName = StackWalker.getInstance().walk(frames => {
+        val frame = frames.limit(TEST_METHOD_FRAME_IDX+1).toList.get(TEST_METHOD_FRAME_IDX)
+        frame.getMethodName
+      })
+      testController.registerTest(uid, testName)
     }
 
     def onFile(_filename: String): Builder = {

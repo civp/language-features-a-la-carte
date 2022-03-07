@@ -1,22 +1,25 @@
-import scala.collection.mutable.ListBuffer
+import scala.collection.mutable
 
 class TestController {
-  private val allTestIds = ListBuffer[Int]()
+  private val allTestIds = mutable.Map[Int, String]()
 
-  def registerTest(testId: Int): Unit = {
-    allTestIds += testId
+  def registerTest(testId: Int, testName: String): Unit = {
+    allTestIds.put(testId, testName)
   }
 
   def unregisterTest(testId: Int): Unit = {
-    val idx = allTestIds.indexOf(testId)
-    require(idx > -1)
-    allTestIds.remove(idx)
+    val prev = allTestIds.remove(testId)
+    require(prev.isDefined)
   }
 
   def assertEmpty(): Unit = {
-    if (allTestIds.nonEmpty) throw new IllegalStateException(
-      "test configuration error: some builders for TestRunner were created but run() was never called on the built object"
-    )
+    if (allTestIds.nonEmpty) {
+      val faultyTestsNames = allTestIds.values
+      object TestConfigException extends Exception(
+        s"the following test(s) never called run() after TestRunner builder instantiation: ${faultyTestsNames.mkString("\n", "\n", "\n")}"
+      )
+      throw TestConfigException
+    }
   }
 
 }
