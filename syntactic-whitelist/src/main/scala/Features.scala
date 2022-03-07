@@ -35,7 +35,6 @@ object Features {
   case object AllowVals extends AtomicFeature({
     case _ : Decl.Val => true
     case _ : Defn.Val => true
-    case _ : Term.Name => true
     case _ : Term.Assign => true
   })
 
@@ -57,7 +56,6 @@ object Features {
     case Defn.Object((modLs, name, template)) => {
       modLs.contains(Mod.Case)
     }
-    case _ : Term.Name => true
     case _ : Term.Super => true
     case _ : Defn.Enum => true
     case _ : Defn.EnumCase => true

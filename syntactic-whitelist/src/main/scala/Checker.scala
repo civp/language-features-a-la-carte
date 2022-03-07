@@ -22,7 +22,7 @@ class Checker private(allowedFeatures: List[Feature]) {
 
   def checkCodeString(sourceCode: String): CheckResult = {
     try {
-      val source = sourceCode.parse[Source].get
+      val source = dialects.Sbt1(sourceCode).parse[Source].get
       checkSource(source)
     } catch {
       case e: Throwable => CheckResult.CompileError(e)
@@ -64,6 +64,7 @@ object Checker {
     case _ : Template => true
     case _ : Self => true
     case _ : Anonymous => true
+    case _ : Term.Name => true
     case _ : Term.Ascribe => true
     case _ : Term.Param => true
     case _ : Term.Block => true

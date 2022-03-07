@@ -11,7 +11,7 @@ class WhitelistCheckerTests {
   @Test def allowLiteralsAndExpressionsShouldAllowLiterals(): Unit = {
     new TestRunner.Builder(testController)
       .onFile("LiteralsOnly")
-      .withFeatures(Features.AllowLiteralsAndExpressions, AllowBasicOop)
+      .withFeatures(Features.AllowLiteralsAndExpressions)
       .expectingResult(CheckResult.Valid)
       .build()
       .run()
@@ -20,7 +20,7 @@ class WhitelistCheckerTests {
   @Test def allowLiteralsAndExpressionsShouldAllowLiteralsAndExpressions(): Unit = {
     new TestRunner.Builder(testController)
       .onFile("LiteralsAndExpressions")
-      .withFeatures(Features.AllowLiteralsAndExpressions, AllowBasicOop)
+      .withFeatures(Features.AllowLiteralsAndExpressions)
       .expectingResult(CheckResult.Valid)
       .build()
       .run()
@@ -40,7 +40,7 @@ class WhitelistCheckerTests {
         Features.AllowPolymorphicTypes
       )
       .expectingMatching({
-        case CheckResult.Invalid(violations) => (violations.size >= 5)
+        case CheckResult.Invalid(violations) => (violations.size >= 5)  // TODO possibly more precise assertions
         case _ => true
       })
       .build()
