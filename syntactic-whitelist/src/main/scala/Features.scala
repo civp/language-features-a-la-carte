@@ -36,6 +36,7 @@ object Features {
     case _ : Decl.Val => true
     case _ : Defn.Val => true
     case _ : Term.Assign => true
+    case _ : Pat.Var => true
   })
 
   case object AllowDefs extends AtomicFeature({
@@ -48,13 +49,23 @@ object Features {
 
   case object AllowADTs extends AtomicFeature({
     case Defn.Class((modLs, name, paramLs, primaryCtor, template)) => {
-      modLs.contains(Mod.Case) || modLs.contains(Mod.Sealed)
+      modLs.exists {
+        case Mod.Case() => true
+        case Mod.Sealed() => true
+        case _ => false
+      }
     }
     case Defn.Trait((modLs, name, paramLs, primaryCtor, template)) => {
-      modLs.contains(Mod.Sealed)
+      modLs.exists {
+        case Mod.Sealed() => true
+        case _ => false
+      }
     }
     case Defn.Object((modLs, name, template)) => {
-      modLs.contains(Mod.Case)
+      modLs.exists {
+        case Mod.Case() => true
+        case _ => false
+      }
     }
     case _ : Term.Super => true
     case _ : Defn.Enum => true
@@ -78,6 +89,10 @@ object Features {
     case _ : Pat.Interpolate => true
     case _ : Pat.Typed => true
     case _ : Case => true
+    case _ : Ctor.Primary => true
+    case _ : Init => true
+    case _ : Mod.Case => true
+    case _ : Mod.Sealed => true
   })
 
   case object AllowLiteralFunctions extends AtomicFeature({
@@ -109,6 +124,7 @@ object Features {
     case Defn.Trait((modLs, name, paramLs, primaryCtor, template)) => true
     case Defn.Object((modLs, name, template)) => true
     case _ : Term.Super => true
+    case _ : Ctor.Secondary => true
   })
 
   private case object AdvancedOOPAddition extends AtomicFeature({

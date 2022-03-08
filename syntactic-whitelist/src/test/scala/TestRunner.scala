@@ -1,5 +1,5 @@
 import Checker.CheckResult
-import org.junit.Assert.assertEquals
+import org.junit.Assert.{assertEquals, fail}
 
 import java.util.concurrent.atomic.AtomicInteger
 
@@ -78,6 +78,18 @@ object TestRunner {
         (actual: CheckResult) => assertEquals(expected, actual)
       )
       this
+    }
+
+    def expectingValid(): Builder = {
+      expectingResult(CheckResult.Valid)
+    }
+
+    def expectingInvalidWithAssertion(assertion: CheckResult.Invalid => Unit): Builder = {
+      expectingMatching {
+        case CheckResult.Valid => fail("checker validated program but it should reject it")
+        case invalid: CheckResult.Invalid => assertion(invalid)
+        case CheckResult.CompileError(e) => throw e
+      }
     }
 
     /**

@@ -1,32 +1,29 @@
-import org.junit.{AfterClass, Test}
+import Features.{AllowADTs, AllowBasicOop, AllowLiteralsAndExpressions, AllowVals}
 import org.junit.Assert._
-import Checker.CheckResult
-import Features.{AllowADTs, AllowBasicOop}
-
-import scala.meta._
+import org.junit.{AfterClass, Test}
 
 class WhitelistCheckerTests {
   import WhitelistCheckerTests._
 
-  @Test def allowLiteralsAndExpressionsShouldAllowLiterals(): Unit = {
+  @Test def allowLiteralsAndExpressions_should_allow_literals(): Unit = {
     new TestRunner.Builder(testController)
       .onFile("LiteralsOnly")
       .withFeatures(Features.AllowLiteralsAndExpressions)
-      .expectingResult(CheckResult.Valid)
+      .expectingValid()
       .build()
       .run()
   }
 
-  @Test def allowLiteralsAndExpressionsShouldAllowLiteralsAndExpressions(): Unit = {
+  @Test def allowLiteralsAndExpressions_should_allow_literals_and_expressions(): Unit = {
     new TestRunner.Builder(testController)
       .onFile("LiteralsAndExpressions")
       .withFeatures(Features.AllowLiteralsAndExpressions)
-      .expectingResult(CheckResult.Valid)
+      .expectingValid()
       .build()
       .run()
   }
 
-  @Test def valsShouldBeRejectedWhenNotAllowed(): Unit = {
+  @Test def vals_should_be_rejected_when_not_allowed(): Unit = {
     new TestRunner.Builder(testController)
       .onFile("Vals")
       .withFeatures(
@@ -37,12 +34,94 @@ class WhitelistCheckerTests {
         Features.AllowImperativeConstructs,
         Features.AllowLaziness,
         Features.AllowLiteralFunctions,
+        Features.AllowPolymorphicTypes,
+      )
+      .expectingInvalidWithAssertion { invalid =>
+        assertTrue(invalid.violations.size >= 5)  // TODO possibly more precise assertions
+      }
+      .build()
+      .run()
+  }
+
+  @Test def vals_should_be_accepted_when_allowed(): Unit = {
+    new TestRunner.Builder(testController)
+      .onFile("Vals")
+      .withFeatures(
+        AllowLiteralsAndExpressions,
+        AllowVals
+      )
+      .expectingValid()
+      .build()
+      .run()
+  }
+
+  @Test def defs_should_be_rejected_when_not_allowed(): Unit = {
+    new TestRunner.Builder(testController)
+      .onFile("Defs")
+      .withFeatures(
+        Features.AllowLiteralsAndExpressions,
+        Features.AllowVals,
+        Features.AllowForExpr,
+        Features.AllowAdvancedOop,
+        Features.AllowImperativeConstructs,
+        Features.AllowLaziness,
+        Features.AllowLiteralFunctions,
         Features.AllowPolymorphicTypes
       )
-      .expectingMatching({
-        case CheckResult.Invalid(violations) => (violations.size >= 5)  // TODO possibly more precise assertions
-        case _ => true
-      })
+      .expectingInvalidWithAssertion { invalid =>
+        assertTrue(invalid.violations.size >= 2)  // TODO possibly more precise assertions
+      }
+      .build()
+      .run()
+  }
+
+  @Test def allowADTs_should_allow_ADTs(): Unit = {
+    new TestRunner.Builder(testController)
+      .onFile("ADTs")
+      .withFeatures(
+        AllowLiteralsAndExpressions,
+        AllowADTs
+      )
+      .expectingValid()
+      .build()
+      .run()
+  }
+
+  @Test def ADTs_should_be_rejected_when_not_allowed(): Unit = {
+    new TestRunner.Builder(testController)
+      .onFile("ADTs")
+      .withFeatures(
+        Features.AllowLiteralsAndExpressions,
+        Features.AllowVals,
+        Features.AllowForExpr,
+        Features.AllowImperativeConstructs,
+        Features.AllowLaziness,
+        Features.AllowLiteralFunctions,
+        Features.AllowPolymorphicTypes
+      )
+      .expectingInvalidWithAssertion { invalid =>
+        assertTrue(invalid.violations.size >= 3)
+      }
+      .build()
+      .run()
+  }
+
+  @Test def AllowADTs_should_not_allow_sealed_trait_with_non_case_class(): Unit = {
+    new TestRunner.Builder(testController)
+      .onFile("NotSoADT")
+      .withFeatures(AllowADTs)
+      .expectingInvalidWithAssertion { invalid =>
+        invalid.violations.nonEmpty
+      }
+      .build()
+      .run()
+  }
+
+  @Test def allowBasicOop_should_allow_sealed_trait_with_non_case_class(): Unit = {
+    new TestRunner.Builder(testController)
+      .onFile("NotSoADT")
+      .withFeatures(AllowBasicOop)
+      .expectingValid()
       .build()
       .run()
   }
