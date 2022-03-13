@@ -61,20 +61,9 @@ object Checker {
   }
 
   private object AlwaysAllowed extends AtomicFeature({
-    // TODO check this list
     case _ : Source => true
     case _ : Template => true
-    case _ : Self => true
-    case _ : Anonymous => true
-    case _ : Term.Name => true
-    case _ : Term.Ascribe => true
-    case _ : Term.Param => true
     case _ : Term.Block => true
-    case _ : Term.Placeholder => true
-    case _ : Term.EndMarker => true
-    case _ : Type.Placeholder => true
-    case _ : Type.Bounds => true
-    case _ : Type.Name => true
   })
 
 }
