@@ -5,7 +5,9 @@ import scala.meta.Name.Anonymous
 import scala.meta._
 import scala.util.{Failure, Success, Using}
 
-class Checker private(allowedFeatures: List[Feature]) {
+// TODO why is syntax without ; not supported
+
+class Checker private(dialect: Dialect, allowedFeatures: List[Feature]) {
   import Checker.AlwaysAllowed
   private val allAllowedFeatures = AlwaysAllowed :: allowedFeatures
 
@@ -22,7 +24,7 @@ class Checker private(allowedFeatures: List[Feature]) {
 
   def checkCodeString(sourceCode: String): CheckResult = {
     try {
-      val source = dialects.Sbt1(sourceCode).parse[Source].get
+      val source = dialect(sourceCode).parse[Source].get
       checkSource(source)
     } catch {
       case e: Throwable => CheckResult.CompileError(e)
@@ -43,8 +45,8 @@ class Checker private(allowedFeatures: List[Feature]) {
 
 object Checker {
 
-  def apply(features: List[Feature]): Checker = new Checker(features)
-  def apply(feature: Feature, features: Feature*): Checker = new Checker(feature :: features.toList)
+  def apply(dialect: Dialect, features: List[Feature]): Checker = new Checker(dialect, features)
+  def apply(dialect: Dialect, feature: Feature, features: Feature*): Checker = new Checker(dialect, feature :: features.toList)
 
   case class Violation private(tree: Tree, tpe: Class[_])
   object Violation {

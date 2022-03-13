@@ -1,6 +1,7 @@
 import Features.{AllowADTs, AllowBasicOop, AllowLiteralsAndExpressions, AllowVals}
 import org.junit.Assert._
 import org.junit.{AfterClass, Test}
+import scala.meta.dialects
 
 class WhitelistCheckerTests {
   import WhitelistCheckerTests._
@@ -9,6 +10,7 @@ class WhitelistCheckerTests {
     new TestRunner.Builder(testController)
       .onFile("LiteralsOnly")
       .withFeatures(Features.AllowLiteralsAndExpressions)
+      .withDialect(dialects.Sbt1)
       .expectingValid()
       .build()
       .run()
@@ -18,6 +20,7 @@ class WhitelistCheckerTests {
     new TestRunner.Builder(testController)
       .onFile("LiteralsAndExpressions")
       .withFeatures(Features.AllowLiteralsAndExpressions)
+      .withDialect(dialects.Sbt1)
       .expectingValid()
       .build()
       .run()
