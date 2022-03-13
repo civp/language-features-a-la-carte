@@ -61,12 +61,7 @@ object Features {
         case _ => false
       }
     }
-    case Defn.Object((modLs, name, template)) => {
-      modLs.exists {
-        case Mod.Case() => true
-        case _ => false
-      }
-    }
+    case _ : Defn.Object => true
     case _ : Term.Super => true
     case _ : Defn.Enum => true
     case _ : Defn.EnumCase => true
