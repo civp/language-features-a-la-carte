@@ -1,6 +1,5 @@
 import Feature._
 
-import scala.meta.Pat.Given
 import scala.meta._
 
 object Features {
@@ -23,6 +22,9 @@ object Features {
       case _ : Term.Apply => true
       case _ : Term.ApplyInfix => true
       case _ : Term.ApplyUnary => true
+      case _ : Term.If => true
+      case _ : Term.Tuple => true
+      case _ : Type.Tuple => true
     }
   }
 
@@ -34,17 +36,20 @@ object Features {
     case _ : Decl.Val => true
     case _ : Defn.Val => true
     case _ : Pat.Var => true
+    case _ : Term.Name => true
   })
 
   case object AllowDefs extends AtomicFeature({
     case _ : Decl.Def => true
     case _ : Defn.Def => true
-
+    case _ : Term.Name => true
+    case _ : Term.Param => true
+    case _ : Type.Repeated => true
   })
 
   case object AllowADTs extends AtomicFeature({
     case _ : Case => true
-    case _ : Ctor => true
+//    case _ : Ctor => true
     case _ : Ctor.Primary => true
     case Defn.Class((modifiersList, typeName, paramLs, primaryCtor, template)) => {
       modifiersList.exists {
@@ -73,35 +78,56 @@ object Features {
     case _ : Pat.Typed => true
     case _ : Pat.Var => true
     case _ : Pat.Wildcard => true
+    case _ : Term.Match => true
+    case _ : Term.Param => true
+    case _ : Term.PartialFunction => true
+  })
 
+  case object AllowAnonymousFunctions extends AtomicFeature({
+    case _ : Term.AnonymousFunction => true
+    case _ : Term.Placeholder => true
+    case _ : Type.Placeholder => true
   })
 
   case object AllowLiteralFunctions extends AtomicFeature({
-
+    case _ : Term.ContextFunction => true
+    case _ : Term.Function => true
+    case _ : Type.ContextFunction => true
+    case _ : Type.Function => true
   })
 
   case object AllowForExpr extends AtomicFeature({
-
+    case _ : Term.For => true
+    case _ : Term.ForYield => true
   })
 
   case object AllowPolymorphicTypes extends AtomicFeature({
     case _ : Decl.Type => true
     case _ : Defn.Type => true
     case Mod.Opaque() => true
+    case _ : Term.PolyFunction => true
+    case _ : Type.Apply => true
+    case _ : Type.Bounds => true
+    case _ : Type.Match => true
+    case _ : Type.Param => true
   })
 
   case object AllowLaziness extends AtomicFeature({
-
+    case _ : Type.ByName => true
   })
 
   case object AllowRecursiveCalls extends AtomicFeature({
-
+    ??? // TODO
   })
 
   private case object BasicOopAddition extends AtomicFeature({
     case _ : Ctor.Secondary => true
     case _ : Defn.Class => true
     case Mod.Protected(ref) => true
+    case _ : Term.New => true
+    case _ : Term.Super => true
+    case _ : Term.This => true
+    case _ : Type.With => true
   })
 
   private case object AdvancedOOPAddition extends AtomicFeature({
@@ -119,6 +145,13 @@ object Features {
     case _ : Defn.Var => true
     case Mod.VarParam() => true
     case _ : Term.Assign => true
+    case _ : Term.Do => true
+    case _ : Term.Name => true
+    case _ : Term.Return => true
+    case _ : Term.Throw => true
+    case _ : Term.Try => true
+    case _ : Term.TryWithHandler => true
+    case _ : Term.While => true
   })
 
   case object AllowContextualConstructs extends AtomicFeature({
@@ -130,6 +163,7 @@ object Features {
     case Mod.Implicit() => true
     case Mod.Using() => true
     case _ : Pat.Given => true
+    case _ : Type.ImplicitFunction => true  // TODO depreacted, keep it?
   })
 
   case object AllowExtensions extends AtomicFeature({
@@ -139,12 +173,16 @@ object Features {
 
   case object AllowMacros extends AtomicFeature({
     case _ : Defn.Macro => true
-
+    case _ : Term.QuotedMacroExpr => true
+    case _ : Term.QuotedMacroType => true
+    case _ : Term.SplicedMacroExpr => true
+    case _ : Term.SplicedMacroPat => true
+    case _ : Type.Macro => true
   })
 
   case object AllowImports extends AtomicFeature({
     case _ : Import => true
-    case _ : Importee => true
+//    case _ : Importee => true
     case _ : Importee.Name => true
     case _ : Importee.Rename => true
     case _ : Importee.Unimport => true
@@ -203,11 +241,39 @@ object Features {
   Term
   Term.Annotate
   Term.Anonymous
-  Term.AnonymousFunction
   Term.ApplyType
   Term.ApplyUsing
   Term.Ascribe
-
+  Term.EndMarker
+  Term.Eta
+  Term.FunctionTerm
+  Term.Interpolate
+  Term.NewAnonymous
+  Term.Ref
+  Term.Repeated
+  Term.Select
+  Term.Xml
+  Type
+  Type.And
+  Type.Annotate
+  Type.AnonymousName
+  Type.ApplyInfix
+  Type.Existential
+  Type.FunctionType
+  Type.Lambda
+  Type.Or
+  Type.PolyFunction
+  Type.Project
+  Type.Ref
+  Type.Refine
+  Type.Select
+  Type.Singleton
+  Type.TypedParam
+  Type.Var
+  TypeCase
+  internal.trees.Quasi
+  Mod.super
+  Type.Method
    */
 
 }

@@ -64,6 +64,7 @@ object Checker {
     case _ : Source => true
     case _ : Template => true
     case _ : Term.Block => true
+    case _ : Type.Name => true
   })
 
 }
