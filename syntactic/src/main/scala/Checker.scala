@@ -47,7 +47,7 @@ class Checker(rules: List[Rule]) {
    */
   def checkFile(filename: String): Try[List[Violation]] = {
     val content = Using(scala.io.Source.fromFile(filename)) { bufferedSource =>
-      bufferedSource.getLines().mkString
+      bufferedSource.getLines().mkString("\n")
     }
     content.flatMap(check)
   }
