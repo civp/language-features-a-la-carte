@@ -1,11 +1,8 @@
 import Checker._
 import Feature.AtomicFeature
 
-import scala.meta.Name.Anonymous
 import scala.meta._
 import scala.util.{Failure, Success, Using}
-
-// TODO why is syntax without ; not supported
 
 class Checker private(dialect: Dialect, allowedFeatures: List[Feature]) {
   import Checker.AlwaysAllowed
@@ -33,7 +30,7 @@ class Checker private(dialect: Dialect, allowedFeatures: List[Feature]) {
 
   def checkFile(filename: String): CheckResult = {
     val content = Using(scala.io.Source.fromFile(filename)) { bufferedSource =>
-      bufferedSource.getLines().mkString
+      bufferedSource.getLines().mkString("\n")
     }
     content.map(checkCodeString) match {
       case Failure(exception) => CheckResult.CompileError(exception)
