@@ -65,6 +65,9 @@ object Checker {
     case _ : Template => true
     case _ : Term.Block => true
     case _ : Type.Name => true
+    case _ : Self => true
+    case _ : Name.Anonymous => true
+    case _ : Init => true
   })
 
 }

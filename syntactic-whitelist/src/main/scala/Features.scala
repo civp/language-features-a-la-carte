@@ -23,8 +23,11 @@ object Features {
       case _ : Term.ApplyInfix => true
       case _ : Term.ApplyUnary => true
       case _ : Term.If => true
+      case _ : Term.Name => true
+      case _ : Term.Select => true
       case _ : Term.Tuple => true
       case _ : Type.Tuple => true
+      case _ => false
     }
   }
 
@@ -128,6 +131,7 @@ object Features {
     case _ : Term.Super => true
     case _ : Term.This => true
     case _ : Type.With => true
+    case _ : Defn.Trait => true
   })
 
   private case object AdvancedOOPAddition extends AtomicFeature({
@@ -211,7 +215,6 @@ object Features {
   Enumerator.Guard
   Enumerator.Val
   ImportExportStat
-  Init
   Lit
   Member
   Member.Term
@@ -223,7 +226,6 @@ object Features {
   Mod.Lazy
   MultiSource
   Name
-  Name.Anonymous
   Name.Indeterminate
   Pat
   Pat.Alternative
@@ -236,7 +238,6 @@ object Features {
   Pat.SeqWildcard
   Pat.Xml
   Ref
-  Self
   Stat
   Term
   Term.Annotate
@@ -251,7 +252,6 @@ object Features {
   Term.NewAnonymous
   Term.Ref
   Term.Repeated
-  Term.Select
   Term.Xml
   Type
   Type.And
