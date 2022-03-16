@@ -129,6 +129,48 @@ class WhitelistCheckerTests {
       .run()
   }
 
+  @Test def allowLiteralFunctions_should_allow_literal_functions(): Unit = {
+    new TestRunner.Builder(testController)
+      .onFile("LiteralFunctions")
+      .withDialect(dialects.Sbt1)
+      .withFeatures(
+        Features.AllowLiteralFunctions,
+        Features.AllowLiteralsAndExpressions,
+        Features.AllowVals,
+        Features.AllowAnonymousFunctions
+      )
+      .expectingValid()
+      .build()
+      .run()
+  }
+
+  @Test def literal_functions_should_be_rejected_when_not_allowed(): Unit = {
+    new TestRunner.Builder(testController)
+      .onFile("LiteralFunctions")
+      .withDialect(dialects.Sbt1)
+      .withFeatures(
+        Features.AllowLiteralsAndExpressions,
+        Features.AllowVals,
+        Features.AllowDefs,
+        Features.AllowAdvancedOop,
+        Features.AllowPolymorphicTypes,
+        Features.AllowForExpr,
+        Features.AllowAnonymousFunctions,
+        Features.AllowImperativeConstructs,
+        Features.AllowContextualConstructs,
+        Features.AllowExports,
+        Features.AllowImports,
+        Features.AllowExtensions,
+        Features.AllowMacros,
+        Features.AllowNull
+      )
+      .expectingInvalidWithAssertion { invalid =>
+        invalid.violations.size >= 6  // TODO possibly more precise assertion
+      }
+      .build()
+      .run()
+  }
+
 }
 
 object WhitelistCheckerTests {
