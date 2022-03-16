@@ -97,6 +97,7 @@ object Features {
     case _ : Term.Function => true
     case _ : Type.ContextFunction => true
     case _ : Type.Function => true
+    case _ : Term.Param => true
   })
 
   case object AllowForExpr extends AtomicFeature({
