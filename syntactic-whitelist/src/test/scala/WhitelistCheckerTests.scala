@@ -171,6 +171,45 @@ class WhitelistCheckerTests {
       .run()
   }
 
+  @Test def allowForExpr_should_allow_for_expressions(): Unit = {
+    new TestRunner.Builder(testController)
+      .onFile("Fors")
+      .withFeatures(
+        Features.AllowLiteralsAndExpressions,
+        Features.AllowDefs,
+        Features.AllowForExpr
+      )
+      .expectingValid()
+      .build()
+      .run()
+  }
+
+  @Test def for_expressions_should_be_rejected_when_not_allowed(): Unit = {
+    new TestRunner.Builder(testController)
+      .onFile("Fors")
+      .withFeatures(
+        Features.AllowLiteralsAndExpressions,
+        Features.AllowNull,
+        Features.AllowExports,
+        Features.AllowDefs,
+        Features.AllowImports,
+        Features.AllowExtensions,
+        Features.AllowAnonymousFunctions,
+        Features.AllowMacros,
+        Features.AllowContextualConstructs,
+        Features.AllowImperativeConstructs,
+        Features.AllowPolymorphicTypes,
+        Features.AllowAdvancedOop,
+        Features.AllowLiteralFunctions,
+        Features.AllowPackages
+      )
+      .expectingInvalidWithAssertion { invalid =>
+        invalid.violations.size >= 3  // TODO possibly more precise assertion
+      }
+      .build()
+      .run()
+  }
+
 }
 
 object WhitelistCheckerTests {
