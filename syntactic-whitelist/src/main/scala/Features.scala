@@ -103,6 +103,8 @@ object Features {
   case object AllowForExpr extends AtomicFeature({
     case _ : Term.For => true
     case _ : Term.ForYield => true
+    case _ : Enumerator => true
+    case _ : Pat.Var => true
   })
 
   case object AllowPolymorphicTypes extends AtomicFeature({
@@ -210,11 +212,6 @@ object Features {
   CaseTree
   Decl
   Defn
-  Enumerator
-  Enumerator.CaseGenerator
-  Enumerator.Generator
-  Enumerator.Guard
-  Enumerator.Val
   ImportExportStat
   Lit
   Member
