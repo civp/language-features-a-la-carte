@@ -65,6 +65,7 @@ object Checker {
     case _ : Self => true
     case _ : Name.Anonymous => true
     case _ : Init => true
+    case _ : Term.EndMarker => true
   })
 
 }

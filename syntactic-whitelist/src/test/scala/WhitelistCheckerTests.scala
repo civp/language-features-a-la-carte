@@ -161,7 +161,7 @@ class WhitelistCheckerTests {
         Features.AllowExports,
         Features.AllowImports,
         Features.AllowExtensions,
-        Features.AllowMacros,
+        Features.AllowMetaprogramming,
         Features.AllowNull
       )
       .expectingInvalidWithAssertion { invalid =>
@@ -195,7 +195,7 @@ class WhitelistCheckerTests {
         Features.AllowImports,
         Features.AllowExtensions,
         Features.AllowAnonymousFunctions,
-        Features.AllowMacros,
+        Features.AllowMetaprogramming,
         Features.AllowContextualConstructs,
         Features.AllowImperativeConstructs,
         Features.AllowPolymorphicTypes,
