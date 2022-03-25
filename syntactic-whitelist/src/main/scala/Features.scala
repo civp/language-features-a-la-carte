@@ -1,6 +1,5 @@
 import Feature._
 
-import scala.meta.Mod.Infix
 import scala.meta._
 
 object Features {
@@ -30,6 +29,8 @@ object Features {
       case _ : Type.Tuple => true
       case _ : ImportExportStat => true
       case _ : Type => true
+      case _ : Term.Ascribe => true
+      case _ : Term.Repeated => true
       case _ => false
     }
   }
@@ -135,9 +136,9 @@ object Features {
     case _ : Type.ByName => true
   })
 
-  case object AllowRecursiveCalls extends AtomicFeature({
-    ??? // TODO
-  })
+//  case object AllowRecursiveCalls extends AtomicFeature({
+//    ??? // TODO
+//  })
 
   private case object BasicOopAddition extends AtomicFeature({
     case _ : Ctor.Secondary => true
@@ -186,6 +187,7 @@ object Features {
     case Mod.Using() => true
     case _ : Pat.Given => true
     case _ : Type.ImplicitFunction => true  // TODO depreacted, keep it? Yes!
+    case _ : Term.ApplyUsing => true
   })
 
   case object AllowExtensions extends AtomicFeature({
@@ -230,24 +232,20 @@ object Features {
     case _ : Pat.Interpolate => true
   })
 
+  case object AllowAnnotations extends AtomicFeature({
+    case _ : Term.Annotate => true
+    // TODO classes, traits, defs, vals with restrictions on modifiers
+  })
+
   /*
   Not implemented  TODO figure out what they are
-  Member
   Member.Term
   Member.Type
   MultiSource
-  Name
   Name.Indeterminate
-  Ref
-  Stat
-  Term
-  Term.Annotate
   Term.ApplyType
-  Term.ApplyUsing
-  Term.Ascribe
   Term.FunctionTerm
   Term.Ref
-  Term.Repeated
    */
 
 }
