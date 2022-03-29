@@ -4,6 +4,9 @@ import scala.meta._
 
 object Features {
 
+  /**
+   * Allows literals of basic types, including Unit and tuples, as well as expressions
+   */
   case object AllowLiteralsAndExpressions extends AtomicFeature({
     case _ : Lit.Boolean => true
     case _ : Lit.Byte => true
@@ -30,10 +33,16 @@ object Features {
     case _ : Term.Repeated => true
   })
 
+  /**
+   * Allows the use of the null literal
+   */
   case object AllowNull extends AtomicFeature({
     case _ : Lit.Null => true
   })
 
+  /**
+   * Allows the use of vals
+   */
   case object AllowVals extends AtomicFeature({
     case _ : Decl.Val => true
     case _ : Defn.Val => true
@@ -42,6 +51,9 @@ object Features {
     case _ : Term.Anonymous => true
   })
 
+  /**
+   * Allows the use of defs
+   */
   case object AllowDefs extends AtomicFeature({
     case _ : Decl.Def => true
     case _ : Defn.Def => true
@@ -50,6 +62,14 @@ object Features {
     case _ : Type.Repeated => true
   })
 
+  // TODO one more feature for objects only (to create modules)?
+
+  /**
+   * Allows algebraic data types, i.e.:
+   * case classes, sealed classes
+   * sealed traits, enums
+   * Also allows objects (and not only case objects) for convenience (e.g. companion objects)
+   */
   case object AllowADTs extends AtomicFeature({
     case Defn.Class(modifiers, _, _, _, _) => modifiers.exists {
       case Mod.Case() => true
@@ -89,12 +109,18 @@ object Features {
     case _ : TypeCase => true
   })
 
+  /**
+   * Allows the use of anonymous functions
+   */
   case object AllowAnonymousFunctions extends AtomicFeature({
     case _ : Term.AnonymousFunction => true
     case _ : Term.Placeholder => true
     case _ : Type.Placeholder => true
   })
 
+  /**
+   * Allows the use of literal functions
+   */
   case object AllowLiteralFunctions extends AtomicFeature({
     case _ : Term.ContextFunction => true
     case _ : Term.Function => true
@@ -104,6 +130,9 @@ object Features {
     case _ : Term.Eta => true
   })
 
+  /**
+   * Allows fors and for-yields
+   */
   case object AllowForExpr extends AtomicFeature({
     case _ : Term.For => true
     case _ : Term.ForYield => true
@@ -111,6 +140,9 @@ object Features {
     case _ : Pat.Var => true
   })
 
+  /**
+   * Allows polymorphism, including opaque types
+   */
   case object AllowPolymorphicTypes extends AtomicFeature({
     case Mod.Opaque() => true
     case _ : Decl.Type => true
@@ -122,6 +154,9 @@ object Features {
     case _ : Type.Param => true
   })
 
+  /**
+   * Allows lazy vals and by-name arguments
+   */
   case object AllowLaziness extends AtomicFeature({
     case Mod.Lazy() => true
     case _ : Type.ByName => true
@@ -154,10 +189,24 @@ object Features {
     case Mod.Transparent() => true
   })
 
+  /**
+   * In addition to constructs related to algebraic data types,
+   * this allows basic object-oriented programming, including:
+   * classes, traits, secondary constructors, access modifiers
+   */
   case object AllowBasicOop extends CompositeFeature(AllowADTs, BasicOopAddition)
 
+  /**
+   * In addition to constructs related to algebraic data types and basic object-oriented programming,
+   * this allows advanced object-oriented modifiers:
+   * final, open, transparent, super, covariant, contravariant, transparent
+   */
   case object AllowAdvancedOop extends CompositeFeature(AllowBasicOop, AdvancedOOPAddition)
 
+  /**
+   * Allows the use of imperative constructs, including:
+   * vars, try-throw-catches, return and while loops
+   */
   case object AllowImperativeConstructs extends AtomicFeature({
     case Mod.VarParam() => true
     case _ : Decl.Var => true
@@ -172,6 +221,10 @@ object Features {
     case _ : Term.While => true
   })
 
+  /**
+   * Allows the use of contextual constructs, including:
+   * implicits, using, givens
+   */
   case object AllowContextualConstructs extends AtomicFeature({
     case Mod.Implicit() => true
     case Mod.Using() => true
@@ -185,10 +238,16 @@ object Features {
     case _ : Term.ApplyUsing => true
   })
 
+  /**
+   * Allows the definition of extension groups and extension methods
+   */
   case object AllowExtensions extends AtomicFeature({
     case _ : Defn.ExtensionGroup => true
   })
 
+  /**
+   * Allows the use of macro and metaprogramming-related constructs
+   */
   case object AllowMetaprogramming extends AtomicFeature({
     case _ : Defn.Macro => true
     case _ : Term.QuotedMacroExpr => true
@@ -200,40 +259,64 @@ object Features {
     case _ : internal.trees.Quasi => true
   })
 
+  /**
+   * Allows the use of imports
+   */
   case object AllowImports extends AtomicFeature({
     case _ : Import => true
     case _ : Importee => true
     case _ : Importer => true
   })
 
+  /**
+   * Allows export clauses
+   */
   case object AllowExports extends AtomicFeature({
     case _ : Export => true
   })
 
+  /**
+   * Allows the use of packages
+   */
   case object AllowPackages extends AtomicFeature({
     case _ : Pkg => true
     case _ : Pkg.Object => true
   })
 
+  /**
+   * Allows the use of XML-related constructs
+   */
   case object AllowXml extends AtomicFeature({
     case _ : Term.Xml => true
     case _ : Pat.Xml => true
   })
 
+  /**
+   * Allows string interpolation
+   */
   case object AllowStringInterpolation extends AtomicFeature({
     case _ : Term.Interpolate => true
     case _ : Pat.Interpolate => true
   })
 
+  /**
+   * Allows annotations
+   */
   case object AllowAnnotations extends AtomicFeature({
     case _ : Term.Annotate => true
     case _ : Mod.Annot => true
   })
 
+  /**
+   * Allows to define infix methods
+   */
   case object AllowInfixes extends AtomicFeature({
     case Mod.Infix() => true
   })
 
+  /**
+   * Allows to define inline methods
+   */
   case object AllowInlines extends AtomicFeature({
     case Mod.Inline() => true
   })
