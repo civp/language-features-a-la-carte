@@ -106,15 +106,6 @@ object Features {
   })
 
   /**
-   * Allows the use of anonymous functions
-   */
-  case object AllowAnonymousFunctions extends AtomicFeature({
-    case _ : Term.AnonymousFunction => true
-    case _ : Term.Placeholder => true
-    case _ : Type.Placeholder => true
-  })
-
-  /**
    * Allows the use of literal functions
    */
   case object AllowLiteralFunctions extends AtomicFeature({
@@ -124,6 +115,9 @@ object Features {
     case _ : Type.Function => true
     case _ : Term.Param => true
     case _ : Term.Eta => true
+    case _ : Term.AnonymousFunction => true
+    case _ : Term.Placeholder => true
+    case _ : Type.Placeholder => true
   })
 
   /**
@@ -333,7 +327,6 @@ object Features {
     AllowVals,
     AllowDefs,
     AllowADTs,
-    AllowAnonymousFunctions,
     AllowLiteralFunctions,
     AllowForExpr,
     AllowPolymorphicTypes,
