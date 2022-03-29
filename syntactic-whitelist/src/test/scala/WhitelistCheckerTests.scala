@@ -1,5 +1,4 @@
 import Features.{AllowADTs, AllowBasicOop, AllowLiteralsAndExpressions, AllowVals}
-import org.junit.Assert._
 import org.junit.{AfterClass, Test}
 import scala.meta.dialects
 
@@ -28,9 +27,7 @@ class WhitelistCheckerTests {
       .onFile("Vals")
       .withFeatures(Features.ALL_FEATURES)
       .exceptFeatures(Features.AllowVals)
-      .expectInvalidWithAssertion { invalid =>
-        assertTrue(invalid.violations.size >= 5)  // TODO possibly more precise assertions
-      }
+      .expectInvalid(2 -> 1, 3 -> 1, 4 -> 1, 5 -> 1, 6 -> 1)
   }
 
   @Test def vals_should_be_accepted_when_allowed(): Unit = {
@@ -48,9 +45,7 @@ class WhitelistCheckerTests {
       .onFile("Defs")
       .withFeatures(Features.ALL_FEATURES)
       .exceptFeatures(Features.AllowDefs)
-      .expectInvalidWithAssertion { invalid =>
-        assertTrue(invalid.violations.size >= 2)  // TODO possibly more precise assertions
-      }
+      .expectInvalid(2 -> 1, 3 -> 1)
   }
 
   @Test def allowADTs_should_allow_ADTs(): Unit = {
@@ -72,18 +67,16 @@ class WhitelistCheckerTests {
         Features.AllowBasicOop,
         Features.AllowAdvancedOop
       )
-      .expectInvalidWithAssertion { invalid =>
-        assertTrue(invalid.violations.size >= 3)
-      }
+      .expectInvalid(2 -> 2, 4 -> 1, 5 -> 3, 6 -> 3,
+        3 -> 1  // FIXME weird behavior of Scalameta on a trait without body
+      )
   }
 
   @Test def AllowADTs_should_not_allow_sealed_trait_with_non_case_class(): Unit = {
     createTest(testController)
       .onFile("NotSoADT")
       .withFeatures(AllowADTs)
-      .expectInvalidWithAssertion { invalid =>
-        invalid.violations.nonEmpty
-      }
+      .expectInvalid(2 -> 1, 3 -> 1)
   }
 
   @Test def allowBasicOop_should_allow_sealed_trait_with_non_case_class(): Unit = {
@@ -100,8 +93,7 @@ class WhitelistCheckerTests {
       .withFeatures(
         Features.AllowLiteralFunctions,
         Features.AllowLiteralsAndExpressions,
-        Features.AllowVals,
-        Features.AllowAnonymousFunctions
+        Features.AllowVals
       )
       .expectValid()
   }
@@ -112,9 +104,7 @@ class WhitelistCheckerTests {
       .withDialect(dialects.Sbt1)
       .withFeatures(Features.ALL_FEATURES)
       .exceptFeatures(Features.AllowLiteralFunctions)
-      .expectInvalidWithAssertion { invalid =>
-        invalid.violations.size >= 6  // TODO possibly more precise assertion
-      }
+      .expectInvalid(2 -> 1, 3 -> 1, 4 -> 2, 5 -> 1, 6 -> 3, 7 -> 1)
   }
 
   @Test def allowForExpr_should_allow_for_expressions(): Unit = {
@@ -133,9 +123,7 @@ class WhitelistCheckerTests {
       .onFile("Fors")
       .withFeatures(Features.ALL_FEATURES)
       .exceptFeatures(Features.AllowForExpr)
-      .expectInvalidWithAssertion { invalid =>
-        invalid.violations.size >= 3  // TODO possibly more precise assertion
-      }
+      .expectInvalid(3 -> 2, 4 -> 2, 5 -> 2)
   }
 
   @Test def AllowImports_should_allow_imports(): Unit = {
@@ -143,6 +131,14 @@ class WhitelistCheckerTests {
       .onFile("ImportOnly")
       .withFeatures(Features.AllowImports)
       .expectValid()
+  }
+
+  @Test def imports_should_be_rejected_when_not_allowed(): Unit = {
+    createTest(testController)
+      .onFile("ImportOnly")
+      .withFeatures(Features.ALL_FEATURES)
+      .exceptFeatures(Features.AllowImports)
+      .expectInvalid(1 -> 3)
   }
 
   @Test def AllowPackages_should_allow_packages(): Unit = {

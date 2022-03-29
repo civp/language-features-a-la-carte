@@ -1,7 +1,8 @@
 import Checker.CheckResult
 import Checker.CheckResult.CompileError
-import org.junit.Assert.{assertEquals, fail}
+import org.junit.Assert.{assertEquals, assertTrue, fail}
 
+import java.util.StringJoiner
 import java.util.concurrent.atomic.AtomicInteger
 import scala.collection.mutable.ListBuffer
 import scala.meta.{Dialect, dialects}
@@ -120,7 +121,7 @@ object TestRunner {
     /**
      * @param expected expected test output, will be compared to the actual one using assertEquals
      */
-    def expectResult(expected: CheckResult): Unit = {
+    private def expectResult(expected: CheckResult): Unit = {
       if (this.matcher.isDefined){
         throw new IllegalStateException("matcher set more than once")
       }
@@ -135,13 +136,42 @@ object TestRunner {
       expectResult(CheckResult.Valid)
     }
 
-    def expectInvalidWithAssertion(assertion: CheckResult.Invalid => Unit): Unit = {
+    private def expectInvalidWithAssertion(assertion: CheckResult.Invalid => Unit): Unit = {
       expectMatching {
         case CheckResult.Valid => fail("checker validated program but it should reject it")
         case invalid: CheckResult.Invalid => assertion(invalid)
         case CheckResult.CompileError(e) => throw e
       }
     }
+
+    /**
+     * @param shiftedExpectedViolationsCnt
+     */
+    def expectInvalid(expectedViolationsCnt: Map[Int, Int]): Unit = {
+      val expectedViolationsCntZeroBasedLines = expectedViolationsCnt.map(lineAndCnt => (lineAndCnt._1 - 1, lineAndCnt._2))
+      expectInvalidWithAssertion { invalid =>
+        val violationsWithLines = invalid.violations.map(violation => (violation.tree.pos.startLine, 1))
+          .foldLeft(Map.empty[Int, Int])((acc, lineAndCnt) => {
+            val (line, cnt) = lineAndCnt
+            acc.updated(line, acc.getOrElse(line, default = 0) + cnt)
+          })
+        val allLinesZeroBased = (expectedViolationsCntZeroBasedLines.keys ++ violationsWithLines.keys).toList.sorted
+        val stringJoiner = new StringJoiner("\n")
+        for (lineZeroBased <- allLinesZeroBased) {
+          val expected = expectedViolationsCntZeroBasedLines.getOrElse(lineZeroBased, default = 0)
+          val actual = violationsWithLines.getOrElse(lineZeroBased, default = 0)
+          if (actual != expected){
+            stringJoiner.add(s"error at line ${lineZeroBased+1}: unexpected number of violations found: $actual, expected: $expected\n" +
+              s"\tfound violations are: ${invalid.violations.filter(_.tree.pos.startLine == lineZeroBased)}")
+          }
+        }
+        if (stringJoiner.length() > 0){
+          fail(stringJoiner.toString)
+        }
+      }
+    }
+
+    def expectInvalid(expectedViolations: (Int, Int)*): Unit = expectInvalid(expectedViolations.toMap)
 
     /**
      * @return an instance of TestRunner with the provided test execution steps
