@@ -3,6 +3,7 @@ import Checker.CheckResult.CompileError
 import org.junit.Assert.{assertEquals, fail}
 
 import java.util.concurrent.atomic.AtomicInteger
+import scala.collection.mutable.ListBuffer
 import scala.meta.{Dialect, dialects}
 
 /**
@@ -51,7 +52,7 @@ object TestRunner {
   class Builder protected[TestRunner](testController: TestController, testName: String) {
     private var matcher: Option[CheckResult => Unit] = None
     private var filename: Option[String] = None
-    private var features: Option[List[Feature]] = None
+    private val features: ListBuffer[Feature] = ListBuffer.empty
     private var dialect: Option[Dialect] = None
     private val uid = uidGenerator.incrementAndGet()
 
@@ -82,13 +83,26 @@ object TestRunner {
     }
 
     /**
-     * @param _features the features that the Checker should allow
+     * @param _features features that the Checker should allow
      */
     def withFeatures(_features: Feature*): Builder = {
-      if (this.features.isDefined){
-        throw new IllegalStateException("features set more than once")
-      }
-      this.features = Some(_features.toList)
+      this.features.addAll(_features)
+      this
+    }
+
+    /**
+     * @param _features features that the Checker should allow
+     */
+    def withFeatures(_features: List[Feature]): Builder = {
+      this.features.addAll(_features)
+      this
+    }
+
+    /**
+     * @param _features features that the Checker should allow
+     */
+    def exceptFeatures(_features: Feature*): Builder = {
+      this.features.filterInPlace(!_features.contains(_))
       this
     }
 
@@ -139,7 +153,7 @@ object TestRunner {
       new TestRunner(
         matcher.get,
         filename.get,
-        features.get,
+        features.toList,
         dialect.getOrElse(DEFAULT_DIALECT),
         testController,
         uid

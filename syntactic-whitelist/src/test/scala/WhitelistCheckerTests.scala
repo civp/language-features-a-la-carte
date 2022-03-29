@@ -26,16 +26,8 @@ class WhitelistCheckerTests {
   @Test def vals_should_be_rejected_when_not_allowed(): Unit = {
     createTest(testController)
       .onFile("Vals")
-      .withFeatures(
-        Features.AllowLiteralsAndExpressions,
-        Features.AllowDefs,
-        Features.AllowForExpr,
-        Features.AllowAdvancedOop,
-        Features.AllowImperativeConstructs,
-        Features.AllowLaziness,
-        Features.AllowLiteralFunctions,
-        Features.AllowPolymorphicTypes,
-      )
+      .withFeatures(Features.ALL_FEATURES)
+      .exceptFeatures(Features.AllowVals)
       .expectInvalidWithAssertion { invalid =>
         assertTrue(invalid.violations.size >= 5)  // TODO possibly more precise assertions
       }
@@ -54,16 +46,8 @@ class WhitelistCheckerTests {
   @Test def defs_should_be_rejected_when_not_allowed(): Unit = {
     createTest(testController)
       .onFile("Defs")
-      .withFeatures(
-        Features.AllowLiteralsAndExpressions,
-        Features.AllowVals,
-        Features.AllowForExpr,
-        Features.AllowAdvancedOop,
-        Features.AllowImperativeConstructs,
-        Features.AllowLaziness,
-        Features.AllowLiteralFunctions,
-        Features.AllowPolymorphicTypes
-      )
+      .withFeatures(Features.ALL_FEATURES)
+      .exceptFeatures(Features.AllowDefs)
       .expectInvalidWithAssertion { invalid =>
         assertTrue(invalid.violations.size >= 2)  // TODO possibly more precise assertions
       }
@@ -82,14 +66,11 @@ class WhitelistCheckerTests {
   @Test def ADTs_should_be_rejected_when_not_allowed(): Unit = {
     createTest(testController)
       .onFile("ADTs")
-      .withFeatures(
-        Features.AllowLiteralsAndExpressions,
-        Features.AllowVals,
-        Features.AllowForExpr,
-        Features.AllowImperativeConstructs,
-        Features.AllowLaziness,
-        Features.AllowLiteralFunctions,
-        Features.AllowPolymorphicTypes
+      .withFeatures(Features.ALL_FEATURES)
+      .exceptFeatures(
+        Features.AllowADTs,
+        Features.AllowBasicOop,
+        Features.AllowAdvancedOop
       )
       .expectInvalidWithAssertion { invalid =>
         assertTrue(invalid.violations.size >= 3)
@@ -129,22 +110,8 @@ class WhitelistCheckerTests {
     createTest(testController)
       .onFile("LiteralFunctions")
       .withDialect(dialects.Sbt1)
-      .withFeatures(
-        Features.AllowLiteralsAndExpressions,
-        Features.AllowVals,
-        Features.AllowDefs,
-        Features.AllowAdvancedOop,
-        Features.AllowPolymorphicTypes,
-        Features.AllowForExpr,
-        Features.AllowAnonymousFunctions,
-        Features.AllowImperativeConstructs,
-        Features.AllowContextualConstructs,
-        Features.AllowExports,
-        Features.AllowImports,
-        Features.AllowExtensions,
-        Features.AllowMetaprogramming,
-        Features.AllowNull
-      )
+      .withFeatures(Features.ALL_FEATURES)
+      .exceptFeatures(Features.AllowLiteralFunctions)
       .expectInvalidWithAssertion { invalid =>
         invalid.violations.size >= 6  // TODO possibly more precise assertion
       }
@@ -164,25 +131,25 @@ class WhitelistCheckerTests {
   @Test def for_expressions_should_be_rejected_when_not_allowed(): Unit = {
     createTest(testController)
       .onFile("Fors")
-      .withFeatures(
-        Features.AllowLiteralsAndExpressions,
-        Features.AllowNull,
-        Features.AllowExports,
-        Features.AllowDefs,
-        Features.AllowImports,
-        Features.AllowExtensions,
-        Features.AllowAnonymousFunctions,
-        Features.AllowMetaprogramming,
-        Features.AllowContextualConstructs,
-        Features.AllowImperativeConstructs,
-        Features.AllowPolymorphicTypes,
-        Features.AllowAdvancedOop,
-        Features.AllowLiteralFunctions,
-        Features.AllowPackages
-      )
+      .withFeatures(Features.ALL_FEATURES)
+      .exceptFeatures(Features.AllowForExpr)
       .expectInvalidWithAssertion { invalid =>
         invalid.violations.size >= 3  // TODO possibly more precise assertion
       }
+  }
+
+  @Test def AllowImports_should_allow_imports(): Unit = {
+    createTest(testController)
+      .onFile("ImportOnly")
+      .withFeatures(Features.AllowImports)
+      .expectValid()
+  }
+
+  @Test def AllowPackages_should_allow_packages(): Unit = {
+    createTest(testController)
+      .onFile("PackageOnly")
+      .withFeatures(Features.AllowPackages)
+      .expectValid()
   }
 
 }

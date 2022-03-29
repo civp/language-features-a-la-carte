@@ -23,8 +23,6 @@ object Features {
     case _ : Term.ApplyInfix => true
     case _ : Term.ApplyUnary => true
     case _ : Term.If => true
-    case _ : Term.Name => true
-    case _ : Term.Select => true
     case _ : Term.Tuple => true
     case _ : Type.Tuple => true
     case _ : ImportExportStat => true
@@ -47,7 +45,6 @@ object Features {
     case _ : Decl.Val => true
     case _ : Defn.Val => true
     case _ : Pat.Var => true
-    case _ : Term.Name => true
     case _ : Term.Anonymous => true
   })
 
@@ -57,7 +54,6 @@ object Features {
   case object AllowDefs extends AtomicFeature({
     case _ : Decl.Def => true
     case _ : Defn.Def => true
-    case _ : Term.Name => true
     case _ : Term.Param => true
     case _ : Type.Repeated => true
   })
@@ -213,7 +209,6 @@ object Features {
     case _ : Defn.Var => true
     case _ : Term.Assign => true
     case _ : Term.Do => true
-    case _ : Term.Name => true
     case _ : Term.Return => true
     case _ : Term.Throw => true
     case _ : Term.Try => true
@@ -260,12 +255,21 @@ object Features {
   })
 
   /**
+   * Allows the use of packages
+   */
+  case object AllowPackages extends AtomicFeature({
+    case _ : Pkg => true
+    case _ : Pkg.Object => true
+  })
+
+  /**
    * Allows the use of imports
    */
   case object AllowImports extends AtomicFeature({
     case _ : Import => true
     case _ : Importee => true
     case _ : Importer => true
+    case _ : Name.Indeterminate => true
   })
 
   /**
@@ -273,14 +277,6 @@ object Features {
    */
   case object AllowExports extends AtomicFeature({
     case _ : Export => true
-  })
-
-  /**
-   * Allows the use of packages
-   */
-  case object AllowPackages extends AtomicFeature({
-    case _ : Pkg => true
-    case _ : Pkg.Object => true
   })
 
   /**
@@ -326,10 +322,36 @@ object Features {
   Member.Term
   Member.Type
   MultiSource
-  Name.Indeterminate
   Term.ApplyType
   Term.FunctionTerm
   Term.Ref
    */
+
+  val ALL_FEATURES: List[Feature] = List(
+    AllowLiteralsAndExpressions,
+    AllowNull,
+    AllowVals,
+    AllowDefs,
+    AllowADTs,
+    AllowAnonymousFunctions,
+    AllowLiteralFunctions,
+    AllowForExpr,
+    AllowPolymorphicTypes,
+    AllowLaziness,
+    AllowBasicOop,
+    AllowAdvancedOop,
+    AllowImperativeConstructs,
+    AllowContextualConstructs,
+    AllowExtensions,
+    AllowMetaprogramming,
+    AllowPackages,
+    AllowImports,
+    AllowExports,
+    AllowXml,
+    AllowStringInterpolation,
+    AllowAnnotations,
+    AllowInfixes,
+    AllowInlines
+  )
 
 }
