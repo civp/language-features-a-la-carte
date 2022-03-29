@@ -34,7 +34,8 @@ class TestController {
     if (allTestIds.nonEmpty) {
       val faultyTestsNames = allTestIds.values
       object TestConfigException extends Exception(
-        s"the following test(s) never called run() after TestRunner builder instantiation: ${faultyTestsNames.mkString("\n", "\n", "\n")}"
+        s"the following tests were never run after TestRunner builder instantiation: ${faultyTestsNames.mkString("\n", "\n", "\n")}" +
+          s"These tests may have passed, but that is only because no check was made in them"
       )
       throw TestConfigException
     }

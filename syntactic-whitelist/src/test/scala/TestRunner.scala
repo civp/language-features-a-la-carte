@@ -32,25 +32,30 @@ object TestRunner {
   private val TEST_RES_DIR = "src/test/res"
   private val TEST_FILES_EXT = "scala"
 
+  private val TEST_METHOD_FRAME_IDX = 1
+
   /**
-   * Builder for TestRunner
+   * @return a builder for TestRunner
    * @param testController the controller that will be used to ensure that the test is actually run
-   * By default it will use Scala3 as a dialect, but it can be overriden
+   * By default it will use Scala3 as a dialect, but it can be overriden <p>
+   * This method should be called at top level inside the tests, not nested (for error reporting to work correctly)
    */
-  class Builder(testController: TestController) {
+  def createTest(testController: TestController): Builder = {
+    val testName = StackWalker.getInstance().walk(frames => {
+      val frame = frames.limit(TEST_METHOD_FRAME_IDX+1).toList.get(TEST_METHOD_FRAME_IDX)
+      frame.getMethodName
+    })
+    new Builder(testController, testName)
+  }
+
+  class Builder protected[TestRunner](testController: TestController, testName: String) {
     private var matcher: Option[CheckResult => Unit] = None
     private var filename: Option[String] = None
     private var features: Option[List[Feature]] = None
     private var dialect: Option[Dialect] = None
     private val uid = uidGenerator.incrementAndGet()
 
-    private val TEST_METHOD_FRAME_IDX = 1
-
     {
-      val testName = StackWalker.getInstance().walk(frames => {
-        val frame = frames.limit(TEST_METHOD_FRAME_IDX+1).toList.get(TEST_METHOD_FRAME_IDX)
-        frame.getMethodName
-      })
       testController.registerTest(uid, testName)
     }
 
@@ -77,43 +82,6 @@ object TestRunner {
     }
 
     /**
-     * @param matcher function that will be called on the resulting CheckResult, in order to check its correctness
-     */
-    def expectingMatching(matcher: CheckResult => Unit): Builder = {
-      if (this.matcher.isDefined){
-        throw new IllegalStateException("matcher set more than once")
-      }
-      this.matcher = Some(matcher)
-      this
-    }
-
-    /**
-     * @param expected expected test output, will be compared to the actual one using assertEquals
-     */
-    def expectingResult(expected: CheckResult): Builder = {
-      if (this.matcher.isDefined){
-        throw new IllegalStateException("matcher set more than once")
-      }
-      this.matcher = Some {
-        case CompileError(cause) => throw cause
-        case actual => assertEquals(expected, actual)
-      }
-      this
-    }
-
-    def expectingValid(): Builder = {
-      expectingResult(CheckResult.Valid)
-    }
-
-    def expectingInvalidWithAssertion(assertion: CheckResult.Invalid => Unit): Builder = {
-      expectingMatching {
-        case CheckResult.Valid => fail("checker validated program but it should reject it")
-        case invalid: CheckResult.Invalid => assertion(invalid)
-        case CheckResult.CompileError(e) => throw e
-      }
-    }
-
-    /**
      * @param _features the features that the Checker should allow
      */
     def withFeatures(_features: Feature*): Builder = {
@@ -122,6 +90,43 @@ object TestRunner {
       }
       this.features = Some(_features.toList)
       this
+    }
+
+    /**
+     * @param matcher function that will be called on the resulting CheckResult, in order to check its correctness
+     */
+    def expectMatching(matcher: CheckResult => Unit): Unit = {
+      if (this.matcher.isDefined){
+        throw new IllegalStateException("matcher set more than once")
+      }
+      this.matcher = Some(matcher)
+      build().run()
+    }
+
+    /**
+     * @param expected expected test output, will be compared to the actual one using assertEquals
+     */
+    def expectResult(expected: CheckResult): Unit = {
+      if (this.matcher.isDefined){
+        throw new IllegalStateException("matcher set more than once")
+      }
+      this.matcher = Some {
+        case CompileError(cause) => throw cause
+        case actual => assertEquals(expected, actual)
+      }
+      build().run()
+    }
+
+    def expectValid(): Unit = {
+      expectResult(CheckResult.Valid)
+    }
+
+    def expectInvalidWithAssertion(assertion: CheckResult.Invalid => Unit): Unit = {
+      expectMatching {
+        case CheckResult.Valid => fail("checker validated program but it should reject it")
+        case invalid: CheckResult.Invalid => assertion(invalid)
+        case CheckResult.CompileError(e) => throw e
+      }
     }
 
     /**
