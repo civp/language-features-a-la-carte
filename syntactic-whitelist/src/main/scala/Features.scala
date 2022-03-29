@@ -4,36 +4,31 @@ import scala.meta._
 
 object Features {
 
-  // TODO restrictions on modifiers
-
-  case object AllowLiteralsAndExpressions extends Feature {
-    override def check(tree: Tree): Boolean = tree match {
-      case _ : Lit.Boolean => true
-      case _ : Lit.Byte => true
-      case _ : Lit.Char => true
-      case _ : Lit.Double => true
-      case _ : Lit.Float => true
-      case _ : Lit.Int => true
-      case _ : Lit.Long => true
-      case _ : Lit.Short => true
-      case _ : Lit.String => true
-      case _ : Lit.Symbol => true
-      case _ : Lit.Unit => true
-      case _ : Term.Apply => true
-      case _ : Term.ApplyInfix => true
-      case _ : Term.ApplyUnary => true
-      case _ : Term.If => true
-      case _ : Term.Name => true
-      case _ : Term.Select => true
-      case _ : Term.Tuple => true
-      case _ : Type.Tuple => true
-      case _ : ImportExportStat => true
-      case _ : Type => true
-      case _ : Term.Ascribe => true
-      case _ : Term.Repeated => true
-      case _ => false
-    }
-  }
+  case object AllowLiteralsAndExpressions extends AtomicFeature({
+    case _ : Lit.Boolean => true
+    case _ : Lit.Byte => true
+    case _ : Lit.Char => true
+    case _ : Lit.Double => true
+    case _ : Lit.Float => true
+    case _ : Lit.Int => true
+    case _ : Lit.Long => true
+    case _ : Lit.Short => true
+    case _ : Lit.String => true
+    case _ : Lit.Symbol => true
+    case _ : Lit.Unit => true
+    case _ : Term.Apply => true
+    case _ : Term.ApplyInfix => true
+    case _ : Term.ApplyUnary => true
+    case _ : Term.If => true
+    case _ : Term.Name => true
+    case _ : Term.Select => true
+    case _ : Term.Tuple => true
+    case _ : Type.Tuple => true
+    case _ : ImportExportStat => true
+    case _ : Type => true
+    case _ : Term.Ascribe => true
+    case _ : Term.Repeated => true
+  })
 
   case object AllowNull extends AtomicFeature({
     case _ : Lit.Null => true
@@ -61,23 +56,22 @@ object Features {
       case Mod.Sealed() => true
       case _ => false
     }
-    case Defn.Trait(modifiers, _, _, _, _) => {
+    case Defn.Trait(modifiers, _, _, _, _) =>
       modifiers.exists {
         case Mod.Sealed() => true
         case _ => false
       }
-    }
     case _ : Defn.Object => true
-    case _ : Case => true
-    case _ : Ctor.Primary => true
-    case _ : Defn.Enum => true
-    case _ : Defn.EnumCase => true
-    case _ : Defn.RepeatedEnumCase => true
     case Mod.Abstract() => true
     case Mod.Case() => true
     case Mod.Override() => true
     case Mod.Sealed() => true
     case Mod.ValParam() => true
+    case _ : Case => true
+    case _ : Ctor.Primary => true
+    case _ : Defn.Enum => true
+    case _ : Defn.EnumCase => true
+    case _ : Defn.RepeatedEnumCase => true
     case _ : Pat.Tuple => true
     case _ : Pat.Typed => true
     case _ : Pat.Var => true
@@ -118,24 +112,23 @@ object Features {
   })
 
   case object AllowPolymorphicTypes extends AtomicFeature({
+    case Mod.Opaque() => true
     case _ : Decl.Type => true
     case _ : Defn.Type => true
-    case Mod.Opaque() => true
     case _ : Term.PolyFunction => true
     case _ : Type.Apply => true
     case _ : Type.Bounds => true
     case _ : Type.Match => true
     case _ : Type.Param => true
-    case Mod.Opaque() => true
   })
 
   case object AllowLaziness extends AtomicFeature({
-    case _ : Type.ByName => true
     case Mod.Lazy() => true
+    case _ : Type.ByName => true
   })
 
 //  case object AllowRecursiveCalls extends AtomicFeature({
-//    ??? // TODO
+//    ???
 //  })
 
   private case object BasicOopAddition extends AtomicFeature({
@@ -166,9 +159,9 @@ object Features {
   case object AllowAdvancedOop extends CompositeFeature(AllowBasicOop, AdvancedOOPAddition)
 
   case object AllowImperativeConstructs extends AtomicFeature({
+    case Mod.VarParam() => true
     case _ : Decl.Var => true
     case _ : Defn.Var => true
-    case Mod.VarParam() => true
     case _ : Term.Assign => true
     case _ : Term.Do => true
     case _ : Term.Name => true
@@ -180,13 +173,13 @@ object Features {
   })
 
   case object AllowContextualConstructs extends AtomicFeature({
+    case Mod.Implicit() => true
+    case Mod.Using() => true
     case _ : Decl.Given => true
     case _ : Defn.Given => true
     case _ : Defn.GivenAlias => true
-    case _ : Importee.Given => true     // TODO here or in import?
-    case _ : Importee.GivenAll => true  // TODO here or in import?
-    case Mod.Implicit() => true
-    case Mod.Using() => true
+    case _ : Importee.Given => true
+    case _ : Importee.GivenAll => true
     case _ : Pat.Given => true
     case _ : Type.ImplicitFunction => true
     case _ : Term.ApplyUsing => true
