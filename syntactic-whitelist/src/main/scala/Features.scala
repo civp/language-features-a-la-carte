@@ -40,8 +40,8 @@ object Features {
   })
 
   case object AllowVals extends AtomicFeature({
-    case _ : Decl.Val => true
-    case _ : Defn.Val => true
+    case Decl.Val(modLs, _, _) => modLs.isEmpty  // no modifiers allowed
+    case Defn.Val(modLs, _, _, _) => modLs.isEmpty
     case _ : Pat.Var => true
     case _ : Term.Name => true
     case _ : Term.Anonymous => true
@@ -56,32 +56,28 @@ object Features {
   })
 
   case object AllowADTs extends AtomicFeature({
-    case _ : Case => true
-//    case _ : Ctor => true
-    case _ : Ctor.Primary => true
-    case Defn.Class((modifiersList, typeName, paramLs, primaryCtor, template)) => {
-      modifiersList.exists {
-        case Mod.Case() => true
+    case Defn.Class(modifiers, _, _, _, _) => modifiers.exists {
+      case Mod.Case() => true
+      case Mod.Sealed() => true
+      case _ => false
+    }
+    case Defn.Trait(modifiers, _, _, _, _) => {
+      modifiers.exists {
         case Mod.Sealed() => true
+        case _ => false
       }
     }
+    case _ : Defn.Object => true
+    case _ : Case => true
+    case _ : Ctor.Primary => true
     case _ : Defn.Enum => true
     case _ : Defn.EnumCase => true
-    case _ : Defn.Object => true
     case _ : Defn.RepeatedEnumCase => true
-    case Defn.Trait((modifiersLs, typeName, paramLs, primaryCtor, template)) => {
-      modifiersLs.exists {
-        case Mod.Sealed() => true
-      }
-    }
     case Mod.Abstract() => true
     case Mod.Case() => true
-    case Mod.Contravariant() => true
-    case Mod.Covariant() => true
     case Mod.Override() => true
-    case Mod.Private(ref) => true
     case Mod.Sealed() => true
-    case Mod.ValParam() => true   // TODO do we really want to allow that?
+    case Mod.ValParam() => true
     case _ : Pat.Tuple => true
     case _ : Pat.Typed => true
     case _ : Pat.Var => true
@@ -130,10 +126,12 @@ object Features {
     case _ : Type.Bounds => true
     case _ : Type.Match => true
     case _ : Type.Param => true
+    case Mod.Opaque() => true
   })
 
   case object AllowLaziness extends AtomicFeature({
     case _ : Type.ByName => true
+    case Mod.Lazy() => true
   })
 
 //  case object AllowRecursiveCalls extends AtomicFeature({
@@ -141,9 +139,10 @@ object Features {
 //  })
 
   private case object BasicOopAddition extends AtomicFeature({
+    case Mod.Private(_) => true
+    case Mod.Protected(_) => true
     case _ : Ctor.Secondary => true
     case _ : Defn.Class => true
-    case Mod.Protected(ref) => true
     case _ : Term.New => true
     case _ : Term.Super => true
     case _ : Term.This => true
@@ -157,6 +156,9 @@ object Features {
     case Mod.Open() => true
     case Mod.Transparent() => true
     case Mod.Super() => true
+    case Mod.Contravariant() => true
+    case Mod.Covariant() => true
+    case Mod.Transparent() => true
   })
 
   case object AllowBasicOop extends CompositeFeature(AllowADTs, BasicOopAddition)
@@ -186,13 +188,12 @@ object Features {
     case Mod.Implicit() => true
     case Mod.Using() => true
     case _ : Pat.Given => true
-    case _ : Type.ImplicitFunction => true  // TODO depreacted, keep it? Yes!
+    case _ : Type.ImplicitFunction => true
     case _ : Term.ApplyUsing => true
   })
 
   case object AllowExtensions extends AtomicFeature({
     case _ : Defn.ExtensionGroup => true
-
   })
 
   case object AllowMetaprogramming extends AtomicFeature({
@@ -210,7 +211,6 @@ object Features {
     case _ : Import => true
     case _ : Importee => true
     case _ : Importer => true
-
   })
 
   case object AllowExports extends AtomicFeature({
@@ -234,7 +234,15 @@ object Features {
 
   case object AllowAnnotations extends AtomicFeature({
     case _ : Term.Annotate => true
-    // TODO classes, traits, defs, vals with restrictions on modifiers
+    case _ : Mod.Annot => true
+  })
+
+  case object AllowInfixes extends AtomicFeature({
+    case Mod.Infix() => true
+  })
+
+  case object AllowInlines extends AtomicFeature({
+    case Mod.Inline() => true
   })
 
   /*
