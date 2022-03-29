@@ -35,8 +35,8 @@ object Features {
   })
 
   case object AllowVals extends AtomicFeature({
-    case Decl.Val(modLs, _, _) => modLs.isEmpty  // no modifiers allowed
-    case Defn.Val(modLs, _, _, _) => modLs.isEmpty
+    case _ : Decl.Val => true
+    case _ : Defn.Val => true
     case _ : Pat.Var => true
     case _ : Term.Name => true
     case _ : Term.Anonymous => true
