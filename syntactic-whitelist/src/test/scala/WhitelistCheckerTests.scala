@@ -187,6 +187,26 @@ class WhitelistCheckerTests {
       .expectInvalid(2 -> 2, 4 -> 2, 7 -> 1, 11 -> 2)
   }
 
+  @Test def AllowLaziness_should_allow_lazy_vals_and_args(): Unit = {
+    createTest(testController)
+      .onFile("Laziness")
+      .withFeatures(
+        Features.AllowVals,
+        Features.AllowDefs,
+        Features.AllowLiteralsAndExpressions,
+        Features.AllowLaziness
+      )
+      .expectValid()
+  }
+
+  @Test def laziness_should_be_rejected_when_not_allowed(): Unit = {
+    createTest(testController)
+      .onFile("Laziness")
+      .withFeatures(Features.ALL_FEATURES)
+      .exceptFeatures(Features.AllowLaziness)
+      .expectInvalid(2 -> 1, 3 -> 1)
+  }
+
 }
 
 object WhitelistCheckerTests {
