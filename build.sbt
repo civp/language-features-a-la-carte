@@ -16,9 +16,6 @@ lazy val syntactic = project
     )
   )
 
-lazy val testsShared = project
-  .in(file("tests/shared"))
-
 lazy val testsInput = project
   .in(file("tests/input"))
 
@@ -38,10 +35,7 @@ lazy val testsUnit = project
     ),
     Compile / compile / compileInputs := {
       (Compile / compile / compileInputs)
-        .dependsOn(
-          testsShared / Compile / compile,
-          testsInput / Compile / compile
-        )
+        .dependsOn(testsInput / Compile / compile)
         .value
     }
   )

@@ -1,7 +1,14 @@
-
-abstract class Example {
-  private var w: Int = 0
-  var y: Int
+/*
+noVar = true
+noWhile = true
+*/
+abstract class NoVarNoWhile {
+  private var w: Int = 0 /* assert: noVar
+          ^^^
+  var is blacklisted */
+  var y: Int /* assert: noVar
+  ^^^
+  var is blacklisted */
   val z: String
 
   def f(x: Int, y: Int): Int = 2*x+y+x*x*x
@@ -14,17 +21,25 @@ abstract class Example {
       }
     }
     else {
-      var x = 0
-      while (x < 1000){
+      var x = 0 /* assert: noVar
+      ^^^
+      var is diabled */
+      while (x < 1000){ /* assert: noWhile
+      ^^^^^
+      while is disabled */
         x = x + (2*x-5) % 15
         y = 2
-        while (y > -50){
+        while (y > -50){ /* assert: noWhile
+        ^^^^^
+        while is disabled */
           y = y - 1
           val p = null
           y = y + p.asInstanceOf[Int]
         }
       }
-      do {
+      do { /* assert: noWhile
+      ^^
+      while is disabled */
         y = y + 5
       } while (y < 0)
       y.toString
