@@ -26,7 +26,6 @@ object Features {
     case _ : Term.Tuple => true
     case _ : Type.Tuple => true
     case _ : ImportExportStat => true
-    case _ : Type => true
     case _ : Term.Ascribe => true
     case _ : Term.Repeated => true
   })
@@ -142,6 +141,7 @@ object Features {
     case _ : Type.Bounds => true
     case _ : Type.Match => true
     case _ : Type.Param => true
+    case _ : Type.Function => true
   })
 
   /**

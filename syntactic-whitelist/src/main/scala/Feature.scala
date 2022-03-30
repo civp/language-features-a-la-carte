@@ -13,7 +13,9 @@ object Feature {
   }
 
   abstract class AtomicFeature(checkPF: PartialFunction[Tree, Boolean]) extends Feature {
-    override def check(tree: Tree): Boolean = checkPF.applyOrElse(tree, (_: Tree) => false)
+    override def check(tree: Tree): Boolean = {
+      checkPF.applyOrElse(tree, (_: Tree) => false)
+    }
   }
 
 }

@@ -148,6 +148,45 @@ class WhitelistCheckerTests {
       .expectValid()
   }
 
+  @Test def AllowNull_should_allow_null(): Unit = {
+    createTest(testController)
+      .onFile("Nulls")
+      .withFeatures(
+        Features.AllowLiteralsAndExpressions,
+        Features.AllowVals,
+        Features.AllowNull
+      )
+      .expectValid()
+  }
+
+  @Test def nulls_should_be_rejected_when_not_allowed(): Unit = {
+    createTest(testController)
+      .onFile("Nulls")
+      .withFeatures(Features.ALL_FEATURES)
+      .exceptFeatures(Features.AllowNull)
+      .expectInvalid(1 -> 1, 2 -> 1, 4 -> 1)
+  }
+
+  @Test def AllowPolymorphicTypes_should_allow_polymorphic_types(): Unit = {
+    createTest(testController)
+      .onFile("Polymorphism")
+      .withFeatures(
+        Features.AllowLiteralsAndExpressions,
+        Features.AllowDefs,
+        Features.AllowBasicOop,
+        Features.AllowPolymorphicTypes
+      )
+      .expectValid()
+  }
+
+  @Test def polymorphic_types_should_be_rejected_when_not_allowed(): Unit = {
+    createTest(testController)
+      .onFile("Polymorphism")
+      .withFeatures(Features.ALL_FEATURES)
+      .exceptFeatures(Features.AllowPolymorphicTypes)
+      .expectInvalid(2 -> 2, 4 -> 2, 7 -> 1, 11 -> 2)
+  }
+
 }
 
 object WhitelistCheckerTests {
