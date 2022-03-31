@@ -423,6 +423,17 @@ class WhitelistCheckerTests {
       .expectInvalidAtLines(2)
   }
 
+  @Test def checker_should_support_classes_without_braces(): Unit = {
+    newTest
+      .onFile("NoBraces")
+      .withFeatures(
+        AllowLiteralsAndExpressions,
+        AllowBasicOop,
+        AllowDefs
+      )
+      .expectValid()
+  }
+
 }
 
 object WhitelistCheckerTests {
