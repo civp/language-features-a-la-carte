@@ -1,5 +1,5 @@
 import Checker.CheckResult
-import Checker.CheckResult.CompileError
+import Checker.CheckResult.ParsingError
 import org.junit.Assert.{assertEquals, assertTrue, fail}
 
 import java.util.StringJoiner
@@ -126,7 +126,7 @@ object TestRunner {
         throw new IllegalStateException("matcher set more than once")
       }
       this.matcher = Some {
-        case CompileError(cause) => throw cause
+        case ParsingError(cause) => throw cause
         case actual => assertEquals(expected, actual)
       }
       build().run()
@@ -140,7 +140,7 @@ object TestRunner {
       expectMatching {
         case CheckResult.Valid => fail("checker validated program but it should reject it")
         case invalid: CheckResult.Invalid => assertion(invalid)
-        case CheckResult.CompileError(e) => throw e
+        case CheckResult.ParsingError(e) => throw e
       }
     }
 
