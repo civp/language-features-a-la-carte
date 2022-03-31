@@ -25,7 +25,6 @@ object Features {
     case _ : Term.If => true
     case _ : Term.Tuple => true
     case _ : Type.Tuple => true
-    case _ : ImportExportStat => true
     case _ : Term.Ascribe => true
     case _ : Term.Repeated => true
   })
@@ -176,7 +175,6 @@ object Features {
     case Mod.Super() => true
     case Mod.Contravariant() => true
     case Mod.Covariant() => true
-    case Mod.Transparent() => true
   })
 
   /**
@@ -208,6 +206,7 @@ object Features {
     case _ : Term.Try => true
     case _ : Term.TryWithHandler => true
     case _ : Term.While => true
+    case _ : Pat.Var => true
   })
 
   /**
@@ -271,6 +270,9 @@ object Features {
    */
   case object AllowExports extends AtomicFeature({
     case _ : Export => true
+    case _ : Importee => true
+    case _ : Importer => true
+    case _ : Name.Indeterminate => true
   })
 
   /**
@@ -279,6 +281,7 @@ object Features {
   case object AllowXml extends AtomicFeature({
     case _ : Term.Xml => true
     case _ : Pat.Xml => true
+    case _ : Lit.String => true
   })
 
   /**

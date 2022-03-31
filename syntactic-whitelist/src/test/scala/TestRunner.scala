@@ -110,7 +110,7 @@ object TestRunner {
     /**
      * @param matcher function that will be called on the resulting CheckResult, in order to check its correctness
      */
-    def expectMatching(matcher: CheckResult => Unit): Unit = {
+    private def expectMatching(matcher: CheckResult => Unit): Unit = {
       if (this.matcher.isDefined){
         throw new IllegalStateException("matcher set more than once")
       }
@@ -172,6 +172,12 @@ object TestRunner {
     }
 
     def expectInvalid(expectedViolations: (Int, Int)*): Unit = expectInvalid(expectedViolations.toMap)
+
+    def expectInvalidAtLines(expectedViolationLines: Int*): Unit = {
+      val expectedViolationsAsMap =
+        (for (line <- expectedViolationLines) yield line -> expectedViolationLines.count(_ == line)).toMap
+      expectInvalid(expectedViolationsAsMap)
+    }
 
     /**
      * @return an instance of TestRunner with the provided test execution steps
