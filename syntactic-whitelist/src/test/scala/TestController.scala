@@ -7,7 +7,7 @@ import scala.collection.mutable
  * instantiated or run() was never called.
  *
  * The test class should define a TestController as a class attribute, pass it to each TestRunner that is instantiated
- * and call assertEmpty when all tests have been executed (e.g. using @AfterClass)
+ * and call assertEmpty when all tests have been executed (using @AfterClass)
  */
 class TestController {
   private val allTestIds = mutable.Map[Int, String]()
@@ -28,7 +28,7 @@ class TestController {
   }
 
   /**
-   * Checks that all registered tests have been unregistered
+   * Checks that all registered tests have been unregistered (i.e. executed)
    */
   def assertEmpty(): Unit = {
     if (allTestIds.nonEmpty) {
