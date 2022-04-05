@@ -26,8 +26,7 @@ class WhitelistCheckerTests {
   @Test def vals_should_be_rejected_when_not_allowed(): Unit = {
     createTest(testController)
       .onFile("Vals")
-      .withFeatures(ALL_FEATURES)
-      .exceptFeatures(Vals)
+      .withAllFeaturesExcept(Vals)
       .expectInvalid(2 -> 1, 3 -> 1, 4 -> 1, 5 -> 1, 6 -> 1)
   }
 
@@ -44,8 +43,7 @@ class WhitelistCheckerTests {
   @Test def defs_should_be_rejected_when_not_allowed(): Unit = {
     createTest(testController)
       .onFile("Defs")
-      .withFeatures(ALL_FEATURES)
-      .exceptFeatures(Defs)
+      .withAllFeaturesExcept(Defs)
       .expectInvalid(2 -> 1, 3 -> 1)
   }
 
@@ -62,8 +60,7 @@ class WhitelistCheckerTests {
   @Test def ADTs_should_be_rejected_when_not_allowed(): Unit = {
     createTest(testController)
       .onFile("ADTs")
-      .withFeatures(ALL_FEATURES)
-      .exceptFeatures(
+      .withAllFeaturesExcept(
         ADTs,
         BasicOop,
         AdvancedOop
@@ -103,8 +100,7 @@ class WhitelistCheckerTests {
     createTest(testController)
       .onFile("LiteralFunctions")
       .withDialect(dialects.Sbt1)
-      .withFeatures(ALL_FEATURES)
-      .exceptFeatures(LiteralFunctions)
+      .withAllFeaturesExcept(LiteralFunctions)
       .expectInvalid(2 -> 1, 3 -> 1, 4 -> 2, 5 -> 1, 6 -> 3, 7 -> 1)
   }
 
@@ -122,8 +118,7 @@ class WhitelistCheckerTests {
   @Test def for_expressions_should_be_rejected_when_not_allowed(): Unit = {
     createTest(testController)
       .onFile("Fors")
-      .withFeatures(ALL_FEATURES)
-      .exceptFeatures(ForExpr)
+      .withAllFeaturesExcept(ForExpr)
       .expectInvalid(3 -> 2, 4 -> 2, 5 -> 2)
   }
 
@@ -137,8 +132,7 @@ class WhitelistCheckerTests {
   @Test def imports_should_be_rejected_when_not_allowed(): Unit = {
     createTest(testController)
       .onFile("ImportOnly")
-      .withFeatures(ALL_FEATURES)
-      .exceptFeatures(Imports)
+      .withAllFeaturesExcept(Imports)
       .expectInvalid(1 -> 1)
   }
 
@@ -163,8 +157,7 @@ class WhitelistCheckerTests {
   @Test def nulls_should_be_rejected_when_not_allowed(): Unit = {
     createTest(testController)
       .onFile("Nulls")
-      .withFeatures(ALL_FEATURES)
-      .exceptFeatures(Nulls)
+      .withAllFeaturesExcept(Nulls)
       .expectInvalid(1 -> 1, 2 -> 1, 4 -> 1)
   }
 
@@ -183,8 +176,7 @@ class WhitelistCheckerTests {
   @Test def polymorphic_types_should_be_rejected_when_not_allowed(): Unit = {
     createTest(testController)
       .onFile("Polymorphism")
-      .withFeatures(ALL_FEATURES)
-      .exceptFeatures(PolymorphicTypes)
+      .withAllFeaturesExcept(PolymorphicTypes)
       .expectInvalid(2 -> 2, 4 -> 2, 7 -> 1, 11 -> 2)
   }
 
@@ -203,8 +195,7 @@ class WhitelistCheckerTests {
   @Test def laziness_should_be_rejected_when_not_allowed(): Unit = {
     createTest(testController)
       .onFile("Laziness")
-      .withFeatures(ALL_FEATURES)
-      .exceptFeatures(Laziness)
+      .withAllFeaturesExcept(Laziness)
       .expectInvalidAtLines(2, 3)
   }
 
@@ -222,8 +213,7 @@ class WhitelistCheckerTests {
   @Test def advanced_oop_constructs_should_be_rejected_when_not_allowed(): Unit = {
     createTest(testController)
       .onFile("AdvancedOOP")
-      .withFeatures(ALL_FEATURES)
-      .exceptFeatures(AdvancedOop)
+      .withAllFeaturesExcept(AdvancedOop)
       .expectInvalidAtLines(2, 6, 10)
   }
   
@@ -243,8 +233,7 @@ class WhitelistCheckerTests {
     createTest(testController)
       .onFile("Imperative")
       .withDialect(dialects.Sbt1)
-      .withFeatures(ALL_FEATURES)
-      .exceptFeatures(ImperativeConstructs)
+      .withAllFeaturesExcept(ImperativeConstructs)
       .expectInvalidAtLines(2, 3, 5, 7, 8, 14, 15, 18)
   }
 
@@ -263,8 +252,7 @@ class WhitelistCheckerTests {
   @Test def contextual_constructs_should_be_rejected_when_not_allowed(): Unit = {
     createTest(testController)
       .onFile("Contextual")
-      .withFeatures(ALL_FEATURES)
-      .exceptFeatures(ContextualConstructs)
+      .withAllFeaturesExcept(ContextualConstructs)
       .expectInvalidAtLines(3, 6, 8)
   }
 
@@ -282,8 +270,7 @@ class WhitelistCheckerTests {
   @Test def extensions_should_be_rejected_when_not_allowed(): Unit = {
     createTest(testController)
       .onFile("Extensions")
-      .withFeatures(ALL_FEATURES)
-      .exceptFeatures(Extensions)
+      .withAllFeaturesExcept(Extensions)
       .expectInvalidAtLines(2)
   }
 
@@ -303,8 +290,7 @@ class WhitelistCheckerTests {
   @Test def metaprogramming_should_be_rejected_when_not_allowed(): Unit = {
     createTest(testController)
       .onFile("Metaprogramming")
-      .withFeatures(ALL_FEATURES)
-      .exceptFeatures(Metaprogramming)
+      .withAllFeaturesExcept(Metaprogramming)
       .expectInvalid(5 -> 3)
   }
 
@@ -323,8 +309,7 @@ class WhitelistCheckerTests {
   @Test def exports_should_be_rejected_when_not_allowed(): Unit = {
     createTest(testController)
       .onFile("Export")
-      .withFeatures(ALL_FEATURES)
-      .exceptFeatures(Exports)
+      .withAllFeaturesExcept(Exports)
       .expectInvalidAtLines(7)
   }
 
@@ -341,8 +326,7 @@ class WhitelistCheckerTests {
   @Test def xml_should_be_rejected_when_not_allowed(): Unit = {
     createTest(testController)
       .onFile("Xml")
-      .withFeatures(ALL_FEATURES)
-      .exceptFeatures(Xml)
+      .withAllFeaturesExcept(Xml)
       .expectInvalidAtLines(2, 3)
   }
 
@@ -360,8 +344,7 @@ class WhitelistCheckerTests {
   @Test def string_interpolation_should_be_rejected_when_not_allowed(): Unit = {
     createTest(testController)
       .onFile("StringInterpolation")
-      .withFeatures(ALL_FEATURES)
-      .exceptFeatures(StringInterpolation)
+      .withAllFeaturesExcept(StringInterpolation)
       .expectInvalid(3 -> 1, 4 -> 1, 6 -> 3)
   }
 
@@ -380,8 +363,7 @@ class WhitelistCheckerTests {
   @Test def annotations_should_be_rejected_when_not_allowed(): Unit = {
     createTest(testController)
       .onFile("Annotations")
-      .withFeatures(ALL_FEATURES)
-      .exceptFeatures(Annotations)
+      .withAllFeaturesExcept(Annotations)
       .expectInvalidAtLines(2, 5, 7, 8, 11)
   }
 
@@ -399,8 +381,7 @@ class WhitelistCheckerTests {
   @Test def infixes_should_be_rejected_when_not_allowed(): Unit = {
     createTest(testController)
       .onFile("Infixes")
-      .withFeatures(ALL_FEATURES)
-      .exceptFeatures(Infixes)
+      .withAllFeaturesExcept(Infixes)
       .expectInvalidAtLines(2)
   }
 
@@ -418,8 +399,7 @@ class WhitelistCheckerTests {
   @Test def inlines_should_be_rejected_when_not_allowed(): Unit = {
     createTest(testController)
       .onFile("Inlines")
-      .withFeatures(ALL_FEATURES)
-      .exceptFeatures(Inlines)
+      .withAllFeaturesExcept(Inlines)
       .expectInvalidAtLines(2)
   }
 
