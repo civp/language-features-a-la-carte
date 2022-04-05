@@ -18,7 +18,7 @@ class Checker private(allowedFeatures: List[Feature]) {
    * @return Some[Violation] if a violation was found, None o.w.
    */
   def checkTree(tree: Tree): Option[Violation] = {
-    if (allAllowedFeatures.exists(_.check(tree))) None
+    if (allAllowedFeatures.exists(_.allows(tree))) None
     else Some(Violation(tree))
   }
 

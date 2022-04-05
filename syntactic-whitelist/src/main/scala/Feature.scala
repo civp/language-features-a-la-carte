@@ -10,7 +10,7 @@ trait Feature {
    * @param tree the tree to check
    * @return true iff it is allowed
    */
-  def check(tree: Tree): Boolean
+  def allows(tree: Tree): Boolean
 
 }
 
@@ -22,7 +22,7 @@ object Feature {
    * @param features the features to allow
    */
   class CompositeFeature(features: Feature*) extends Feature {
-    override def check(tree: Tree): Boolean = features.exists(_.check(tree))
+    override def allows(tree: Tree): Boolean = features.exists(_.allows(tree))
   }
 
   /**
@@ -31,7 +31,7 @@ object Feature {
    *                (or return false on them, but this is not necessary)
    */
   abstract class AtomicFeature(checkPF: PartialFunction[Tree, Boolean]) extends Feature {
-    override def check(tree: Tree): Boolean = {
+    override def allows(tree: Tree): Boolean = {
       checkPF.applyOrElse(tree, (_: Tree) => false)
     }
   }
