@@ -25,8 +25,8 @@ class TestRunner private(matcher: CheckResult => Unit, filename: String, feature
   // To be called once everything is set up
   private def run(): Unit = {
     testController.unregisterTest(uid)
-    val checker = Checker(dialect, features)
-    val actualRes = checker.checkFile(s"$TEST_RES_DIR/$filename.$TEST_FILES_EXT")
+    val checker = Checker(features)
+    val actualRes = checker.checkFile(dialect, s"$TEST_RES_DIR/$filename.$TEST_FILES_EXT")
     matcher(actualRes)
   }
 

@@ -8,7 +8,7 @@ import scala.util.{Failure, Success, Try, Using}
 /**
  * A checker to enforce the features specification
  */
-class Checker private(dialect: Dialect, allowedFeatures: List[Feature]) {
+class Checker private(allowedFeatures: List[Feature]) {
   import Checker.AlwaysAllowed
   private val allAllowedFeatures = AlwaysAllowed :: allowedFeatures
 
@@ -35,10 +35,11 @@ class Checker private(dialect: Dialect, allowedFeatures: List[Feature]) {
 
   /**
    * Check whether the input program (as a string) uses only allowed features
+   * @param dialect the Scala dialect that the parsing should use
    * @param sourceCode the string to be checked
    * @return a CheckResult (Valid, Invalid or ParsingError)
    */
-  def checkCodeString(sourceCode: String): CheckResult = {
+  def checkCodeString(dialect: Dialect, sourceCode: String): CheckResult = {
     val inputWithDialect = dialect(sourceCode)
     Try {
       inputWithDialect.parse[Source].get
@@ -51,14 +52,15 @@ class Checker private(dialect: Dialect, allowedFeatures: List[Feature]) {
 
   /**
    * Check whether the program contained in the file with the given filename uses only allowed features
+   * @param dialect the Scala dialect that the parsing should use
    * @param filename the name of the file containing the program to be checked
    * @return a CheckResult (Valid, Invalid or ParsingError)
    */
-  def checkFile(filename: String): CheckResult = {
+  def checkFile(dialect: Dialect, filename: String): CheckResult = {
     val content = Using(scala.io.Source.fromFile(filename)) { bufferedSource =>
       bufferedSource.getLines().mkString("\n")
     }
-    content.map(checkCodeString) match {
+    content.map(checkCodeString(dialect, _)) match {
       case Failure(exception) => CheckResult.ParsingError(exception)
       case Success(checkRes) => checkRes
     }
@@ -69,16 +71,14 @@ class Checker private(dialect: Dialect, allowedFeatures: List[Feature]) {
 object Checker {
 
   /**
-   * @param dialect the Scala dialect that the parsing should use
    * @param features the features that are allowed in the programs to be checked
    */
-  def apply(dialect: Dialect, features: List[Feature]): Checker = new Checker(dialect, features)
+  def apply(features: List[Feature]): Checker = new Checker(features)
 
   /**
-   * @param dialect the Scala dialect that the parsing should use
    * @param features the features that are allowed in the programs to be checked
    */
-  def apply(dialect: Dialect, feature: Feature, features: Feature*): Checker = new Checker(dialect, feature :: features.toList)
+  def apply(feature: Feature, features: Feature*): Checker = new Checker(feature :: features.toList)
 
   /**
    * A violation detected by the checker
