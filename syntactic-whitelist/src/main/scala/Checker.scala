@@ -1,7 +1,7 @@
-import Checker._
+import Checker.{CheckResult, Violation}
 import Feature.AtomicFeature
 
-import scala.meta._
+import scala.meta.{Dialect, Init, Name, Self, Source, Template, Term, Tree, Type}
 import scala.util.{Failure, Success, Using}
 
 /**

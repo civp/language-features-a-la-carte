@@ -1,4 +1,4 @@
-import Feature._
+import Feature.{AtomicFeature, CompositeFeature}
 
 import scala.meta._
 
