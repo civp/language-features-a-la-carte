@@ -17,7 +17,7 @@ class Checker private(dialect: Dialect, allowedFeatures: List[Feature]) {
    * @return Some[Violation] if a violation was found, None o.w.
    */
   def checkTree(tree: Tree): Option[Violation] = {
-    if (allAllowedFeatures.exists(ft => ft.check(tree))) None
+    if (allAllowedFeatures.exists(_.check(tree))) None
     else Some(Violation(tree))
   }
 
@@ -27,7 +27,7 @@ class Checker private(dialect: Dialect, allowedFeatures: List[Feature]) {
    * @return a CheckResult (Valid, Invalid or ParsingError)
    */
   def checkSource(src: Source): CheckResult = {
-    val violations = src.collect((t: Tree) => checkTree(t)).flatten
+    val violations = src.collect((tree: Tree) => checkTree(tree)).flatten
     if (violations.isEmpty) CheckResult.Valid
     else CheckResult.Invalid(violations)
   }
