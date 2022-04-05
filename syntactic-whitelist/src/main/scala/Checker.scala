@@ -84,11 +84,8 @@ object Checker {
    * A violation detected by the checker
    * @param tree the tree on which the violation happened
    */
-  case class Violation private(tree: Tree){
+  case class Violation(tree: Tree){
     override def toString: String = s"Violation($tree, ${tree.getClass})"
-  }
-  object Violation {
-    def apply(tree: Tree): Violation = new Violation(tree)
   }
 
   /**
