@@ -2,7 +2,8 @@ import Checker.{CheckResult, Violation}
 import Feature.AtomicFeature
 
 import scala.meta.{Dialect, Init, Name, Self, Source, Template, Term, Tree, Type}
-import scala.util.{Failure, Success, Using}
+import scala.util.control.NonFatal
+import scala.util.{Failure, Success, Try, Using}
 
 /**
  * A checker to enforce the features specification
@@ -38,11 +39,13 @@ class Checker private(dialect: Dialect, allowedFeatures: List[Feature]) {
    * @return a CheckResult (Valid, Invalid or ParsingError)
    */
   def checkCodeString(sourceCode: String): CheckResult = {
-    try {
-      val source = dialect(sourceCode).parse[Source].get
-      checkSource(source)
-    } catch {
-      case e: Throwable => CheckResult.ParsingError(e)
+    val inputWithDialect = dialect(sourceCode)
+    Try {
+      inputWithDialect.parse[Source].get
+    } match {
+      case Success(source) => checkSource(source)
+      case Failure(NonFatal(throwable)) => CheckResult.ParsingError(throwable)
+      case Failure(fatal) => throw fatal
     }
   }
 
