@@ -1,5 +1,5 @@
 import Checker.{CheckResult, Violation}
-import Feature.AtomicFeature
+import Feature.{AtomicFeature, CompositeFeature}
 
 import scala.meta.{Dialect, Init, Name, Self, Source, Template, Term, Tree, Type}
 import scala.util.control.NonFatal
@@ -10,7 +10,7 @@ import scala.util.{Failure, Success, Try, Using}
  */
 class Checker private(allowedFeatures: List[Feature]) {
   import Checker.AlwaysAllowed
-  private val groupedFeature = Feature.CompositeFeature(AlwaysAllowed :: allowedFeatures)
+  private val groupedFeature = new CompositeFeature(AlwaysAllowed :: allowedFeatures)
 
   /**
    * Check whether the input tree uses only allowed features

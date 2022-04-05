@@ -324,7 +324,7 @@ object Features {
   Term.Ref
    */
 
-  val ALL_FEATURES: List[Feature] = List(
+  val all: List[Feature] = List(
     LiteralsAndExpressions,
     Nulls,
     Vals,

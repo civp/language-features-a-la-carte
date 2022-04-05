@@ -418,7 +418,7 @@ class WhitelistCheckerTests {
   @Test def checker_correctly_reports_parsing_error(): Unit = {
     createTest(testController)
       .onFile("Erroneous")
-      .withFeatures(ALL_FEATURES)
+      .withFeatures(all)
       .expectParsingError(classOf[ParseException])
   }
 

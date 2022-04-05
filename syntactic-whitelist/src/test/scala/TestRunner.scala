@@ -114,7 +114,7 @@ object TestRunner {
      * @param _features features that the Checker should allow
      */
     def withAllFeaturesExcept(_features: Feature*): Builder = {
-      this.features.addAll(Features.ALL_FEATURES.filter(!_features.contains(_)))
+      this.features.addAll(Features.all.filter(!_features.contains(_)))
       this
     }
 

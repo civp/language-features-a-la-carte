@@ -21,7 +21,8 @@ object Feature {
    * A composite feature allows a tree iff at least one of the underlying features accepts it
    * @param features the features to allow
    */
-  case class CompositeFeature(features: Feature*) extends Feature {
+  class CompositeFeature(features: List[Feature]) extends Feature {
+    def this(features: Feature*) = this(features.toList)
     override def allows(tree: Tree): Boolean = features.exists(_.allows(tree))
   }
 
