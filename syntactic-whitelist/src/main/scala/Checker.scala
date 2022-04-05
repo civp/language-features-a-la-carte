@@ -10,7 +10,7 @@ import scala.util.{Failure, Success, Try, Using}
  */
 class Checker private(allowedFeatures: List[Feature]) {
   import Checker.AlwaysAllowed
-  private val allAllowedFeatures = AlwaysAllowed :: allowedFeatures
+  private val groupedFeature = Feature.CompositeFeature(AlwaysAllowed :: allowedFeatures)
 
   /**
    * Check whether the input tree uses only allowed features
@@ -18,7 +18,7 @@ class Checker private(allowedFeatures: List[Feature]) {
    * @return Some[Violation] if a violation was found, None o.w.
    */
   def checkTree(tree: Tree): Option[Violation] = {
-    if (allAllowedFeatures.exists(_.allows(tree))) None
+    if (groupedFeature.allows(tree)) None
     else Some(Violation(tree))
   }
 
