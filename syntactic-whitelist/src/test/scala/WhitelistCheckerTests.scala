@@ -10,7 +10,7 @@ class WhitelistCheckerTests {
   @Test def allowLiteralsAndExpressions_should_allow_literals(): Unit = {
     createTest(testController)
       .onFile("LiteralsOnly")
-      .withFeatures(AllowLiteralsAndExpressions)
+      .withFeatures(LiteralsAndExpressions)
       .withDialect(dialects.Sbt1)
       .expectValid()
   }
@@ -18,7 +18,7 @@ class WhitelistCheckerTests {
   @Test def allowLiteralsAndExpressions_should_allow_literals_and_expressions(): Unit = {
     createTest(testController)
       .onFile("LiteralsAndExpressions")
-      .withFeatures(AllowLiteralsAndExpressions)
+      .withFeatures(LiteralsAndExpressions)
       .withDialect(dialects.Sbt1)
       .expectValid()
   }
@@ -27,7 +27,7 @@ class WhitelistCheckerTests {
     createTest(testController)
       .onFile("Vals")
       .withFeatures(ALL_FEATURES)
-      .exceptFeatures(AllowVals)
+      .exceptFeatures(Vals)
       .expectInvalid(2 -> 1, 3 -> 1, 4 -> 1, 5 -> 1, 6 -> 1)
   }
 
@@ -35,8 +35,8 @@ class WhitelistCheckerTests {
     createTest(testController)
       .onFile("Vals")
       .withFeatures(
-        AllowLiteralsAndExpressions,
-        AllowVals
+        LiteralsAndExpressions,
+        Vals
       )
       .expectValid()
   }
@@ -45,7 +45,7 @@ class WhitelistCheckerTests {
     createTest(testController)
       .onFile("Defs")
       .withFeatures(ALL_FEATURES)
-      .exceptFeatures(AllowDefs)
+      .exceptFeatures(Defs)
       .expectInvalid(2 -> 1, 3 -> 1)
   }
 
@@ -53,8 +53,8 @@ class WhitelistCheckerTests {
     createTest(testController)
       .onFile("ADTs")
       .withFeatures(
-        AllowLiteralsAndExpressions,
-        AllowADTs
+        LiteralsAndExpressions,
+        ADTs
       )
       .expectValid()
   }
@@ -64,9 +64,9 @@ class WhitelistCheckerTests {
       .onFile("ADTs")
       .withFeatures(ALL_FEATURES)
       .exceptFeatures(
-        AllowADTs,
-        AllowBasicOop,
-        AllowAdvancedOop
+        ADTs,
+        BasicOop,
+        AdvancedOop
       )
       .expectInvalid(2 -> 2, 4 -> 1, 5 -> 3, 6 -> 3,
         3 -> 1  // FIXME weird behavior of Scalameta on a trait without body
@@ -76,14 +76,14 @@ class WhitelistCheckerTests {
   @Test def AllowADTs_should_not_allow_sealed_trait_with_non_case_class(): Unit = {
     createTest(testController)
       .onFile("NotSoADT")
-      .withFeatures(AllowADTs)
+      .withFeatures(ADTs)
       .expectInvalid(2 -> 1, 3 -> 1)
   }
 
   @Test def allowBasicOop_should_allow_sealed_trait_with_non_case_class(): Unit = {
     createTest(testController)
       .onFile("NotSoADT")
-      .withFeatures(AllowBasicOop)
+      .withFeatures(BasicOop)
       .expectValid()
   }
 
@@ -92,9 +92,9 @@ class WhitelistCheckerTests {
       .onFile("LiteralFunctions")
       .withDialect(dialects.Sbt1)
       .withFeatures(
-        AllowLiteralFunctions,
-        AllowLiteralsAndExpressions,
-        AllowVals
+        LiteralFunctions,
+        LiteralsAndExpressions,
+        Vals
       )
       .expectValid()
   }
@@ -104,7 +104,7 @@ class WhitelistCheckerTests {
       .onFile("LiteralFunctions")
       .withDialect(dialects.Sbt1)
       .withFeatures(ALL_FEATURES)
-      .exceptFeatures(AllowLiteralFunctions)
+      .exceptFeatures(LiteralFunctions)
       .expectInvalid(2 -> 1, 3 -> 1, 4 -> 2, 5 -> 1, 6 -> 3, 7 -> 1)
   }
 
@@ -112,9 +112,9 @@ class WhitelistCheckerTests {
     createTest(testController)
       .onFile("Fors")
       .withFeatures(
-        AllowLiteralsAndExpressions,
-        AllowDefs,
-        AllowForExpr
+        LiteralsAndExpressions,
+        Defs,
+        ForExpr
       )
       .expectValid()
   }
@@ -123,14 +123,14 @@ class WhitelistCheckerTests {
     createTest(testController)
       .onFile("Fors")
       .withFeatures(ALL_FEATURES)
-      .exceptFeatures(AllowForExpr)
+      .exceptFeatures(ForExpr)
       .expectInvalid(3 -> 2, 4 -> 2, 5 -> 2)
   }
 
   @Test def AllowImports_should_allow_imports(): Unit = {
     createTest(testController)
       .onFile("ImportOnly")
-      .withFeatures(AllowImports)
+      .withFeatures(Imports)
       .expectValid()
   }
 
@@ -138,14 +138,14 @@ class WhitelistCheckerTests {
     createTest(testController)
       .onFile("ImportOnly")
       .withFeatures(ALL_FEATURES)
-      .exceptFeatures(AllowImports)
+      .exceptFeatures(Imports)
       .expectInvalid(1 -> 1)
   }
 
   @Test def AllowPackages_should_allow_packages(): Unit = {
     createTest(testController)
       .onFile("PackageOnly")
-      .withFeatures(AllowPackages)
+      .withFeatures(Packages)
       .expectValid()
   }
 
@@ -153,9 +153,9 @@ class WhitelistCheckerTests {
     createTest(testController)
       .onFile("Nulls")
       .withFeatures(
-        AllowLiteralsAndExpressions,
-        AllowVals,
-        AllowNull
+        LiteralsAndExpressions,
+        Vals,
+        Nulls
       )
       .expectValid()
   }
@@ -164,7 +164,7 @@ class WhitelistCheckerTests {
     createTest(testController)
       .onFile("Nulls")
       .withFeatures(ALL_FEATURES)
-      .exceptFeatures(AllowNull)
+      .exceptFeatures(Nulls)
       .expectInvalid(1 -> 1, 2 -> 1, 4 -> 1)
   }
 
@@ -172,10 +172,10 @@ class WhitelistCheckerTests {
     createTest(testController)
       .onFile("Polymorphism")
       .withFeatures(
-        AllowLiteralsAndExpressions,
-        AllowDefs,
-        AllowBasicOop,
-        AllowPolymorphicTypes
+        LiteralsAndExpressions,
+        Defs,
+        BasicOop,
+        PolymorphicTypes
       )
       .expectValid()
   }
@@ -184,7 +184,7 @@ class WhitelistCheckerTests {
     createTest(testController)
       .onFile("Polymorphism")
       .withFeatures(ALL_FEATURES)
-      .exceptFeatures(AllowPolymorphicTypes)
+      .exceptFeatures(PolymorphicTypes)
       .expectInvalid(2 -> 2, 4 -> 2, 7 -> 1, 11 -> 2)
   }
 
@@ -192,10 +192,10 @@ class WhitelistCheckerTests {
     createTest(testController)
       .onFile("Laziness")
       .withFeatures(
-        AllowVals,
-        AllowDefs,
-        AllowLiteralsAndExpressions,
-        AllowLaziness
+        Vals,
+        Defs,
+        LiteralsAndExpressions,
+        Laziness
       )
       .expectValid()
   }
@@ -204,7 +204,7 @@ class WhitelistCheckerTests {
     createTest(testController)
       .onFile("Laziness")
       .withFeatures(ALL_FEATURES)
-      .exceptFeatures(AllowLaziness)
+      .exceptFeatures(Laziness)
       .expectInvalidAtLines(2, 3)
   }
 
@@ -212,9 +212,9 @@ class WhitelistCheckerTests {
     createTest(testController)
       .onFile("AdvancedOOP")
       .withFeatures(
-        AllowLiteralsAndExpressions,
-        AllowAdvancedOop,
-        AllowDefs
+        LiteralsAndExpressions,
+        AdvancedOop,
+        Defs
       )
       .expectValid()
   }
@@ -223,7 +223,7 @@ class WhitelistCheckerTests {
     createTest(testController)
       .onFile("AdvancedOOP")
       .withFeatures(ALL_FEATURES)
-      .exceptFeatures(AllowAdvancedOop)
+      .exceptFeatures(AdvancedOop)
       .expectInvalidAtLines(2, 6, 10)
   }
   
@@ -232,9 +232,9 @@ class WhitelistCheckerTests {
       .onFile("Imperative")
       .withDialect(dialects.Sbt1)
       .withFeatures(
-        AllowLiteralsAndExpressions,
-        AllowDefs,
-        AllowImperativeConstructs
+        LiteralsAndExpressions,
+        Defs,
+        ImperativeConstructs
       )
       .expectValid()
   }
@@ -244,7 +244,7 @@ class WhitelistCheckerTests {
       .onFile("Imperative")
       .withDialect(dialects.Sbt1)
       .withFeatures(ALL_FEATURES)
-      .exceptFeatures(AllowImperativeConstructs)
+      .exceptFeatures(ImperativeConstructs)
       .expectInvalidAtLines(2, 3, 5, 7, 8, 14, 15, 18)
   }
 
@@ -252,10 +252,10 @@ class WhitelistCheckerTests {
     createTest(testController)
       .onFile("Contextual")
       .withFeatures(
-        AllowLiteralsAndExpressions,
-        AllowDefs,
-        AllowContextualConstructs,
-        AllowPolymorphicTypes
+        LiteralsAndExpressions,
+        Defs,
+        ContextualConstructs,
+        PolymorphicTypes
       )
       .expectValid()
   }
@@ -264,7 +264,7 @@ class WhitelistCheckerTests {
     createTest(testController)
       .onFile("Contextual")
       .withFeatures(ALL_FEATURES)
-      .exceptFeatures(AllowContextualConstructs)
+      .exceptFeatures(ContextualConstructs)
       .expectInvalidAtLines(3, 6, 8)
   }
 
@@ -272,9 +272,9 @@ class WhitelistCheckerTests {
     createTest(testController)
       .onFile("Extensions")
       .withFeatures(
-        AllowLiteralsAndExpressions,
-        AllowDefs,
-        AllowExtensions
+        LiteralsAndExpressions,
+        Defs,
+        Extensions
       )
       .expectValid()
   }
@@ -283,7 +283,7 @@ class WhitelistCheckerTests {
     createTest(testController)
       .onFile("Extensions")
       .withFeatures(ALL_FEATURES)
-      .exceptFeatures(AllowExtensions)
+      .exceptFeatures(Extensions)
       .expectInvalidAtLines(2)
   }
 
@@ -291,11 +291,11 @@ class WhitelistCheckerTests {
     createTest(testController)
       .onFile("Metaprogramming")
       .withFeatures(
-        AllowLiteralsAndExpressions,
-        AllowDefs,
-        AllowContextualConstructs,
-        AllowPolymorphicTypes,
-        AllowMetaprogramming
+        LiteralsAndExpressions,
+        Defs,
+        ContextualConstructs,
+        PolymorphicTypes,
+        Metaprogramming
       )
       .expectValid()
   }
@@ -304,7 +304,7 @@ class WhitelistCheckerTests {
     createTest(testController)
       .onFile("Metaprogramming")
       .withFeatures(ALL_FEATURES)
-      .exceptFeatures(AllowMetaprogramming)
+      .exceptFeatures(Metaprogramming)
       .expectInvalid(5 -> 3)
   }
 
@@ -312,10 +312,10 @@ class WhitelistCheckerTests {
     createTest(testController)
       .onFile("Export")
       .withFeatures(
-        AllowLiteralsAndExpressions,
-        AllowBasicOop,
-        AllowDefs,
-        AllowExports
+        LiteralsAndExpressions,
+        BasicOop,
+        Defs,
+        Exports
       )
       .expectValid()
   }
@@ -324,7 +324,7 @@ class WhitelistCheckerTests {
     createTest(testController)
       .onFile("Export")
       .withFeatures(ALL_FEATURES)
-      .exceptFeatures(AllowExports)
+      .exceptFeatures(Exports)
       .expectInvalidAtLines(7)
   }
 
@@ -332,8 +332,8 @@ class WhitelistCheckerTests {
     createTest(testController)
       .onFile("Xml")
       .withFeatures(
-        AllowVals,
-        AllowXml
+        Vals,
+        Xml
       )
       .expectValid()
   }
@@ -342,7 +342,7 @@ class WhitelistCheckerTests {
     createTest(testController)
       .onFile("Xml")
       .withFeatures(ALL_FEATURES)
-      .exceptFeatures(AllowXml)
+      .exceptFeatures(Xml)
       .expectInvalidAtLines(2, 3)
   }
 
@@ -350,9 +350,9 @@ class WhitelistCheckerTests {
     createTest(testController)
       .onFile("StringInterpolation")
       .withFeatures(
-        AllowLiteralsAndExpressions,
-        AllowVals,
-        AllowStringInterpolation
+        LiteralsAndExpressions,
+        Vals,
+        StringInterpolation
       )
       .expectValid()
   }
@@ -361,7 +361,7 @@ class WhitelistCheckerTests {
     createTest(testController)
       .onFile("StringInterpolation")
       .withFeatures(ALL_FEATURES)
-      .exceptFeatures(AllowStringInterpolation)
+      .exceptFeatures(StringInterpolation)
       .expectInvalid(3 -> 1, 4 -> 1, 6 -> 3)
   }
 
@@ -369,10 +369,10 @@ class WhitelistCheckerTests {
     createTest(testController)
       .onFile("Annotations")
       .withFeatures(
-        AllowLiteralsAndExpressions,
-        AllowDefs,
-        AllowBasicOop,
-        AllowAnnotations
+        LiteralsAndExpressions,
+        Defs,
+        BasicOop,
+        Annotations
       )
       .expectValid()
   }
@@ -381,7 +381,7 @@ class WhitelistCheckerTests {
     createTest(testController)
       .onFile("Annotations")
       .withFeatures(ALL_FEATURES)
-      .exceptFeatures(AllowAnnotations)
+      .exceptFeatures(Annotations)
       .expectInvalidAtLines(2, 5, 7, 8, 11)
   }
 
@@ -389,9 +389,9 @@ class WhitelistCheckerTests {
     createTest(testController)
       .onFile("Infixes")
       .withFeatures(
-        AllowDefs,
-        AllowLiteralsAndExpressions,
-        AllowInfixes
+        Defs,
+        LiteralsAndExpressions,
+        Infixes
       )
       .expectValid()
   }
@@ -400,7 +400,7 @@ class WhitelistCheckerTests {
     createTest(testController)
       .onFile("Infixes")
       .withFeatures(ALL_FEATURES)
-      .exceptFeatures(AllowInfixes)
+      .exceptFeatures(Infixes)
       .expectInvalidAtLines(2)
   }
 
@@ -408,9 +408,9 @@ class WhitelistCheckerTests {
     createTest(testController)
       .onFile("Inlines")
       .withFeatures(
-        AllowDefs,
-        AllowLiteralsAndExpressions,
-        AllowInlines
+        Defs,
+        LiteralsAndExpressions,
+        Inlines
       )
       .expectValid()
   }
@@ -419,7 +419,7 @@ class WhitelistCheckerTests {
     createTest(testController)
       .onFile("Inlines")
       .withFeatures(ALL_FEATURES)
-      .exceptFeatures(AllowInlines)
+      .exceptFeatures(Inlines)
       .expectInvalidAtLines(2)
   }
 
@@ -427,9 +427,9 @@ class WhitelistCheckerTests {
     createTest(testController)
       .onFile("NoBraces")
       .withFeatures(
-        AllowLiteralsAndExpressions,
-        AllowBasicOop,
-        AllowDefs
+        LiteralsAndExpressions,
+        BasicOop,
+        Defs
       )
       .expectValid()
   }

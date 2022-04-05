@@ -7,7 +7,7 @@ object Features {
   /**
    * Allows literals of basic types, including Unit and tuples, as well as expressions
    */
-  case object AllowLiteralsAndExpressions extends AtomicFeature({
+  case object LiteralsAndExpressions extends AtomicFeature({
     case _ : Lit.Boolean => true
     case _ : Lit.Byte => true
     case _ : Lit.Char => true
@@ -32,14 +32,14 @@ object Features {
   /**
    * Allows the use of the null literal
    */
-  case object AllowNull extends AtomicFeature({
+  case object Nulls extends AtomicFeature({
     case _ : Lit.Null => true
   })
 
   /**
    * Allows the use of vals
    */
-  case object AllowVals extends AtomicFeature({
+  case object Vals extends AtomicFeature({
     case _ : Decl.Val => true
     case _ : Defn.Val => true
     case _ : Pat.Var => true
@@ -49,7 +49,7 @@ object Features {
   /**
    * Allows the use of defs
    */
-  case object AllowDefs extends AtomicFeature({
+  case object Defs extends AtomicFeature({
     case _ : Decl.Def => true
     case _ : Defn.Def => true
     case _ : Term.Param => true
@@ -64,7 +64,7 @@ object Features {
    * sealed traits, enums
    * Also allows objects (and not only case objects) for convenience (e.g. companion objects)
    */
-  case object AllowADTs extends AtomicFeature({
+  case object ADTs extends AtomicFeature({
     case Defn.Class(modifiers, _, _, _, _) => modifiers.exists {
       case Mod.Case() => true
       case Mod.Sealed() => true
@@ -106,7 +106,7 @@ object Features {
   /**
    * Allows the use of literal functions
    */
-  case object AllowLiteralFunctions extends AtomicFeature({
+  case object LiteralFunctions extends AtomicFeature({
     case _ : Term.ContextFunction => true
     case _ : Term.Function => true
     case _ : Type.ContextFunction => true
@@ -121,7 +121,7 @@ object Features {
   /**
    * Allows fors and for-yields
    */
-  case object AllowForExpr extends AtomicFeature({
+  case object ForExpr extends AtomicFeature({
     case _ : Term.For => true
     case _ : Term.ForYield => true
     case _ : Enumerator => true
@@ -131,7 +131,7 @@ object Features {
   /**
    * Allows polymorphism, including opaque types
    */
-  case object AllowPolymorphicTypes extends AtomicFeature({
+  case object PolymorphicTypes extends AtomicFeature({
     case Mod.Opaque() => true
     case _ : Decl.Type => true
     case _ : Defn.Type => true
@@ -146,12 +146,12 @@ object Features {
   /**
    * Allows lazy vals and by-name arguments
    */
-  case object AllowLaziness extends AtomicFeature({
+  case object Laziness extends AtomicFeature({
     case Mod.Lazy() => true
     case _ : Type.ByName => true
   })
 
-//  case object AllowRecursiveCalls extends AtomicFeature({
+//  case object RecursiveCalls extends AtomicFeature({
 //    ???
 //  })
 
@@ -182,20 +182,20 @@ object Features {
    * this allows basic object-oriented programming, including:
    * classes, traits, secondary constructors, access modifiers
    */
-  case object AllowBasicOop extends CompositeFeature(AllowADTs, BasicOopAddition)
+  case object BasicOop extends CompositeFeature(ADTs, BasicOopAddition)
 
   /**
    * In addition to constructs related to algebraic data types and basic object-oriented programming,
    * this allows advanced object-oriented modifiers:
    * final, open, transparent, super, covariant, contravariant, transparent
    */
-  case object AllowAdvancedOop extends CompositeFeature(AllowBasicOop, AdvancedOOPAddition)
+  case object AdvancedOop extends CompositeFeature(BasicOop, AdvancedOOPAddition)
 
   /**
    * Allows the use of imperative constructs, including:
    * vars, try-throw-catches, return and while loops
    */
-  case object AllowImperativeConstructs extends AtomicFeature({
+  case object ImperativeConstructs extends AtomicFeature({
     case Mod.VarParam() => true
     case _ : Decl.Var => true
     case _ : Defn.Var => true
@@ -213,7 +213,7 @@ object Features {
    * Allows the use of contextual constructs, including:
    * implicits, using, givens
    */
-  case object AllowContextualConstructs extends AtomicFeature({
+  case object ContextualConstructs extends AtomicFeature({
     case Mod.Implicit() => true
     case Mod.Using() => true
     case _ : Decl.Given => true
@@ -229,14 +229,14 @@ object Features {
   /**
    * Allows the definition of extension groups and extension methods
    */
-  case object AllowExtensions extends AtomicFeature({
+  case object Extensions extends AtomicFeature({
     case _ : Defn.ExtensionGroup => true
   })
 
   /**
    * Allows the use of macro and metaprogramming-related constructs
    */
-  case object AllowMetaprogramming extends AtomicFeature({
+  case object Metaprogramming extends AtomicFeature({
     case _ : Defn.Macro => true
     case _ : Term.QuotedMacroExpr => true
     case _ : Term.QuotedMacroType => true
@@ -250,7 +250,7 @@ object Features {
   /**
    * Allows the use of packages
    */
-  case object AllowPackages extends AtomicFeature({
+  case object Packages extends AtomicFeature({
     case _ : Pkg => true
     case _ : Pkg.Object => true
   })
@@ -258,7 +258,7 @@ object Features {
   /**
    * Allows the use of imports
    */
-  case object AllowImports extends AtomicFeature({
+  case object Imports extends AtomicFeature({
     case _ : Import => true
     case _ : Importee => true
     case _ : Importer => true
@@ -268,7 +268,7 @@ object Features {
   /**
    * Allows export clauses
    */
-  case object AllowExports extends AtomicFeature({
+  case object Exports extends AtomicFeature({
     case _ : Export => true
     case _ : Importee => true
     case _ : Importer => true
@@ -278,7 +278,7 @@ object Features {
   /**
    * Allows the use of XML-related constructs
    */
-  case object AllowXml extends AtomicFeature({
+  case object Xml extends AtomicFeature({
     case _ : Term.Xml => true
     case _ : Pat.Xml => true
     case _ : Lit.String => true
@@ -287,7 +287,7 @@ object Features {
   /**
    * Allows string interpolation
    */
-  case object AllowStringInterpolation extends AtomicFeature({
+  case object StringInterpolation extends AtomicFeature({
     case _ : Term.Interpolate => true
     case _ : Pat.Interpolate => true
   })
@@ -295,7 +295,7 @@ object Features {
   /**
    * Allows annotations
    */
-  case object AllowAnnotations extends AtomicFeature({
+  case object Annotations extends AtomicFeature({
     case _ : Term.Annotate => true
     case _ : Mod.Annot => true
   })
@@ -303,14 +303,14 @@ object Features {
   /**
    * Allows to define infix methods
    */
-  case object AllowInfixes extends AtomicFeature({
+  case object Infixes extends AtomicFeature({
     case Mod.Infix() => true
   })
 
   /**
    * Allows to define inline methods
    */
-  case object AllowInlines extends AtomicFeature({
+  case object Inlines extends AtomicFeature({
     case Mod.Inline() => true
   })
 
@@ -325,29 +325,29 @@ object Features {
    */
 
   val ALL_FEATURES: List[Feature] = List(
-    AllowLiteralsAndExpressions,
-    AllowNull,
-    AllowVals,
-    AllowDefs,
-    AllowADTs,
-    AllowLiteralFunctions,
-    AllowForExpr,
-    AllowPolymorphicTypes,
-    AllowLaziness,
-    AllowBasicOop,
-    AllowAdvancedOop,
-    AllowImperativeConstructs,
-    AllowContextualConstructs,
-    AllowExtensions,
-    AllowMetaprogramming,
-    AllowPackages,
-    AllowImports,
-    AllowExports,
-    AllowXml,
-    AllowStringInterpolation,
-    AllowAnnotations,
-    AllowInfixes,
-    AllowInlines
+    LiteralsAndExpressions,
+    Nulls,
+    Vals,
+    Defs,
+    ADTs,
+    LiteralFunctions,
+    ForExpr,
+    PolymorphicTypes,
+    Laziness,
+    BasicOop,
+    AdvancedOop,
+    ImperativeConstructs,
+    ContextualConstructs,
+    Extensions,
+    Metaprogramming,
+    Packages,
+    Imports,
+    Exports,
+    Xml,
+    StringInterpolation,
+    Annotations,
+    Infixes,
+    Inlines
   )
 
 }
