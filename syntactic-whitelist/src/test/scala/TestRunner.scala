@@ -95,7 +95,7 @@ object TestRunner {
     }
 
     /**
-     * @param _features features that the Checker should allow
+     * @param _features features that should be allowed in the checked program
      */
     def withFeatures(_features: Feature*): Builder = {
       this.features.addAll(_features)
