@@ -1,6 +1,6 @@
 import Checker.CheckResult
 import Checker.CheckResult.ParsingError
-import org.junit.Assert.{assertEquals, fail}
+import org.junit.Assert.{assertEquals, assertTrue, fail}
 
 import java.util.StringJoiner
 import java.util.concurrent.atomic.AtomicInteger
@@ -127,6 +127,16 @@ object TestRunner {
       }
       this.matcher = Some(matcher)
       build().run()
+    }
+
+    def expectParsingError[T <: Throwable](expected: Class[T]): Unit = {
+      expectMatching {
+        case err: CheckResult.ParsingError => {
+          val actualClass = err.cause.getClass
+          assertEquals(s"expected $expected, got $actualClass", expected, actualClass)
+        }
+        case other => fail(s"expected CheckResult.ParsingError, got ${other.getClass}($other)")
+      }
     }
 
     /**

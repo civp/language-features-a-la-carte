@@ -3,6 +3,7 @@ import TestRunner.createTest
 import org.junit.{AfterClass, Test}
 
 import scala.meta.dialects
+import scala.meta.parsers.ParseException
 
 class WhitelistCheckerTests {
   import WhitelistCheckerTests._
@@ -412,6 +413,13 @@ class WhitelistCheckerTests {
         Defs
       )
       .expectValid()
+  }
+
+  @Test def checker_correctly_reports_parsing_error(): Unit = {
+    createTest(testController)
+      .onFile("Erroneous")
+      .withFeatures(ALL_FEATURES)
+      .expectParsingError(classOf[ParseException])
   }
 
 }
