@@ -9,7 +9,7 @@ import scala.util.{Try, Using}
 /**
  * @param rules rules to be checked
  */
-class Checker(rules: List[Rule]) {
+class Checker private(rules: List[Rule]) {
   require(rules.nonEmpty, "checker must have at least 1 rule")
 
   // matches trees that do not match any rule
@@ -60,5 +60,6 @@ class Checker(rules: List[Rule]) {
 object Checker {
 
   def apply(rule: Rule, rules: Rule*): Checker = new Checker(rule :: rules.toList)
+//  def apply(rules: List[Rule]): Checker = new Checker(rules)
 
 }

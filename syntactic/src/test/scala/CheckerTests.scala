@@ -1,6 +1,7 @@
-import Rule.Violation
+import syntactic.Rule
 import org.junit.Test
 import org.junit.Assert._
+import syntactic.Checker
 
 import scala.meta._
 
