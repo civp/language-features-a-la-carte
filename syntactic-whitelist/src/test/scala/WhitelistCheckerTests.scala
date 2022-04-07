@@ -1,434 +1,436 @@
 import Features._
-import TestRunner.createTest
-import org.junit.{AfterClass, Test}
+import TestRunner.{expectInvalidWhenExcludingFeatures, expectParsingError, expectValidWithFeatures}
+import org.junit.Test
 
-import scala.meta.dialects
-import scala.meta.parsers.ParseException
+import scala.meta.{Dialect, dialects}
 
 class WhitelistCheckerTests {
-  import WhitelistCheckerTests._
 
   @Test def allowLiteralsAndExpressions_should_allow_literals(): Unit = {
-    createTest(testController)
-      .onFile("LiteralsOnly")
-      .withFeatures(LiteralsAndExpressions)
-      .withDialect(dialects.Sbt1)
-      .expectValid()
+    expectValidWithFeatures(
+      srcFileName = "LiteralsOnly",
+      features = List(LiteralsAndExpressions),
+      dialect = dialects.Sbt1
+    )
   }
 
-  @Test def allowLiteralsAndExpressions_should_allow_literals_and_expressions(): Unit = {
-    createTest(testController)
-      .onFile("LiteralsAndExpressions")
-      .withFeatures(LiteralsAndExpressions)
-      .withDialect(dialects.Sbt1)
-      .expectValid()
+  @Test def feature_LiteralsAndExpressions_should_allow_literals_and_expressions(): Unit = {
+    expectValidWithFeatures(
+      srcFileName = "LiteralsAndExpressions",
+      features = List(LiteralsAndExpressions),
+      dialect = dialects.Sbt1
+    )
   }
 
   @Test def vals_should_be_rejected_when_not_allowed(): Unit = {
-    createTest(testController)
-      .onFile("Vals")
-      .withAllFeaturesExcept(Vals)
-      .expectInvalid(2 -> 1, 3 -> 1, 4 -> 1, 5 -> 1, 6 -> 1)
+    expectInvalidWhenExcludingFeatures(
+      srcFileName = "Vals",
+      excludedFeatures = List(Vals),
+      expectedViolationCnts = Map(5 -> 1, 6 -> 1, 2 -> 1, 3 -> 1, 4 -> 1)
+    )
   }
 
   @Test def vals_should_be_accepted_when_allowed(): Unit = {
-    createTest(testController)
-      .onFile("Vals")
-      .withFeatures(
-        LiteralsAndExpressions,
-        Vals
-      )
-      .expectValid()
+    expectValidWithFeatures(
+      srcFileName = "Vals",
+      features = List(LiteralsAndExpressions, Vals)
+    )
   }
 
   @Test def defs_should_be_rejected_when_not_allowed(): Unit = {
-    createTest(testController)
-      .onFile("Defs")
-      .withAllFeaturesExcept(Defs)
-      .expectInvalid(2 -> 1, 3 -> 1)
+    expectInvalidWhenExcludingFeatures(
+      srcFileName = "Defs",
+      excludedFeatures = List(Defs),
+      expectedViolationCnts = Map(2 -> 1, 3 -> 1)
+    )
   }
 
-  @Test def allowADTs_should_allow_ADTs(): Unit = {
-    createTest(testController)
-      .onFile("ADTs")
-      .withFeatures(
-        LiteralsAndExpressions,
-        ADTs
-      )
-      .expectValid()
+  @Test def feature_ADTs_should_allow_ADTs(): Unit = {
+    expectValidWithFeatures(
+      srcFileName = "ADTs",
+      features = List(LiteralsAndExpressions, ADTs)
+    )
   }
 
   @Test def ADTs_should_be_rejected_when_not_allowed(): Unit = {
-    createTest(testController)
-      .onFile("ADTs")
-      .withAllFeaturesExcept(
-        ADTs,
-        BasicOop,
-        AdvancedOop
-      )
-      .expectInvalid(2 -> 2, 4 -> 1, 5 -> 3, 6 -> 3,
-        3 -> 1  // FIXME weird behavior of Scalameta on a trait without body
-      )
+    expectInvalidWhenExcludingFeatures(
+      srcFileName = "ADTs",
+      excludedFeatures = List(ADTs, BasicOop, AdvancedOop),
+      expectedViolationCnts = Map(5 -> 3, 6 -> 3, 2 -> 2, 3 -> 1, 4 -> 1)
+    )
   }
 
-  @Test def AllowADTs_should_not_allow_sealed_trait_with_non_case_class(): Unit = {
-    createTest(testController)
-      .onFile("NotSoADT")
-      .withFeatures(ADTs)
-      .expectInvalid(2 -> 1, 3 -> 1)
+  @Test def feature_ADTs_should_not_allow_sealed_trait_with_non_case_class(): Unit = {
+    expectInvalidWhenExcludingFeatures(
+      srcFileName = "NotSoADT",
+      excludedFeatures = List(BasicOop, AdvancedOop),
+      expectedViolationCnts = Map(2 -> 1, 3 -> 1)
+    )
   }
 
-  @Test def allowBasicOop_should_allow_sealed_trait_with_non_case_class(): Unit = {
-    createTest(testController)
-      .onFile("NotSoADT")
-      .withFeatures(BasicOop)
-      .expectValid()
+  @Test def feature_BasicOop_should_allow_sealed_trait_with_non_case_class(): Unit = {
+    expectValidWithFeatures(
+      srcFileName = "NotSoADT",
+      features = List(BasicOop)
+    )
   }
 
-  @Test def allowLiteralFunctions_should_allow_literal_functions(): Unit = {
-    createTest(testController)
-      .onFile("LiteralFunctions")
-      .withDialect(dialects.Sbt1)
-      .withFeatures(
-        LiteralFunctions,
-        LiteralsAndExpressions,
-        Vals
-      )
-      .expectValid()
+  @Test def feature_LiteralFunctions_should_allow_literal_functions(): Unit = {
+    expectValidWithFeatures(
+      srcFileName = "LiteralFunctions",
+      features = List(LiteralFunctions, LiteralsAndExpressions, Vals),
+      dialect = dialects.Sbt1
+    )
   }
 
   @Test def literal_functions_should_be_rejected_when_not_allowed(): Unit = {
-    createTest(testController)
-      .onFile("LiteralFunctions")
-      .withDialect(dialects.Sbt1)
-      .withAllFeaturesExcept(LiteralFunctions)
-      .expectInvalid(2 -> 1, 3 -> 1, 4 -> 2, 5 -> 1, 6 -> 3, 7 -> 1)
+    expectInvalidWhenExcludingFeatures(
+      srcFileName = "LiteralFunctions",
+      excludedFeatures = List(LiteralFunctions),
+      expectedViolationCnts = Map(5 -> 1, 6 -> 3, 2 -> 1, 7 -> 1, 3 -> 1, 4 -> 2),
+      dialect = dialects.Sbt1
+    )
   }
 
-  @Test def allowForExpr_should_allow_for_expressions(): Unit = {
-    createTest(testController)
-      .onFile("Fors")
-      .withFeatures(
-        LiteralsAndExpressions,
-        Defs,
-        ForExpr
-      )
-      .expectValid()
+  @Test def feature_ForExpr_should_allow_for_expressions(): Unit = {
+    expectValidWithFeatures(
+      srcFileName = "Fors",
+      features = List(LiteralsAndExpressions, Defs, ForExpr)
+    )
   }
 
   @Test def for_expressions_should_be_rejected_when_not_allowed(): Unit = {
-    createTest(testController)
-      .onFile("Fors")
-      .withAllFeaturesExcept(ForExpr)
-      .expectInvalid(3 -> 2, 4 -> 2, 5 -> 2)
+    expectInvalidWhenExcludingFeatures(
+      srcFileName = "Fors",
+      excludedFeatures = List(ForExpr),
+      expectedViolationCnts = Map(3 -> 2, 4 -> 2, 5 -> 2)
+    )
   }
 
-  @Test def AllowImports_should_allow_imports(): Unit = {
-    createTest(testController)
-      .onFile("ImportOnly")
-      .withFeatures(Imports)
-      .expectValid()
+  @Test def feature_Imports_should_allow_imports(): Unit = {
+    expectValidWithFeatures(
+      srcFileName = "ImportOnly",
+      features = List(Imports)
+    )
   }
 
   @Test def imports_should_be_rejected_when_not_allowed(): Unit = {
-    createTest(testController)
-      .onFile("ImportOnly")
-      .withAllFeaturesExcept(Imports)
-      .expectInvalid(1 -> 1)
+    expectInvalidWhenExcludingFeatures(
+      srcFileName = "ImportOnly",
+      excludedFeatures = List(Imports),
+      expectedViolationCnts = Map(1 -> 1)
+    )
   }
 
-  @Test def AllowPackages_should_allow_packages(): Unit = {
-    createTest(testController)
-      .onFile("PackageOnly")
-      .withFeatures(Packages)
-      .expectValid()
+  @Test def feature_Packages_should_allow_packages(): Unit = {
+    expectValidWithFeatures(
+      srcFileName = "PackageOnly",
+      features = List(Packages)
+    )
   }
 
-  @Test def AllowNull_should_allow_null(): Unit = {
-    createTest(testController)
-      .onFile("Nulls")
-      .withFeatures(
-        LiteralsAndExpressions,
-        Vals,
-        Nulls
-      )
-      .expectValid()
+  @Test def feature_Null_should_allow_null(): Unit = {
+    expectValidWithFeatures(
+      srcFileName = "Nulls",
+      features = List(LiteralsAndExpressions, Vals, Nulls)
+    )
   }
 
   @Test def nulls_should_be_rejected_when_not_allowed(): Unit = {
-    createTest(testController)
-      .onFile("Nulls")
-      .withAllFeaturesExcept(Nulls)
-      .expectInvalid(1 -> 1, 2 -> 1, 4 -> 1)
+    expectInvalidWhenExcludingFeatures(
+      srcFileName = "Nulls",
+      excludedFeatures = List(Nulls),
+      expectedViolationCnts = Map(1 -> 1, 2 -> 1, 4 -> 1)
+    )
   }
 
-  @Test def AllowPolymorphicTypes_should_allow_polymorphic_types(): Unit = {
-    createTest(testController)
-      .onFile("Polymorphism")
-      .withFeatures(
-        LiteralsAndExpressions,
-        Defs,
-        BasicOop,
-        PolymorphicTypes
-      )
-      .expectValid()
+  @Test def feature_PolymorphicTypes_should_allow_polymorphic_types(): Unit = {
+    expectValidWithFeatures(
+      srcFileName = "Polymorphism",
+      features = List(LiteralsAndExpressions, Defs, BasicOop, PolymorphicTypes)
+    )
   }
 
   @Test def polymorphic_types_should_be_rejected_when_not_allowed(): Unit = {
-    createTest(testController)
-      .onFile("Polymorphism")
-      .withAllFeaturesExcept(PolymorphicTypes)
-      .expectInvalid(2 -> 2, 4 -> 2, 7 -> 1, 11 -> 2)
+    expectInvalidWhenExcludingFeatures(
+      srcFileName = "Polymorphism",
+      excludedFeatures = List(PolymorphicTypes),
+      expectedViolationCnts = Map(2 -> 2, 4 -> 2, 7 -> 1, 11 -> 2)
+    )
   }
 
-  @Test def AllowLaziness_should_allow_lazy_vals_and_args(): Unit = {
-    createTest(testController)
-      .onFile("Laziness")
-      .withFeatures(
-        Vals,
-        Defs,
-        LiteralsAndExpressions,
-        Laziness
-      )
-      .expectValid()
+  @Test def feature_Laziness_should_allow_lazy_vals_and_args(): Unit = {
+    expectValidWithFeatures(
+      srcFileName = "Laziness",
+      features = List(Vals, Defs, LiteralsAndExpressions, Laziness)
+    )
   }
 
   @Test def laziness_should_be_rejected_when_not_allowed(): Unit = {
-    createTest(testController)
-      .onFile("Laziness")
-      .withAllFeaturesExcept(Laziness)
-      .expectInvalidAtLines(2, 3)
+    expectInvalidWhenExcludingFeatures(
+      srcFileName = "Laziness",
+      excludedFeatures = List(Laziness),
+      expectedViolationCnts = Map(2 -> 1, 3 -> 1)
+    )
   }
 
-  @Test def AllowAdvancedOop_should_allow_advanced_oop_constructs(): Unit = {
-    createTest(testController)
-      .onFile("AdvancedOOP")
-      .withFeatures(
-        LiteralsAndExpressions,
-        AdvancedOop,
-        Defs
-      )
-      .expectValid()
+  @Test def feature_AdvancedOop_should_allow_advanced_oop_constructs(): Unit = {
+    expectValidWithFeatures(
+      srcFileName = "AdvancedOOP",
+      features = List(LiteralsAndExpressions, AdvancedOop, Defs)
+    )
   }
 
   @Test def advanced_oop_constructs_should_be_rejected_when_not_allowed(): Unit = {
-    createTest(testController)
-      .onFile("AdvancedOOP")
-      .withAllFeaturesExcept(AdvancedOop)
-      .expectInvalidAtLines(2, 6, 10)
+    expectInvalidWhenExcludingFeatures(
+      srcFileName = "AdvancedOOP",
+      excludedFeatures = List(AdvancedOop),
+      expectedViolationCnts = Map(2 -> 1, 6 -> 1, 10 -> 1)
+    )
   }
-  
-  @Test def AllowImperativeConstructs_should_allow_imperative_constructs(): Unit = {
-    createTest(testController)
-      .onFile("Imperative")
-      .withDialect(dialects.Sbt1)
-      .withFeatures(
-        LiteralsAndExpressions,
-        Defs,
-        ImperativeConstructs
-      )
-      .expectValid()
+
+  @Test def feature_ImperativeConstructs_should_allow_imperative_constructs(): Unit = {
+    expectValidWithFeatures(
+      srcFileName = "Imperative",
+      features = List(LiteralsAndExpressions, Defs, ImperativeConstructs),
+      dialect = dialects.Sbt1
+    )
   }
 
   @Test def imperative_constructs_should_be_rejected_when_not_allowed(): Unit = {
-    createTest(testController)
-      .onFile("Imperative")
-      .withDialect(dialects.Sbt1)
-      .withAllFeaturesExcept(ImperativeConstructs)
-      .expectInvalidAtLines(2, 3, 5, 7, 8, 14, 15, 18)
+    expectInvalidWhenExcludingFeatures(
+      srcFileName = "Imperative",
+      excludedFeatures = List(ImperativeConstructs),
+      expectedViolationCnts = Map(5 -> 1, 14 -> 1, 2 -> 1, 7 -> 1, 3 -> 1, 18 -> 1, 8 -> 1, 15 -> 1),
+      dialect = dialects.Sbt1
+    )
   }
 
-  @Test def AllowContextualConstructs_should_allow_contextual_constructs(): Unit = {
-    createTest(testController)
-      .onFile("Contextual")
-      .withFeatures(
-        LiteralsAndExpressions,
-        Defs,
-        ContextualConstructs,
-        PolymorphicTypes
-      )
-      .expectValid()
+  @Test def feature_ContextualConstructs_should_allow_contextual_constructs(): Unit = {
+    expectValidWithFeatures(
+      srcFileName = "Contextual",
+      features = List(LiteralsAndExpressions, Defs, ContextualConstructs, PolymorphicTypes)
+    )
   }
 
   @Test def contextual_constructs_should_be_rejected_when_not_allowed(): Unit = {
-    createTest(testController)
-      .onFile("Contextual")
-      .withAllFeaturesExcept(ContextualConstructs)
-      .expectInvalidAtLines(3, 6, 8)
+    expectInvalidWhenExcludingFeatures(
+      srcFileName = "Contextual",
+      excludedFeatures = List(ContextualConstructs),
+      expectedViolationCnts = Map(3 -> 1,6 -> 1,8 -> 1)
+    )
   }
 
-  @Test def AllowExtensions_should_allow_extensions(): Unit = {
-    createTest(testController)
-      .onFile("Extensions")
-      .withFeatures(
-        LiteralsAndExpressions,
-        Defs,
-        Extensions
-      )
-      .expectValid()
+  @Test def feature_Extensions_should_allow_extensions(): Unit = {
+    expectValidWithFeatures(
+      srcFileName = "Extensions",
+      features = List(LiteralsAndExpressions, Defs, Extensions)
+    )
   }
 
   @Test def extensions_should_be_rejected_when_not_allowed(): Unit = {
-    createTest(testController)
-      .onFile("Extensions")
-      .withAllFeaturesExcept(Extensions)
-      .expectInvalidAtLines(2)
+    expectInvalidWhenExcludingFeatures(
+      srcFileName = "Extensions",
+      excludedFeatures = List(Extensions),
+      expectedViolationCnts = Map(2 -> 1)
+    )
   }
 
-  @Test def AllowMetaprogramming_should_allow_macros(): Unit = {
-    createTest(testController)
-      .onFile("Metaprogramming")
-      .withFeatures(
-        LiteralsAndExpressions,
-        Defs,
-        ContextualConstructs,
-        PolymorphicTypes,
-        Metaprogramming
-      )
-      .expectValid()
+  @Test def feature_Metaprogramming_should_allow_macros(): Unit = {
+    expectValidWithFeatures(
+      srcFileName = "Metaprogramming",
+      features = List(LiteralsAndExpressions, Defs, ContextualConstructs, PolymorphicTypes, Metaprogramming)
+    )
   }
 
   @Test def metaprogramming_should_be_rejected_when_not_allowed(): Unit = {
-    createTest(testController)
-      .onFile("Metaprogramming")
-      .withAllFeaturesExcept(Metaprogramming)
-      .expectInvalid(5 -> 3)
+    expectInvalidWhenExcludingFeatures(
+      srcFileName = "Metaprogramming",
+      excludedFeatures = List(Metaprogramming),
+      expectedViolationCnts = Map(5 -> 3)
+    )
   }
 
-  @Test def AllowExports_should_allow_exports(): Unit = {
-    createTest(testController)
-      .onFile("Export")
-      .withFeatures(
-        LiteralsAndExpressions,
-        BasicOop,
-        Defs,
-        Exports
-      )
-      .expectValid()
+  @Test def feature_Exports_should_allow_exports(): Unit = {
+    expectValidWithFeatures(
+      srcFileName = "Export",
+      features = List(LiteralsAndExpressions, BasicOop, Defs, Exports)
+    )
   }
 
   @Test def exports_should_be_rejected_when_not_allowed(): Unit = {
-    createTest(testController)
-      .onFile("Export")
-      .withAllFeaturesExcept(Exports)
-      .expectInvalidAtLines(7)
+    expectInvalidWhenExcludingFeatures(
+      srcFileName = "Export",
+      excludedFeatures = List(Exports),
+      expectedViolationCnts = Map(7 -> 1)
+    )
   }
 
-  @Test def AllowXml_should_allow_xml(): Unit = {
-    createTest(testController)
-      .onFile("Xml")
-      .withFeatures(
-        Vals,
-        Xml
-      )
-      .expectValid()
+  @Test def feature_Xml_should_allow_xml(): Unit = {
+    expectValidWithFeatures(
+      srcFileName = "Xml",
+      features = List(Vals, Xml)
+    )
   }
 
   @Test def xml_should_be_rejected_when_not_allowed(): Unit = {
-    createTest(testController)
-      .onFile("Xml")
-      .withAllFeaturesExcept(Xml)
-      .expectInvalidAtLines(2, 3)
+    expectInvalidWhenExcludingFeatures(
+      srcFileName = "Xml",
+      excludedFeatures = List(Xml),
+      expectedViolationCnts = Map(2 -> 1, 3 -> 1)
+    )
   }
 
-  @Test def AllowStringInterpolation_should_allow_string_interpolation(): Unit = {
-    createTest(testController)
-      .onFile("StringInterpolation")
-      .withFeatures(
-        LiteralsAndExpressions,
-        Vals,
-        StringInterpolation
-      )
-      .expectValid()
+  @Test def feature_StringInterpolation_should_allow_string_interpolation(): Unit = {
+    expectValidWithFeatures(
+      srcFileName = "StringInterpolation",
+      features = List(LiteralsAndExpressions, Vals, StringInterpolation)
+    )
   }
 
   @Test def string_interpolation_should_be_rejected_when_not_allowed(): Unit = {
-    createTest(testController)
-      .onFile("StringInterpolation")
-      .withAllFeaturesExcept(StringInterpolation)
-      .expectInvalid(3 -> 1, 4 -> 1, 6 -> 3)
+    expectInvalidWhenExcludingFeatures(
+      srcFileName = "StringInterpolation",
+      excludedFeatures = List(StringInterpolation),
+      expectedViolationCnts = Map(3 -> 1, 4 -> 1, 6 -> 3)
+    )
   }
 
-  @Test def AllowAnnotations_should_allow_annotations(): Unit = {
-    createTest(testController)
-      .onFile("Annotations")
-      .withFeatures(
-        LiteralsAndExpressions,
-        Defs,
-        BasicOop,
-        Annotations
-      )
-      .expectValid()
+  @Test def feature_Annotations_should_allow_annotations(): Unit = {
+    expectValidWithFeatures(
+      srcFileName = "Annotations",
+      features = List(LiteralsAndExpressions, Defs, BasicOop, Annotations)
+    )
   }
 
   @Test def annotations_should_be_rejected_when_not_allowed(): Unit = {
-    createTest(testController)
-      .onFile("Annotations")
-      .withAllFeaturesExcept(Annotations)
-      .expectInvalidAtLines(2, 5, 7, 8, 11)
+    expectInvalidWhenExcludingFeatures(
+      srcFileName = "Annotations",
+      excludedFeatures = List(Annotations),
+      expectedViolationCnts = Map(5 -> 1, 2 -> 1, 7 -> 1, 11 -> 1, 8 -> 1)
+    )
   }
 
-  @Test def AllowInfixes_should_allow_infixes(): Unit = {
-    createTest(testController)
-      .onFile("Infixes")
-      .withFeatures(
-        Defs,
-        LiteralsAndExpressions,
-        Infixes
-      )
-      .expectValid()
+  @Test def feature_Infixes_should_allow_infixes(): Unit = {
+    expectValidWithFeatures(
+      srcFileName = "Infixes",
+      features = List(Defs, LiteralsAndExpressions, Infixes)
+    )
   }
 
   @Test def infixes_should_be_rejected_when_not_allowed(): Unit = {
-    createTest(testController)
-      .onFile("Infixes")
-      .withAllFeaturesExcept(Infixes)
-      .expectInvalidAtLines(2)
+    expectInvalidWhenExcludingFeatures(
+      srcFileName = "Infixes",
+      excludedFeatures = List(Infixes),
+      expectedViolationCnts = Map(2 -> 1)
+    )
   }
 
-  @Test def AllowInlines_should_allow_inlines(): Unit = {
-    createTest(testController)
-      .onFile("Inlines")
-      .withFeatures(
-        Defs,
-        LiteralsAndExpressions,
-        Inlines
-      )
-      .expectValid()
+  @Test def feature_Inlines_should_allow_inlines(): Unit = {
+    expectValidWithFeatures(
+      srcFileName = "Inlines",
+      features = List(Defs, LiteralsAndExpressions, Inlines)
+    )
   }
 
   @Test def inlines_should_be_rejected_when_not_allowed(): Unit = {
-    createTest(testController)
-      .onFile("Inlines")
-      .withAllFeaturesExcept(Inlines)
-      .expectInvalidAtLines(2)
+    expectInvalidWhenExcludingFeatures(
+      srcFileName = "Inlines",
+      excludedFeatures = List(Inlines),
+      expectedViolationCnts = Map(2 -> 1)
+    )
   }
 
   @Test def checker_should_support_classes_without_braces(): Unit = {
-    createTest(testController)
-      .onFile("NoBraces")
-      .withFeatures(
-        LiteralsAndExpressions,
-        BasicOop,
-        Defs
-      )
-      .expectValid()
+    expectValidWithFeatures(
+      srcFileName = "NoBraces",
+      features = List(LiteralsAndExpressions, BasicOop, Defs)
+    )
   }
 
   @Test def checker_correctly_reports_parsing_error(): Unit = {
-    createTest(testController)
-      .onFile("Erroneous")
-      .withFeatures(all)
-      .expectParsingError(classOf[ParseException])
+    expectParsingError(srcFileName = "Erroneous")
   }
 
 }
 
 object WhitelistCheckerTests {
-  val testController = new TestController()
 
-  @AfterClass
-  def checkAllRun(): Unit = {
-    testController.assertEmpty()
+  class TempClass {
+    private var filename: String = null
+    private var features = List.empty[Feature]
+    private var valid: Boolean = false
+    private var expectedViolations = Map.empty[Int, Int]
+    private var dialect: Dialect = null
+
+    def onFile(filename: String): TempClass = {
+      this.filename = filename
+      this
+    }
+
+    def withFeatures(features: Feature*): TempClass = {
+      this.features = features.toList
+      this
+    }
+
+    def expectValid(): Unit = {
+      this.valid = true
+      println(this)
+    }
+
+    def withAllFeaturesExcept(features: Feature*): TempClass = {
+      this.features = features.toList
+      this
+    }
+
+    def withDialect(dialect: Dialect): TempClass = {
+      this.dialect = dialect
+      this
+    }
+
+    def expectInvalid(exp: (Int, Int)*): Unit = {
+      this.expectedViolations = exp.toMap
+      println(this)
+    }
+
+    def expectInvalidAtLines(exp: Int*): Unit = {
+      this.expectedViolations = exp.map((_, 1)).toMap
+      println(this)
+    }
+
+    val drop = 5
+
+    private def toStringValid: String = {
+      val s = s"""
+        |expectValidWithFeatures(
+        |  srcFileName = "$filename",
+        |  features = $features
+        |)
+        |""".stripMargin
+      if (dialect == null) s
+      else s.dropRight(drop) ++ s",\n  dialect = dialects.$dialect\n)"
+    }
+
+    private def toStringInvalid: String = {
+      val s = s"""
+         |expectInvalidWhenExcludingFeatures(
+         |  srcFileName = "$filename",
+         |  excludedFeatures = $features,
+         |  expectedViolationCnts = ${expectedViolations.mkString("Map(", ", ", ")")}
+         |)
+         |""".stripMargin
+      if (dialect == null) s
+      else s.dropRight(drop) ++ s",\n  dialect = dialects.$dialect\n)"
+    }
+
+    override def toString: String = {
+      if (valid) toStringValid else toStringInvalid
+    }
+
   }
+
+  val testController = ""
+
+  def createTest(any: Any): TempClass = new TempClass()
+
 }
