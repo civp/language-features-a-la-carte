@@ -50,7 +50,7 @@ class Checker private(rules: List[Rule]) {
    */
   def checkFile(filename: String): Try[List[Violation]] = {
     val content = Using(scala.io.Source.fromFile(filename)) { bufferedSource =>
-      bufferedSource.getLines().mkString
+      bufferedSource.getLines().mkString("\n")
     }
     content.flatMap(check)
   }
@@ -60,6 +60,5 @@ class Checker private(rules: List[Rule]) {
 object Checker {
 
   def apply(rule: Rule, rules: Rule*): Checker = new Checker(rule :: rules.toList)
-//  def apply(rules: List[Rule]): Checker = new Checker(rules)
 
 }
