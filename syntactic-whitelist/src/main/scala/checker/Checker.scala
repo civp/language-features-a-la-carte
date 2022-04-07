@@ -1,5 +1,7 @@
-import Checker.{CheckResult, Violation}
-import Feature.{AtomicFeature, CompositeFeature}
+package checker
+
+import checker.Checker.{CheckResult, Violation}
+import checker.Feature.{AtomicFeature, CompositeFeature}
 
 import scala.meta.{Dialect, Init, Name, Self, Source, Template, Term, Tree, Type}
 import scala.util.control.NonFatal

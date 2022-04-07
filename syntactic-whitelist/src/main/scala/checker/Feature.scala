@@ -1,9 +1,11 @@
+package checker
+
 import scala.meta.Tree
 
 /**
  * Subdivision of the Scala language, allowing a specific set of constructs
  */
-trait Feature {
+sealed trait Feature {
 
   /**
    * Checks whether a tree is allowed by this feature
@@ -24,6 +26,8 @@ object Feature {
    * @param features the features to allow
    */
   class CompositeFeature(private val features: Set[Feature]) extends Feature {
+    require(features != null)
+
     def this(features: List[Feature]) = this(features.toSet)
     def this(features: Feature*) = this(features.toSet)
 
@@ -44,7 +48,9 @@ object Feature {
    * @param checkPF this function should return true when given a tree that is allowed and not be defined on other trees
    *                (or return false on them, but this is not necessary)
    */
-  abstract class AtomicFeature(checkPF: PartialFunction[Tree, Boolean]) extends Feature {
+  protected[checker] abstract class AtomicFeature(checkPF: PartialFunction[Tree, Boolean]) extends Feature {
+    require(checkPF != null)
+
     override def allows(tree: Tree): Boolean = {
       checkPF.applyOrElse(tree, (_: Tree) => false)
     }

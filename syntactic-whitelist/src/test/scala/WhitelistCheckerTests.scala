@@ -1,4 +1,4 @@
-import Features._
+import checker.Features._
 import TestRunner.{expectInvalidWhenExcludingFeatures, expectParsingError, expectValidWithFeatures}
 import org.junit.Test
 

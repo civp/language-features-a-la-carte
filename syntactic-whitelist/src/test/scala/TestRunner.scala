@@ -1,4 +1,5 @@
-import Checker.{CheckResult, Violation}
+import checker.Checker.{CheckResult, Violation}
+import checker.{Checker, Feature, Features}
 import org.junit.Assert.{assertEquals, assertTrue, fail}
 
 import java.util.StringJoiner
