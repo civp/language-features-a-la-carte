@@ -1,3 +1,4 @@
+package syntactic
 
 import scala.meta._
 

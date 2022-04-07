@@ -1,12 +1,15 @@
+package syntactic
+
 import Rule._
 
+import java.io.File
 import scala.meta._
 import scala.util.{Try, Using}
 
 /**
  * @param rules rules to be checked
  */
-class Checker(rules: List[Rule]) {
+class Checker private(rules: List[Rule]) {
   require(rules.nonEmpty, "checker must have at least 1 rule")
 
   // matches trees that do not match any rule
