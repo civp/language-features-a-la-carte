@@ -8,6 +8,13 @@ import scala.meta.{Dialect, dialects}
 
 object TestRunner {
 
+  /**
+   * Test method for a test where the checker should accept the program
+   * @param srcFileName name of the file containing the program <p>
+   *                    This is the name of one of the files in test/res, without ".scala"
+   * @param dialect the dialect to be used by the checker
+   * @param features the features that the checker should use
+   */
   def expectValidWithFeatures(
                                srcFileName: String,
                                dialect: Dialect = defaultDialect,
@@ -16,6 +23,15 @@ object TestRunner {
     runTest(srcFileName, expectValidCheckFunc, dialect, features)
   }
 
+  /**
+   * Test method for a test where the checker should reject the program
+   * @param srcFileName name of the file containing the program <p>
+   *                    This is the name of one of the files in test/res, without ".scala"
+   * @param dialect the dialect to be used by the checker
+   * @param excludedFeatures the checker will use all atomic features except these ones
+   * @param expectedViolationCnts map from line indices to the number of expected violations on the
+   *                              corresponding line. Lines with 0 expected violation can be omitted
+   */
   def expectInvalidWhenExcludingFeatures(
                                           srcFileName: String,
                                           dialect: Dialect = defaultDialect,
@@ -26,6 +42,13 @@ object TestRunner {
     runTest(srcFileName, expectInvalidCheckFunc(expectedViolationCnts), dialect, allowedFeatures)
   }
 
+  /**
+   * Test method for a test where the parsing of the program should fail <p>
+   * The method therefore expects a CheckResult.ParsingError to be returned by the check method
+   * @param srcFileName name of the file containing the program <p>
+   *                    This is the name of one of the files in test/res, without ".scala"
+   * @param dialect the dialect to be used by the checker
+   */
   def expectParsingError(
                           srcFileName: String,
                           dialect: Dialect = defaultDialect
@@ -34,9 +57,18 @@ object TestRunner {
   }
 
   private val defaultDialect = dialects.Scala3
-  private val testResDir = "src/test/res"
+  private val testResourcesDirectory = "src/test/res"
   private val testFilesExtension = "scala"
 
+  /**
+   * Runs the test described by its arguments
+   * @param srcFileName name of the file containing the program <p>
+   *                    This is the name of one of the files in test/res, without ".scala"
+   * @param assertionFunc the function that is called on the CheckResult returned by the check method <p>
+   *                        This function should contain the assertions
+   * @param dialect the dialect to be used by the checker
+   * @param features the features that the checker should use
+   */
   private def runTest(
                        srcFileName: String,
                        assertionFunc: Checker.CheckResult => Unit,
@@ -44,11 +76,14 @@ object TestRunner {
                        features: List[Feature]
                      ): Unit = {
     val checker = Checker(features)
-    val filepath = s"$testResDir/$srcFileName.$testFilesExtension"
+    val filepath = s"$testResourcesDirectory/$srcFileName.$testFilesExtension"
     val checkRes = checker.checkFile(dialect, filepath)
     assertionFunc(checkRes)
   }
 
+  /**
+   * Assertion function for parsing error
+   */
   private val expectParsingErrorCheckFunc: PartialFunction[CheckResult, Unit] = {
     case err: CheckResult.ParsingError => {
       assertTrue(s"expected ParseException, got ${err.cause.getClass}", err.cause.isInstanceOf[ParseException])
@@ -56,11 +91,19 @@ object TestRunner {
     case other => fail(s"expected CheckResult.ParsingError, got ${other.getClass}($other)")
   }
 
+  /**
+   * Assertion function for valid program
+   */
   private val expectValidCheckFunc: PartialFunction[CheckResult, Unit] = {
     case CheckResult.ParsingError(cause) => throw cause
     case res => assertEquals(res, CheckResult.Valid)
   }
 
+  /**
+   * Produces an assertion function for invalid programs
+   * @param expectedViolationsCnts map from line indices to the number of expected violations on the
+   *                              corresponding line. Lines with 0 expected violation can be omitted
+   */
   private def expectInvalidCheckFunc(expectedViolationsCnts: Map[Int, Int]): PartialFunction[CheckResult, Unit] = {
 
     // convert from 1-based to 0-based line indices
