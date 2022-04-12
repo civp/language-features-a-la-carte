@@ -13,4 +13,5 @@ object Rules {
   // A temporary workaround for blacklist
   abstract class Rule
   abstract class BlacklistRule extends Rule
+  object NoRule extends Rule
 }

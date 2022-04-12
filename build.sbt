@@ -19,14 +19,10 @@ lazy val syntactic = project
 
 lazy val shared = project
   .in(file("shared"))
-  .settings(
-    moduleName := "shared"
-  )
 
 lazy val testkit = project
   .in(file("testkit"))
   .settings(
-    moduleName := "testkit",
     libraryDependencies ++= Seq(
       scalameta,
       scalaParserCombinators
@@ -37,25 +33,19 @@ lazy val testkit = project
 lazy val testsInput = project
   .in(file("tests/input"))
 
-lazy val testsOutput = project
-  .in(file("tests/output"))
-  .dependsOn(syntactic)
-
 lazy val testsUnit = project
   .in(file("tests/unit"))
   .settings(
-    buildInfoPackage := "tests",
-    buildInfoObject := "BuildInfo",
-    libraryDependencies ++= Seq(
-      scalatest,
-      funsuite,
-      scalametaTeskit
-    ),
+    libraryDependencies += munit,
     Compile / compile / compileInputs := {
       (Compile / compile / compileInputs)
         .dependsOn(testsInput / Compile / compile)
         .value
+    },
+    fork := true,
+    javaOptions += {
+      val testsInputProduct = (testsInput / Compile / scalaSource).value
+      s"-Dtests-input=$testsInputProduct"
     }
   )
-  .enablePlugins(BuildInfoPlugin)
-  .dependsOn(syntactic, testsOutput)
+  .dependsOn(testkit, syntactic)

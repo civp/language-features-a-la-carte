@@ -1,5 +1,11 @@
 package carte
 
-import Rules.Rule
+import Rules.{Rule, NoRule}
+import Spans.{Span, NoSpan}
 
-case class Violation(rule: Rule, span: Span)
+object Violations {
+
+  case class Violation(rule: Rule, span: Span)
+
+  object NoViolation extends Violation(NoRule, NoSpan)
+}
