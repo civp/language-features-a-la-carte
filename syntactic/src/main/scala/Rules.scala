@@ -1,5 +1,7 @@
 package syntactic
 
+import carte.Rules.BlacklistRule
+
 import scala.meta._
 
 /**
@@ -8,6 +10,7 @@ import scala.meta._
  * @param msg explanation of why the construct is rejected
  */
 sealed abstract class Rule(val checkFunc: PartialFunction[Tree, Rule.Violation], val msg: String)
+  extends BlacklistRule
 
 object Rule {
 
