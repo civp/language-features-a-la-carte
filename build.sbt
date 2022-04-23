@@ -19,10 +19,10 @@ lazy val syntactic = project
   )
 
 lazy val syntacticWhitelist = project
-  .in(file("syntactic-whitelist"))
+  .in(file("syntactic-syntactic_checker.whitelist"))
   .settings(
     scalaVersion := "2.13.8",
-    moduleName := "syntactic-whitelist",
+    moduleName := "syntactic-syntactic_checker.whitelist",
     libraryDependencies ++= Seq(
       scalameta,
       junit,

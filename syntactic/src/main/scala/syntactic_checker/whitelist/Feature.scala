@@ -1,4 +1,4 @@
-package checker
+package syntactic_checker.whitelist
 
 import scala.meta.Tree
 
@@ -48,7 +48,7 @@ object Feature {
    * @param checkPF this function should return true when given a tree that is allowed and not be defined on other trees
    *                (or return false on them, but this is not necessary)
    */
-  protected[checker] abstract class AtomicFeature(checkPF: PartialFunction[Tree, Boolean]) extends Feature {
+  protected[whitelist] abstract class AtomicFeature(checkPF: PartialFunction[Tree, Boolean]) extends Feature {
     require(checkPF != null)
 
     override def allows(tree: Tree): Boolean = {

@@ -1,19 +1,22 @@
-import checker.Checker.{CheckResult, Violation}
-import checker.{Checker, Feature, Features}
+package syntactic_checker.whitelist
+
 import org.junit.Assert.{assertEquals, assertTrue, fail}
+import syntactic_checker.{CheckResult, Violation}
+import syntactic_checker.whitelist.WhitelistChecker.WhitelistViolation
 
 import java.util.StringJoiner
 import scala.meta.parsers.ParseException
 import scala.meta.{Dialect, dialects}
 
-object TestRunner {
+object WhitelistCheckerTestRunner {
 
   /**
    * Test method for a test where the checker should accept the program
+   *
    * @param srcFileName name of the file containing the program <p>
    *                    This is the name of one of the files in test/res, without ".scala"
-   * @param dialect the dialect to be used by the checker
-   * @param features the features that the checker should use
+   * @param dialect     the dialect to be used by the checker
+   * @param features    the features that the checker should use
    */
   def expectValidWithFeatures(
                                srcFileName: String,
@@ -25,10 +28,11 @@ object TestRunner {
 
   /**
    * Test method for a test where the checker should reject the program
-   * @param srcFileName name of the file containing the program <p>
-   *                    This is the name of one of the files in test/res, without ".scala"
-   * @param dialect the dialect to be used by the checker
-   * @param excludedFeatures the checker will use all atomic features except these ones
+   *
+   * @param srcFileName           name of the file containing the program <p>
+   *                              This is the name of one of the files in test/res, without ".scala"
+   * @param dialect               the dialect to be used by the checker
+   * @param excludedFeatures      the checker will use all atomic features except these ones
    * @param expectedViolationCnts map from line indices to the number of expected violations on the
    *                              corresponding line. Lines with 0 expected violation can be omitted
    */
@@ -44,10 +48,11 @@ object TestRunner {
 
   /**
    * Test method for a test where the parsing of the program should fail <p>
-   * The method therefore expects a CheckResult.ParsingError to be returned by the check method
+   * The method therefore expects a syntactic_checker.CheckResult.ParsingError to be returned by the check method
+   *
    * @param srcFileName name of the file containing the program <p>
    *                    This is the name of one of the files in test/res, without ".scala"
-   * @param dialect the dialect to be used by the checker
+   * @param dialect     the dialect to be used by the checker
    */
   def expectParsingError(
                           srcFileName: String,
@@ -62,20 +67,21 @@ object TestRunner {
 
   /**
    * Runs the test described by its arguments
-   * @param srcFileName name of the file containing the program <p>
-   *                    This is the name of one of the files in test/res, without ".scala"
-   * @param assertionFunc the function that is called on the CheckResult returned by the check method <p>
-   *                        This function should contain the assertions
-   * @param dialect the dialect to be used by the checker
-   * @param features the features that the checker should use
+   *
+   * @param srcFileName   name of the file containing the program <p>
+   *                      This is the name of one of the files in test/res, without ".scala"
+   * @param assertionFunc the function that is called on the syntactic_checker.CheckResult returned by the check method <p>
+   *                      This function should contain the assertions
+   * @param dialect       the dialect to be used by the checker
+   * @param features      the features that the checker should use
    */
   private def runTest(
                        srcFileName: String,
-                       assertionFunc: Checker.CheckResult => Unit,
+                       assertionFunc: CheckResult => Unit,
                        dialect: Dialect,
                        features: List[Feature]
                      ): Unit = {
-    val checker = Checker(features)
+    val checker = WhitelistChecker(features)
     val filepath = s"$testResourcesDirectory/$srcFileName.$testFilesExtension"
     val checkRes = checker.checkFile(dialect, filepath)
     assertionFunc(checkRes)
@@ -85,10 +91,9 @@ object TestRunner {
    * Assertion function for parsing error
    */
   private val expectParsingErrorCheckFunc: PartialFunction[CheckResult, Unit] = {
-    case err: CheckResult.ParsingError => {
+    case err: CheckResult.ParsingError =>
       assertTrue(s"expected ParseException, got ${err.cause.getClass}", err.cause.isInstanceOf[ParseException])
-    }
-    case other => fail(s"expected CheckResult.ParsingError, got ${other.getClass}($other)")
+    case other => fail(s"expected syntactic_checker.CheckResult.ParsingError, got ${other.getClass}($other)")
   }
 
   /**
@@ -101,8 +106,9 @@ object TestRunner {
 
   /**
    * Produces an assertion function for invalid programs
+   *
    * @param expectedViolationsCnts map from line indices to the number of expected violations on the
-   *                              corresponding line. Lines with 0 expected violation can be omitted
+   *                               corresponding line. Lines with 0 expected violation can be omitted
    */
   private def expectInvalidCheckFunc(expectedViolationsCnts: Map[Int, Int]): PartialFunction[CheckResult, Unit] = {
 
@@ -110,14 +116,14 @@ object TestRunner {
     val expectedViolationsCntZeroBasedLines = expectedViolationsCnts.map(lineAndCnt => (lineAndCnt._1 - 1, lineAndCnt._2))
 
     // extracts the number of actual violation(s) on each line
-    def extractViolationsCnts(violations: List[Violation]): Map[Int, Int] = {
+    def extractViolationsCnts(violations: List[WhitelistViolation]): Map[Int, Int] = {
       violations.foldLeft(Map.empty[Int, Int])((acc, violation) => {
-        val line = violation.tree.pos.startLine
+        val line = violation.forbiddenNode.pos.startLine
         acc.updated(line, acc.getOrElse(line, default = 0) + 1)
       })
     }
 
-    def assertViolationsCntsEqual(actualViolations: List[Violation]): Unit = {
+    def assertViolationsCntsEqual(actualViolations: List[WhitelistViolation]): Unit = {
       val actualViolationsCnts = extractViolationsCnts(actualViolations)
       val allLinesZeroBased = (expectedViolationsCntZeroBasedLines.keys ++ actualViolationsCnts.keys).toList.sorted
       val stringJoiner = new StringJoiner("\n")
@@ -126,7 +132,7 @@ object TestRunner {
         val actual = actualViolationsCnts.getOrElse(lineZeroBased, default = 0)
         if (actual != expected) {
           stringJoiner.add(s"error at line ${lineZeroBased + 1}: unexpected number of violations found: $actual, expected: $expected\n" +
-            s"\tfound violations are: ${actualViolations.filter(_.tree.pos.startLine == lineZeroBased)}")
+            s"\tfound violations are: ${actualViolations.filter(_.forbiddenNode.pos.startLine == lineZeroBased)}")
         }
       }
       if (stringJoiner.length() > 0) {
@@ -138,10 +144,11 @@ object TestRunner {
     val partialFunction: PartialFunction[CheckResult, Unit] = {
       case CheckResult.ParsingError(cause) => throw cause
       case CheckResult.Valid => fail("checker accepted program but it should have rejected it")
-      case CheckResult.Invalid(actualViolations) => assertViolationsCntsEqual(actualViolations)
+      case CheckResult.Invalid(actualViolations: List[WhitelistViolation]) => assertViolationsCntsEqual(actualViolations)
+      case CheckResult.Invalid(ls : List[Violation]) =>
+        fail(s"expected a list of ${WhitelistViolation.getClass.getSimpleName}, got ${ls.getClass}")
     }
     partialFunction
   }
 
 }
-
