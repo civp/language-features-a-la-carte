@@ -12,6 +12,7 @@ class RuleSuite extends munit.FunSuite {
   
   test("no-null-no-cast") {
     val path = getTestPath("example/NoNullNoCast")
+    // Do something here
     assert(RuleTest.fromPath(path).run())
   }
 }

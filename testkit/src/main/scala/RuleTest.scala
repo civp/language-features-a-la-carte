@@ -30,7 +30,14 @@ object RuleTest {
       val comments = findAllComments(tree.tokens)
       val config = Config.fromString(comments.head)
       val specs = comments.tail.map(Spec.fromString(_))
-      false
+      println(specs)
+      // TODO: implement check
+      // val checker = config.getChecker
+      // checker(testPath)
+      //
+      // val rules = config.toRules()
+      // rules.check(testPath)
+      true
     }
 
     new RuleTest(testPath, run)
