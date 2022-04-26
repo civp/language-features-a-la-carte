@@ -13,10 +13,10 @@ class WhitelistChecker private(allowedFeatures: List[Feature]) extends Checker {
 
   import WhitelistChecker.AlwaysAllowed
 
-  private val groupedFeature = new CompositeFeature(AlwaysAllowed :: allowedFeatures)
+  private object GroupedFeature extends CompositeFeature(AlwaysAllowed :: allowedFeatures)
 
   override def checkTree(tree: Tree): Option[WhitelistViolation] = {
-    if (groupedFeature.allows(tree)) None
+    if (GroupedFeature.allows(tree)) None
     else Some(WhitelistViolation(tree))
   }
 

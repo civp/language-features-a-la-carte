@@ -25,7 +25,7 @@ object Feature {
    *
    * @param features the features to allow
    */
-  class CompositeFeature(private val features: Set[Feature]) extends Feature {
+  abstract class CompositeFeature(private val features: Set[Feature]) extends Feature {
     require(features != null)
 
     def this(features: List[Feature]) = this(features.toSet)
