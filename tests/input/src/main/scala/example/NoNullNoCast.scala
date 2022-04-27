@@ -16,9 +16,11 @@ abstract class NoNullNoCast {
     if (str.length > 5){
       bar match {
         case Some(value) => value ++ str ++ s"${null}" /* violation: NoNull
-                                                ^^^^ */
+                                                ^^^^
+        usage of null is forbidden */
         case None => if (str.length < 10) str else null /* violation: NoNull
-                                                   ^^^^ */
+                                                   ^^^^
+        usage of null is forbidden */
       }
     }
     else {
@@ -29,9 +31,11 @@ abstract class NoNullNoCast {
         while (y > -50){
           y = y - 1
           val p = null /* violation: NoNull
-                  ^^^^ */
+                  ^^^^
+          usage of null is forbidden */
           y = y + p.asInstanceOf[Int] /* violation: NoCast
-                    ^^^^^^^^^^^^ */
+                    ^^^^^^^^^^^^
+          casts are forbidden */
         }
       }
       do {

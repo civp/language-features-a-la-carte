@@ -6,12 +6,12 @@ rules = [
 ]
 */
 abstract class NoVarNoWhile {
-  private var w: Int = 0 /* assert: noVar
-          ^^^
-  var is blacklisted */
-  var y: Int /* assert: noVar
+  private var w: Int = 0 /* violation: NoVar
+  ^^^^^^^^^^^
+  usage of var is forbidden */
+  var y: Int /* violation: NoVar
   ^^^
-  var is blacklisted */
+  usage of var is forbidden */
   val z: String
 
   def f(x: Int, y: Int): Int = 2*x+y+x*x*x
@@ -24,25 +24,25 @@ abstract class NoVarNoWhile {
       }
     }
     else {
-      var x = 0 /* assert: noVar
+      var x = 0 /* violation: NoVar
       ^^^
-      var is diabled */
-      while (x < 1000){ /* assert: noWhile
+      usage of var is forbidden */
+      while (x < 1000){ /* violation: NoWhile
       ^^^^^
-      while is disabled */
+      usage of while and do-while loops is forbidden */
         x = x + (2*x-5) % 15
         y = 2
-        while (y > -50){ /* assert: noWhile
+        while (y > -50){ /* violation: NoWhile
         ^^^^^
-        while is disabled */
+        usage of while and do-while loops is forbidden */
           y = y - 1
           val p = null
           y = y + p.asInstanceOf[Int]
         }
       }
-      do { /* assert: noWhile
+      do { /* violation: NoWhile
       ^^
-      while is disabled */
+      usage of while and do-while loops is forbidden */
         y = y + 5
       } while (y < 0)
       y.toString

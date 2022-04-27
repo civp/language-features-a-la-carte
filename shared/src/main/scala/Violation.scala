@@ -5,7 +5,11 @@ import Spans.{Span, NoSpan}
 
 object Violations {
 
-  case class Violation(rule: Rule, span: Span)
+  abstract class Violation(rule: Rule, span: Span) {
+    def toString: String
+  }
 
-  object NoViolation extends Violation(NoRule, NoSpan)
+  object NoViolation extends Violation(NoRule, NoSpan) {
+    override def toString: String = ""
+  }
 }

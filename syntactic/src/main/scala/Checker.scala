@@ -1,6 +1,7 @@
 package syntactic
 
 import Rule._
+import carte.{Checker => AbstractChecker}
 
 import java.io.File
 import scala.meta._
@@ -9,7 +10,7 @@ import scala.util.{Try, Using}
 /**
  * @param rules rules to be checked
  */
-class Checker(rules: List[Rule]) {
+class Checker(rules: List[Rule]) extends AbstractChecker {
   require(rules.nonEmpty, "checker must have at least 1 rule")
 
   // matches trees that do not match any rule
@@ -50,7 +51,7 @@ class Checker(rules: List[Rule]) {
    */
   def checkFile(filename: String): Try[List[Violation]] = {
     val content = Using(scala.io.Source.fromFile(filename)) { bufferedSource =>
-      bufferedSource.getLines().mkString
+      bufferedSource.getLines().mkString("\n")
     }
     content.flatMap(check)
   }

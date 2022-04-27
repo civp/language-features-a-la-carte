@@ -13,4 +13,6 @@ class TestPath (
 ) {
   def read: Input =
     Input.VirtualFile(name, FileIO.slurp(path, StandardCharsets.UTF_8)) 
+  
+  override def toString: String = path.toString()
 }
