@@ -12,7 +12,7 @@ import scala.meta._
  */
 abstract class BlacklistRule(val checkFunc: PartialFunction[Tree, BlacklistViolation], val msg: String)
 
-object BlacklistRule {
+object BlacklistRules {
 
   /**
    * Forbid the use of null

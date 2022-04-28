@@ -13,7 +13,7 @@ class BlacklistCheckerTests {
 
   @Test
   def nullInstanceOfCheckerTest(): Unit = {
-    val checker = BlacklistChecker(BlacklistRule.NoNull, BlacklistRule.NoCast)
+    val checker = BlacklistChecker(BlacklistRules.NoNull, BlacklistRules.NoCast)
     val checkRes = checker.checkCodeString(dialects.Scala213, sourceCode)
     checkRes match {
       case CheckResult.ParsingError(e) => throw e
@@ -31,7 +31,7 @@ class BlacklistCheckerTests {
 
   @Test
   def varWhileCheckerTest(): Unit = {
-    val checker = BlacklistChecker(BlacklistRule.NoVar, BlacklistRule.NoWhile)
+    val checker = BlacklistChecker(BlacklistRules.NoVar, BlacklistRules.NoWhile)
     val checkRes = checker.checkCodeString(dialects.Scala213, sourceCode)
     checkRes match {
       case CheckResult.ParsingError(e) => throw e
