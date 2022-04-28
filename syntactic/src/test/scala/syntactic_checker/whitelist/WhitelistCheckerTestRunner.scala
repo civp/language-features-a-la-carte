@@ -1,6 +1,7 @@
 package syntactic_checker.whitelist
 
 import org.junit.Assert.{assertEquals, assertTrue, fail}
+import syntactic_checker.whitelist.Features._
 import syntactic_checker.{CheckResult, Violation}
 import syntactic_checker.whitelist.WhitelistChecker.WhitelistViolation
 
@@ -42,7 +43,7 @@ object WhitelistCheckerTestRunner {
                                           excludedFeatures: List[Feature],
                                           expectedViolationCnts: Map[Int, Int]
                                         ): Unit = {
-    val allowedFeatures = Features.all.filter(!excludedFeatures.contains(_))
+    val allowedFeatures = allFeatures.filter(!excludedFeatures.contains(_))
     runTest(srcFileName, expectInvalidCheckFunc(expectedViolationCnts), dialect, allowedFeatures)
   }
 
@@ -58,7 +59,7 @@ object WhitelistCheckerTestRunner {
                           srcFileName: String,
                           dialect: Dialect = defaultDialect
                         ): Unit = {
-    runTest(srcFileName, expectParsingErrorCheckFunc, dialect, Features.all)
+    runTest(srcFileName, expectParsingErrorCheckFunc, dialect, allFeatures)
   }
 
   private val defaultDialect = dialects.Scala3
@@ -150,5 +151,31 @@ object WhitelistCheckerTestRunner {
     }
     partialFunction
   }
+
+  private val allFeatures: List[Feature] = List(
+    LiteralsAndExpressions,
+    Nulls,
+    Vals,
+    Defs,
+    ADTs,
+    LiteralFunctions,
+    ForExpr,
+    PolymorphicTypes,
+    Laziness,
+    BasicOop,
+    AdvancedOop,
+    ImperativeConstructs,
+    ContextualConstructs,
+    Extensions,
+    Metaprogramming,
+    Packages,
+    Imports,
+    Exports,
+    Xml,
+    StringInterpolation,
+    Annotations,
+    Infixes,
+    Inlines
+  )
 
 }

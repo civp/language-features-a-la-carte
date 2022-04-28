@@ -324,30 +324,4 @@ object Features {
   Term.Ref
    */
 
-  val all: List[Feature] = List(
-    LiteralsAndExpressions,
-    Nulls,
-    Vals,
-    Defs,
-    ADTs,
-    LiteralFunctions,
-    ForExpr,
-    PolymorphicTypes,
-    Laziness,
-    BasicOop,
-    AdvancedOop,
-    ImperativeConstructs,
-    ContextualConstructs,
-    Extensions,
-    Metaprogramming,
-    Packages,
-    Imports,
-    Exports,
-    Xml,
-    StringInterpolation,
-    Annotations,
-    Infixes,
-    Inlines
-  )
-
 }
