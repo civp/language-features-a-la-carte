@@ -10,7 +10,7 @@ import scala.meta._
  * @param checkFunc PartialFunction reporting the forbidden constructs
  * @param msg       explanation of why the construct is rejected
  */
-sealed abstract class BlacklistRule(val checkFunc: PartialFunction[Tree, BlacklistViolation], val msg: String)
+abstract class BlacklistRule(val checkFunc: PartialFunction[Tree, BlacklistViolation], val msg: String)
 
 object BlacklistRule {
 
