@@ -6,6 +6,7 @@ import syntactic_checker.{CheckResult, Violation}
 import syntactic_checker.whitelist.WhitelistChecker.WhitelistViolation
 
 import java.util.StringJoiner
+import scala.io.Source
 import scala.meta.parsers.ParseException
 import scala.meta.{Dialect, dialects}
 
@@ -63,7 +64,6 @@ object WhitelistCheckerTestRunner {
   }
 
   private val defaultDialect = dialects.Scala3
-  private val testResourcesDirectory = "src/test/res"
   private val testFilesExtension = "scala"
 
   /**
@@ -83,8 +83,9 @@ object WhitelistCheckerTestRunner {
                        features: List[Feature]
                      ): Unit = {
     val checker = WhitelistChecker(features)
-    val filepath = s"$testResourcesDirectory/$srcFileName.$testFilesExtension"
-    val checkRes = checker.checkFile(dialect, filepath)
+    val testFileUrl = getClass.getResource(s"/$srcFileName.$testFilesExtension")
+    val testFile = Source.fromURL(testFileUrl)
+    val checkRes = checker.checkBufferedSource(dialect, testFile)
     assertionFunc(checkRes)
   }
 
