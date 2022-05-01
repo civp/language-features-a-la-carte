@@ -46,6 +46,7 @@ private def reportNull(kw: Tree) = BlacklistViolation(kw, NoNull)
 ```
 (the `NoNull` rule of this example is actually implemented in `BlackListRules`, so in practice it should not
 be redefined)
+
 *Note:* the method `reportNull` is needed because simply writing `case nullKw: Lit.Null => BlacklistViolation(nullKw, NoNull)`
 gives a compile error since `NoNull` cannot be referenced in its own definition.
 
