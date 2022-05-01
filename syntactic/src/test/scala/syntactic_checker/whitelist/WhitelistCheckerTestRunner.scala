@@ -64,6 +64,7 @@ object WhitelistCheckerTestRunner {
   }
 
   private val defaultDialect = dialects.Scala3
+  private val testResourcesDirectory = "src/test/res"
   private val testFilesExtension = "scala"
 
   /**
@@ -83,9 +84,12 @@ object WhitelistCheckerTestRunner {
                        features: List[Feature]
                      ): Unit = {
     val checker = WhitelistChecker(features)
-    val testFileUrl = getClass.getResource(s"/$srcFileName.$testFilesExtension")
-    val testFile = Source.fromURL(testFileUrl)
-    val checkRes = checker.checkBufferedSource(dialect, testFile)
+    // FIXME should probably not be necessary to have both paths
+    val filepathOrNull = Source.fromFile(s"$testResourcesDirectory/$srcFileName.$testFilesExtension")
+    val filepath =
+      if (filepathOrNull != null) filepathOrNull
+      else Source.fromFile(s"syntactic/$testResourcesDirectory/$srcFileName.$testFilesExtension")
+    val checkRes = checker.checkBufferedSource(dialect, filepath)
     assertionFunc(checkRes)
   }
 
@@ -147,7 +151,7 @@ object WhitelistCheckerTestRunner {
       case CheckResult.ParsingError(cause) => throw cause
       case CheckResult.Valid => fail("checker accepted program but it should have rejected it")
       case CheckResult.Invalid(actualViolations: List[WhitelistViolation]) => assertViolationsCntsEqual(actualViolations)
-      case CheckResult.Invalid(ls : List[Violation]) =>
+      case CheckResult.Invalid(ls: List[Violation]) =>
         fail(s"expected a list of ${WhitelistViolation.getClass.getSimpleName}, got ${ls.getClass}")
     }
     partialFunction
