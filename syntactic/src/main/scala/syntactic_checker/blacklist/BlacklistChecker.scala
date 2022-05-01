@@ -34,8 +34,9 @@ object BlacklistChecker {
 
   /**
    * syntactic_checker.Violation of a rule
+   *
    * @param forbiddenNode node that violates the rule
-   * @param violatedRule rule that rejected this node
+   * @param violatedRule  rule that rejected this node
    */
   case class BlacklistViolation(override val forbiddenNode: Tree, val violatedRule: BlacklistRule) extends Violation {
 

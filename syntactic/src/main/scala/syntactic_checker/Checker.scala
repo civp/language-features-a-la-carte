@@ -51,7 +51,7 @@ trait Checker {
   /**
    * Check whether the program contained in the given source uses only allowed features
    *
-   * @param dialect the Scala dialect that the parsing should use
+   * @param dialect        the Scala dialect that the parsing should use
    * @param bufferedSource the source of the program to be checked
    * @return a CheckResult (Valid, Invalid or ParsingError)
    */
@@ -68,8 +68,8 @@ trait Checker {
   /**
    * Check whether the program contained in the given file uses only allowed features
    *
-   * @param dialect  the Scala dialect that the parsing should use
-   * @param file the file containing the program to be checked
+   * @param dialect the Scala dialect that the parsing should use
+   * @param file    the file containing the program to be checked
    * @return a CheckResult (Valid, Invalid or ParsingError)
    */
   final def checkFile(dialect: Dialect, file: File): CheckResult = {

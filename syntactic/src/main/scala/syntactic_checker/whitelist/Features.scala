@@ -151,10 +151,6 @@ object Features {
     case _: Type.ByName => true
   })
 
-  //  case object RecursiveCalls extends AtomicFeature({
-  //    ???
-  //  })
-
   private case object BasicOopAddition extends AtomicFeature({
     case Mod.Private(_) => true
     case Mod.Protected(_) => true

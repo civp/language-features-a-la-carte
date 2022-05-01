@@ -29,6 +29,7 @@ object Feature {
     require(features != null)
 
     def this(features: List[Feature]) = this(features.toSet)
+
     def this(features: Feature*) = this(features.toSet)
 
     override def allows(tree: Tree): Boolean = features.exists(_.allows(tree))

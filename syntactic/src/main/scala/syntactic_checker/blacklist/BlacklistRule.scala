@@ -19,7 +19,7 @@ object BlacklistRules {
    */
   case object NoNull extends BlacklistRule({
     case nullKw: Lit.Null => reportNull(nullKw)
-  }, msg="usage of null is forbidden")
+  }, msg = "usage of null is forbidden")
 
   private def reportNull(kw: Tree) = BlacklistViolation(kw, NoNull)
 
@@ -28,7 +28,7 @@ object BlacklistRules {
    */
   case object NoCast extends BlacklistRule({
     case asInstanceOfKw@Name("asInstanceOf") => reportCast(asInstanceOfKw)
-  }, msg="casts are forbidden")
+  }, msg = "casts are forbidden")
 
   private def reportCast(kw: Tree) = BlacklistViolation(kw, NoCast)
 
@@ -38,7 +38,7 @@ object BlacklistRules {
   case object NoVar extends BlacklistRule({
     case varKw: Defn.Var => reportVar(varKw)
     case varKw: Decl.Var => reportVar(varKw)
-  }, msg="usage of var is forbidden")
+  }, msg = "usage of var is forbidden")
 
   private def reportVar(kw: Tree) = BlacklistViolation(kw, NoVar)
 
@@ -48,7 +48,7 @@ object BlacklistRules {
   case object NoWhile extends BlacklistRule({
     case whileKw: Term.While => reportImperativeLoop(whileKw)
     case doWhileKw: Term.Do => reportImperativeLoop(doWhileKw)
-  }, msg="usage of while and do-while loops is forbidden")
+  }, msg = "usage of while and do-while loops is forbidden")
 
   private def reportImperativeLoop(kw: Tree) = BlacklistViolation(kw, NoWhile)
 

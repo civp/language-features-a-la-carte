@@ -219,7 +219,7 @@ class WhitelistCheckerTests {
     expectInvalidWhenExcludingFeatures(
       srcFileName = "Contextual",
       excludedFeatures = List(ContextualConstructs),
-      expectedViolationCnts = Map(3 -> 1,6 -> 1,8 -> 1)
+      expectedViolationCnts = Map(3 -> 1, 6 -> 1, 8 -> 1)
     )
   }
 
