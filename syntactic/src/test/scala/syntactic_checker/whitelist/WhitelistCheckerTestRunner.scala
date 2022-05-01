@@ -151,7 +151,8 @@ object WhitelistCheckerTestRunner {
     val partialFunction: PartialFunction[CheckResult, Unit] = {
       case CheckResult.ParsingError(cause) => throw cause
       case CheckResult.Valid => fail("checker accepted program but it should have rejected it")
-      case CheckResult.Invalid(actualViolations: List[WhitelistViolation]) => assertViolationsCntsEqual(actualViolations)
+      case CheckResult.Invalid(actualViolations) if actualViolations.forall(_.isInstanceOf[WhitelistViolation]) =>
+        assertViolationsCntsEqual(actualViolations.map(_.asInstanceOf[WhitelistViolation]))
       case CheckResult.Invalid(ls: List[Violation]) =>
         fail(s"expected a list of ${WhitelistViolation.getClass.getSimpleName}, got ${ls.getClass}")
     }
