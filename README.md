@@ -77,7 +77,8 @@ checker.checkCodeString(dialect = Sbt1, sourceCodeString)  // return Valid
 
 To define a custom `Feature`, create an object that
 extends `AtomicFeature` with `checkPF` a `PartialFunction` that returns true when given a construct
-that it allows (for other constructs it can either return `false` or not be defined).
+that it allows (for other constructs it can either return `false` or not be defined). It is also
+possible to define a `Feature` as a `CompositeFeature`, by combining existing `Feature`s.
 
 E.g. defining a `Feature` that allows to define values using `val` can be done as follows:
 ```Scala
