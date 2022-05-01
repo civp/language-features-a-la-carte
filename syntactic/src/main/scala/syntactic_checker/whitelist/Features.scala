@@ -312,12 +312,9 @@ object Features {
 
   /*
   Not implemented  TODO figure out what they are
-  Member.Term
-  Member.Type
+
   MultiSource
   Term.ApplyType
-  Term.FunctionTerm
-  Term.Ref
    */
 
 }
