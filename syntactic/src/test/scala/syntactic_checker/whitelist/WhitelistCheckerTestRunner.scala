@@ -7,6 +7,7 @@ import syntactic_checker.whitelist.WhitelistChecker.WhitelistViolation
 
 import java.util.StringJoiner
 import scala.io.Source
+import scala.meta.io.AbsolutePath
 import scala.meta.parsers.ParseException
 import scala.meta.{Dialect, dialects}
 
@@ -85,11 +86,10 @@ object WhitelistCheckerTestRunner {
                      ): Unit = {
     val checker = WhitelistChecker(features)
     // FIXME should probably not be necessary to have both paths
-    val filepathOrNull = Source.fromFile(s"$testResourcesDirectory/$srcFileName.$testFilesExtension")
-    val filepath =
-      if (filepathOrNull != null) filepathOrNull
-      else Source.fromFile(s"syntactic/$testResourcesDirectory/$srcFileName.$testFilesExtension")
-    val checkRes = checker.checkBufferedSource(dialect, filepath)
+    val intellijTestFile = AbsolutePath(s"$testResourcesDirectory/$srcFileName.$testFilesExtension").toFile
+    def sbtTestFile = AbsolutePath(s"syntactic/$testResourcesDirectory/$srcFileName.$testFilesExtension").toFile
+    val file = if (intellijTestFile.exists()) intellijTestFile else sbtTestFile
+    val checkRes = checker.checkFile(dialect, file)
     assertionFunc(checkRes)
   }
 
