@@ -100,7 +100,6 @@ object Features {
     case _: Pat.ExtractInfix => true
     case _: Pat.Repeated => true
     case _: Pat.SeqWildcard => true
-    case _: TypeCase => true
   })
 
   /**
