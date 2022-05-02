@@ -1,9 +1,9 @@
 package syntactic_checker.whitelist
 
 import org.junit.Assert.{assertEquals, assertTrue, fail}
+import syntactic_checker.CheckResult
 import syntactic_checker.whitelist.Features._
 import syntactic_checker.whitelist.WhitelistChecker.WhitelistViolation
-import syntactic_checker.{CheckResult, Violation}
 
 import java.util.StringJoiner
 import scala.meta.io.AbsolutePath

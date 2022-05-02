@@ -39,7 +39,7 @@ object BlacklistChecker {
    * @param forbiddenNode node that violates the rule
    * @param violatedRule  rule that rejected this node
    */
-  case class BlacklistViolation(override val forbiddenNode: Tree, val violatedRule: BlacklistRule) extends Violation {
+  case class BlacklistViolation(override val forbiddenNode: Tree, violatedRule: BlacklistRule) extends Violation {
 
     override def toString: String = s"${pos.startLine}:${pos.startColumn}: ${violatedRule.msg}"
   }

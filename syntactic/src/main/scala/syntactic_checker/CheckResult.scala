@@ -17,7 +17,7 @@ object CheckResult {
    *
    * @param violations the forbidden trees
    */
-  case class Invalid[+V <: Violation](val violations: List[V]) extends CheckResult[V]
+  case class Invalid[+V <: Violation](violations: List[V]) extends CheckResult[V]
 
   /**
    * syntactic_checker.CheckResult meaning that the program could not be checked against the features specification
@@ -25,5 +25,5 @@ object CheckResult {
    *
    * @param cause the throwable thrown on the error
    */
-  case class ParsingError(val cause: Throwable) extends CheckResult[Nothing]
+  case class ParsingError(cause: Throwable) extends CheckResult[Nothing]
 }
