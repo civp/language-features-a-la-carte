@@ -9,7 +9,7 @@ import scala.meta.{Init, Name, Self, Source, Template, Term, Tree, Type}
 /**
  * A checker to enforce the features specification
  */
-class WhitelistChecker private(allowedFeatures: List[Feature]) extends Checker {
+class WhitelistChecker private(allowedFeatures: List[Feature]) extends Checker[WhitelistViolation] {
 
   import WhitelistChecker.AlwaysAllowed
 

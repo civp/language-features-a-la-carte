@@ -6,7 +6,7 @@ import scala.meta.{Dialect, Source, Tree}
 import scala.util.control.NonFatal
 import scala.util.{Failure, Success, Try, Using}
 
-trait Checker {
+trait Checker[+V <: Violation] {
 
   /**
    * Check whether the input tree uses only allowed features
@@ -14,7 +14,7 @@ trait Checker {
    * @param tree the tree to be checked
    * @return Some[Violation] if a violation was found, None o.w.
    */
-  def checkTree(tree: Tree): Option[Violation]
+  def checkTree(tree: Tree): Option[V]
 
   /**
    * Check whether the input program (as a source) uses only allowed features
@@ -22,7 +22,7 @@ trait Checker {
    * @param src the source to be checked
    * @return a CheckResult (Valid, Invalid or ParsingError)
    */
-  final def checkSource(src: Source): CheckResult = {
+  final def checkSource(src: Source): CheckResult[V] = {
     val violations = src.collect {
       case tree: Tree => checkTree(tree)
     }.flatten
@@ -37,7 +37,7 @@ trait Checker {
    * @param sourceCode the string to be checked
    * @return a CheckResult (Valid, Invalid or ParsingError)
    */
-  final def checkCodeString(dialect: Dialect, sourceCode: String): CheckResult = {
+  final def checkCodeString(dialect: Dialect, sourceCode: String): CheckResult[V] = {
     val inputWithDialect = dialect(sourceCode)
     Try {
       inputWithDialect.parse[Source].get
@@ -55,7 +55,7 @@ trait Checker {
    * @param bufferedSource the source of the program to be checked
    * @return a CheckResult (Valid, Invalid or ParsingError)
    */
-  final def checkBufferedSource(dialect: Dialect, bufferedSource: BufferedSource): CheckResult = {
+  final def checkBufferedSource(dialect: Dialect, bufferedSource: BufferedSource): CheckResult[V] = {
     val content = Using(bufferedSource) { bufferedSource =>
       bufferedSource.getLines().mkString("\n")
     }
@@ -72,7 +72,7 @@ trait Checker {
    * @param file    the file containing the program to be checked
    * @return a CheckResult (Valid, Invalid or ParsingError)
    */
-  final def checkFile(dialect: Dialect, file: File): CheckResult = {
+  final def checkFile(dialect: Dialect, file: File): CheckResult[V] = {
     checkBufferedSource(dialect, scala.io.Source.fromFile(file))
   }
 
@@ -83,7 +83,7 @@ trait Checker {
    * @param filename the name of the file containing the program to be checked
    * @return a CheckResult (Valid, Invalid or ParsingError)
    */
-  final def checkFile(dialect: Dialect, filename: String): CheckResult = {
+  final def checkFile(dialect: Dialect, filename: String): CheckResult[V] = {
     checkBufferedSource(dialect, scala.io.Source.fromFile(filename))
   }
 
