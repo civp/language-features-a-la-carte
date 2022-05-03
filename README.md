@@ -15,8 +15,8 @@ To check a program using a blacklist-based approach, instantiate a `BlacklistChe
 
 E.g. to check that a program does not use `while` or `var`:
 ```Scala
-import syntactic_checker.blacklist.{ BlacklistChecker, BlacklistRules }
-import scala.meta.dialects.Sbt1
+import syntactic.blacklist.{ BlacklistChecker, BlacklistRules }
+import scala.meta.dialects.Scala3
 
 // example source code
 val sourceCodeString = """
@@ -28,7 +28,7 @@ val checker = BlacklistChecker(
   BlacklistRules.NoWhile
 )
 
-checker.checkCodeString(dialect = Sbt1, sourceCodeString) // returns Valid
+checker.checkCodeString(dialect = Scala3, sourceCodeString) // returns Valid
 ```
 
 To define a custom `BlacklistRule`, create an
@@ -59,8 +59,8 @@ in `Features`, e.g. `Features.ForExpr`) or user-defined.
 
 E.g.:
 ```Scala
-import syntactic_checker.whitelist.{ Features, WhitelistChecker }
-import scala.meta.dialects.Sbt1
+import syntactic.whitelist.{Features, WhitelistChecker}
+import scala.meta.dialects.Scala3
 
 // example source code
 val sourceCodeString = """
@@ -72,7 +72,8 @@ val checker = WhitelistChecker(
   Features.Vals
 )
 
-checker.checkCodeString(dialect = Sbt1, sourceCodeString)  // return Valid
+checker.checkCodeString(dialect = Scala3, sourceCodeString)  // return Valid
+
 ```
 
 To define a custom `Feature`, create an object that
