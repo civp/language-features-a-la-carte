@@ -1,6 +1,6 @@
 package output.example
 
-import syntactic_checker.blacklist.{BlacklistChecker, BlacklistRules}
+import syntactic.blacklist.{BlacklistChecker, BlacklistRules}
 
 object NoVarNoWhileOutput extends Output (
 

@@ -1,7 +1,7 @@
-package syntactic_checker.blacklist
+package syntactic.blacklist
 
-import syntactic_checker.blacklist.BlacklistChecker.BlacklistViolation
-import syntactic_checker.{Checker, Violation}
+import syntactic.blacklist.BlacklistChecker.BlacklistViolation
+import syntactic.{Checker, Violation}
 
 import scala.meta._
 

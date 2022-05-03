@@ -1,4 +1,4 @@
-package syntactic_checker
+package syntactic
 
 import java.io.File
 import scala.io.BufferedSource

@@ -1,8 +1,8 @@
-package syntactic_checker.whitelist
+package syntactic.whitelist
 
-import syntactic_checker.whitelist.Feature.{AtomicFeature, CompositeFeature}
-import syntactic_checker.whitelist.WhitelistChecker.WhitelistViolation
-import syntactic_checker.{Checker, Violation}
+import syntactic.whitelist.Feature.{AtomicFeature, CompositeFeature}
+import syntactic.whitelist.WhitelistChecker.WhitelistViolation
+import syntactic.{Checker, Violation}
 
 import scala.meta.{Init, Name, Self, Source, Template, Term, Tree, Type}
 

@@ -1,8 +1,8 @@
-package syntactic_checker.blacklist
+package syntactic.blacklist
 
 import org.junit.Assert._
 import org.junit.Test
-import syntactic_checker.CheckResult
+import syntactic.CheckResult
 
 import scala.meta.dialects
 

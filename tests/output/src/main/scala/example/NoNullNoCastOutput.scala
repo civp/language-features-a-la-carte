@@ -1,8 +1,8 @@
 package output.example
 
-import syntactic_checker.blacklist.BlacklistRules
+import syntactic.blacklist.BlacklistRules
 
-import syntactic_checker.blacklist.{BlacklistChecker, BlacklistRule}
+import syntactic.blacklist.{BlacklistChecker, BlacklistRule}
 
 object NoNullNoCastOutput extends Output (
 

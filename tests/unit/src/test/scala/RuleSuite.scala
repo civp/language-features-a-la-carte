@@ -1,6 +1,6 @@
 import org.junit.Assert._
 import org.scalatest.FunSuite
-import syntactic_checker.CheckResult
+import syntactic.CheckResult
 
 import java.nio.charset.StandardCharsets
 import scala.meta._

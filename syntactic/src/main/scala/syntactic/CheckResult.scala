@@ -1,4 +1,4 @@
-package syntactic_checker
+package syntactic
 
 /**
  * Result of checking a program

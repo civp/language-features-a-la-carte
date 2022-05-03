@@ -1,8 +1,8 @@
-package syntactic_checker.whitelist
+package syntactic.whitelist
 
 import org.junit.Test
-import syntactic_checker.whitelist.Features._
-import syntactic_checker.whitelist.WhitelistCheckerTestRunner.{expectInvalidWhenExcludingFeatures, expectParsingError, expectValidWithFeatures}
+import syntactic.whitelist.Features._
+import syntactic.whitelist.WhitelistCheckerTestRunner.{expectInvalidWhenExcludingFeatures, expectParsingError, expectValidWithFeatures}
 
 import scala.meta.dialects
 

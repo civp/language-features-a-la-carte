@@ -1,4 +1,4 @@
-package syntactic_checker
+package syntactic
 
 import scala.meta.{Position, Tree}
 

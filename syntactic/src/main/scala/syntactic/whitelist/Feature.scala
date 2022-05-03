@@ -1,4 +1,4 @@
-package syntactic_checker.whitelist
+package syntactic.whitelist
 
 import scala.meta.Tree
 

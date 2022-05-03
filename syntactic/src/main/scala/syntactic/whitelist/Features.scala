@@ -1,6 +1,6 @@
-package syntactic_checker.whitelist
+package syntactic.whitelist
 
-import syntactic_checker.whitelist.Feature.{AtomicFeature, CompositeFeature}
+import syntactic.whitelist.Feature.{AtomicFeature, CompositeFeature}
 
 import scala.meta._
 
