@@ -5,7 +5,7 @@ A tool checking that some specific language features are not used
 ## How to use the tool
 Defining which constructs are allowed to be used in a program can be done in two ways:
 * Blacklist-based checking: specify the constructs that <b>should not</b> be used
-* Whitelist-based checking: specify the constructs that <b>are allowed</b> to be used
+* Whitelist-based checking: specify the constructs that <b>are allowed</b> to be used (the other constructs are forbidden)
 
 ### Blacklisting language features
 To check a program using a blacklist-based approach, instantiate a `BlacklistChecker` with
