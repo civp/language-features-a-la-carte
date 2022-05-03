@@ -10,3 +10,4 @@ case class Bar(x: Int) extends Baz[Int]{
 
 def wxyz[SomeType](st: SomeType): SomeType = st
 
+def f() = wxyz[Int](0)

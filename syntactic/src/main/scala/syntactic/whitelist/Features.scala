@@ -140,6 +140,7 @@ object Features {
     case _: Type.Match => true
     case _: Type.Param => true
     case _: Type.Function => true
+    case _: Term.ApplyType => true
   })
 
   /**
@@ -308,12 +309,5 @@ object Features {
   case object Inlines extends AtomicFeature({
     case Mod.Inline() => true
   })
-
-  /*
-  Not implemented  TODO figure out what they are
-
-  MultiSource
-  Term.ApplyType
-   */
 
 }

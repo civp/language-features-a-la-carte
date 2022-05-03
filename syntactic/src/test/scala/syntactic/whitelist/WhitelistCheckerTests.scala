@@ -157,7 +157,7 @@ class WhitelistCheckerTests {
     expectInvalidWhenExcludingFeatures(
       srcFileName = "Polymorphism",
       excludedFeatures = List(PolymorphicTypes),
-      expectedViolationCnts = Map(2 -> 2, 4 -> 2, 7 -> 1, 11 -> 2)
+      expectedViolationCnts = Map(2 -> 2, 4 -> 2, 7 -> 1, 11 -> 2, 13 -> 1)
     )
   }
 
