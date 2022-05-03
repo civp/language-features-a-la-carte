@@ -18,18 +18,6 @@ lazy val syntactic = project
     )
   )
 
-lazy val syntacticWhitelist = project
-  .in(file("syntactic-syntactic_checker.whitelist"))
-  .settings(
-    scalaVersion := "2.13.8",
-    moduleName := "syntactic-syntactic_checker.whitelist",
-    libraryDependencies ++= Seq(
-      scalameta,
-      junit,
-      junitInterface
-    )
-  )
-
 lazy val testsShared = project
   .in(file("tests/shared"))
 
