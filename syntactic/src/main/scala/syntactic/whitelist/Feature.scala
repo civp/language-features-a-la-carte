@@ -34,13 +34,6 @@ object Feature {
 
     override def allows(tree: Tree): Boolean = features.exists(_.allows(tree))
 
-    override def equals(other: Any): Boolean = other match {
-      case that: CompositeFeature =>
-        features == that.features
-      case _ => false
-    }
-
-    override def hashCode(): Int = features.hashCode()
   }
 
   /**
