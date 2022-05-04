@@ -1,9 +1,8 @@
 package syntactic.whitelist
 
 import org.junit.Assert.{assertEquals, assertTrue, fail}
-import syntactic.CheckResult
 import syntactic.whitelist.Features._
-import syntactic.whitelist.WhitelistChecker.WhitelistViolation
+import syntactic.{CheckResult, Violation}
 
 import java.util.StringJoiner
 import scala.meta.io.AbsolutePath
@@ -79,7 +78,7 @@ object WhitelistCheckerTestRunner {
    */
   private def runTest(
                        srcFileName: String,
-                       assertionFunc: CheckResult[WhitelistViolation] => Unit,
+                       assertionFunc: CheckResult => Unit,
                        dialect: Dialect,
                        features: List[Feature]
                      ): Unit = {
@@ -97,7 +96,7 @@ object WhitelistCheckerTestRunner {
   /**
    * Assertion function for parsing error
    */
-  private val expectParsingErrorCheckFunc: PartialFunction[CheckResult[WhitelistViolation], Unit] = {
+  private val expectParsingErrorCheckFunc: PartialFunction[CheckResult, Unit] = {
     case err: CheckResult.ParsingError =>
       assertTrue(s"expected ParseException, got ${err.cause.getClass}", err.cause.isInstanceOf[ParseException])
     case other => fail(s"expected syntactic_checker.CheckResult.ParsingError, got ${other.getClass}($other)")
@@ -106,7 +105,7 @@ object WhitelistCheckerTestRunner {
   /**
    * Assertion function for valid program
    */
-  private val expectValidCheckFunc: PartialFunction[CheckResult[WhitelistViolation], Unit] = {
+  private val expectValidCheckFunc: PartialFunction[CheckResult, Unit] = {
     case CheckResult.ParsingError(cause) => throw cause
     case res => assertEquals(res, CheckResult.Valid)
   }
@@ -117,20 +116,20 @@ object WhitelistCheckerTestRunner {
    * @param expectedViolationsCnts map from line indices to the number of expected violations on the
    *                               corresponding line. Lines with 0 expected violation can be omitted
    */
-  private def expectInvalidCheckFunc(expectedViolationsCnts: Map[Int, Int]): PartialFunction[CheckResult[WhitelistViolation], Unit] = {
+  private def expectInvalidCheckFunc(expectedViolationsCnts: Map[Int, Int]): PartialFunction[CheckResult, Unit] = {
 
     // convert from 1-based to 0-based line indices
     val expectedViolationsCntZeroBasedLines = expectedViolationsCnts.map(lineAndCnt => (lineAndCnt._1 - 1, lineAndCnt._2))
 
     // extracts the number of actual violation(s) on each line
-    def extractViolationsCnts(violations: List[WhitelistViolation]): Map[Int, Int] = {
+    def extractViolationsCnts(violations: List[Violation]): Map[Int, Int] = {
       violations.foldLeft(Map.empty[Int, Int])((acc, violation) => {
         val line = violation.forbiddenNode.pos.startLine
         acc.updated(line, acc.getOrElse(line, default = 0) + 1)
       })
     }
 
-    def assertViolationsCntsEqual(actualViolations: List[WhitelistViolation]): Unit = {
+    def assertViolationsCntsEqual(actualViolations: List[Violation]): Unit = {
       val actualViolationsCnts = extractViolationsCnts(actualViolations)
       val allLinesZeroBased = (expectedViolationsCntZeroBasedLines.keys ++ actualViolationsCnts.keys).toList.sorted
       val stringJoiner = new StringJoiner("\n")
@@ -148,11 +147,10 @@ object WhitelistCheckerTestRunner {
     }
 
     require(expectedViolationsCnts.values.forall(_ >= 0))
-    val partialFunction: PartialFunction[CheckResult[WhitelistViolation], Unit] = {
+    val partialFunction: PartialFunction[CheckResult, Unit] = {
       case CheckResult.ParsingError(cause) => throw cause
       case CheckResult.Valid => fail("checker accepted program but it should have rejected it")
-      case CheckResult.Invalid(actualViolations) if actualViolations.forall(_.isInstanceOf[WhitelistViolation]) =>
-        assertViolationsCntsEqual(actualViolations)
+      case CheckResult.Invalid(actualViolations) => assertViolationsCntsEqual(actualViolations)
     }
     partialFunction
   }

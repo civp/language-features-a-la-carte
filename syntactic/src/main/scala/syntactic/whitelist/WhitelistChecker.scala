@@ -1,7 +1,6 @@
 package syntactic.whitelist
 
 import syntactic.whitelist.Feature.{AtomicFeature, CompositeFeature}
-import syntactic.whitelist.WhitelistChecker.WhitelistViolation
 import syntactic.{Checker, Violation}
 
 import scala.meta.{Init, Name, Self, Source, Template, Term, Tree, Type}
@@ -9,15 +8,15 @@ import scala.meta.{Init, Name, Self, Source, Template, Term, Tree, Type}
 /**
  * A checker to enforce the features specification
  */
-class WhitelistChecker private(allowedFeatures: List[Feature]) extends Checker[WhitelistViolation] {
+class WhitelistChecker private(allowedFeatures: List[Feature]) extends Checker {
 
   import WhitelistChecker.AlwaysAllowed
 
   private object GroupedFeature extends CompositeFeature(AlwaysAllowed :: allowedFeatures)
 
-  override def checkTree(tree: Tree): Option[WhitelistViolation] = {
+  override def checkTree(tree: Tree): Option[Violation] = {
     if (GroupedFeature.allows(tree)) None
-    else Some(WhitelistViolation(tree))
+    else Some(Violation(tree))
   }
 
 }
@@ -33,15 +32,6 @@ object WhitelistChecker {
    * @param features the features that are allowed in the programs to be checked
    */
   def apply(feature: Feature, features: Feature*): WhitelistChecker = new WhitelistChecker(feature :: features.toList)
-
-  /**
-   * A violation detected by the checker
-   *
-   * @param forbiddenNode the tree on which the violation happened
-   */
-  case class WhitelistViolation(override val forbiddenNode: Tree) extends Violation {
-    override def toString: String = s"WhitelistViolation($forbiddenNode, ${forbiddenNode.getClass})"
-  }
 
   // Specification of the constructs that should always be allowed
   // These constructs do not allow to write any meaningful program on their own,

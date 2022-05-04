@@ -1,6 +1,6 @@
 package syntactic.blacklist
 
-import syntactic.blacklist.BlacklistChecker.BlacklistViolation
+import syntactic.Violation
 
 import scala.meta._
 
@@ -8,9 +8,8 @@ import scala.meta._
  * Specification of language constructs that are forbidden
  *
  * @param checkFunc PartialFunction reporting the forbidden constructs
- * @param msg       explanation of why the construct is rejected
  */
-abstract class BlacklistRule(val checkFunc: PartialFunction[Tree, BlacklistViolation], val msg: String)
+abstract class BlacklistRule(val checkFunc: PartialFunction[Tree, Violation])
 
 object BlacklistRules {
 
@@ -18,19 +17,15 @@ object BlacklistRules {
    * Forbid the use of null
    */
   case object NoNull extends BlacklistRule({
-    case nullKw: Lit.Null => reportNull(nullKw)
-  }, msg = "usage of null is forbidden")
-
-  private def reportNull(kw: Tree) = BlacklistViolation(kw, NoNull)
+    case nullKw: Lit.Null => Violation(nullKw, "usage of null is forbidden")
+  })
 
   /**
    * Forbid casts with asInstanceOf
    */
   case object NoCast extends BlacklistRule({
-    case asInstanceOfKw@Name("asInstanceOf") => reportCast(asInstanceOfKw)
-  }, msg = "casts are forbidden")
-
-  private def reportCast(kw: Tree) = BlacklistViolation(kw, NoCast)
+    case asInstanceOfKw@Name("asInstanceOf") => Violation(asInstanceOfKw, "casts are forbidden")
+  })
 
   /**
    * Forbid the use of var
@@ -38,9 +33,9 @@ object BlacklistRules {
   case object NoVar extends BlacklistRule({
     case varKw: Defn.Var => reportVar(varKw)
     case varKw: Decl.Var => reportVar(varKw)
-  }, msg = "usage of var is forbidden")
+  })
 
-  private def reportVar(kw: Tree) = BlacklistViolation(kw, NoVar)
+  private def reportVar(kw: Tree) = Violation(kw, "usage of var is forbidden")
 
   /**
    * Forbid the use of imperative loops (while and do-while)
@@ -48,8 +43,8 @@ object BlacklistRules {
   case object NoWhile extends BlacklistRule({
     case whileKw: Term.While => reportImperativeLoop(whileKw)
     case doWhileKw: Term.Do => reportImperativeLoop(doWhileKw)
-  }, msg = "usage of while and do-while loops is forbidden")
+  })
 
-  private def reportImperativeLoop(kw: Tree) = BlacklistViolation(kw, NoWhile)
+  private def reportImperativeLoop(kw: Tree) = Violation(kw, "usage of while and do-while loops is forbidden")
 
 }

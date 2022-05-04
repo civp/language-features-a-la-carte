@@ -34,21 +34,16 @@ checker.checkCodeString(dialect = Scala3, sourceCodeString) // returns Valid
 To define a custom `BlacklistRule`, create an
 object named following the name of your rule and let it extend `BlacklistRule` with as `checkFunc`
 a `PartialFunction` that returns a `BlackListViolation` when given a construct that should be blacklisted (for
-other constructs it should not be defined) and as `msg` the message that should
-be displayed to the user when a construct is found in the program that is forbidden by the rule.
+other constructs it should not be defined).
 
 E.g. defining a rule that forbids the usage of `null` can be done as follows:
 ```Scala
-case object NoNull extends BlacklistRule(checkFunc = {
-    case nullKw: Lit.Null => reportNull(nullKw)
-}, msg = "usage of null is forbidden")
-private def reportNull(kw: Tree) = BlacklistViolation(kw, NoNull)
+case object NoNull extends BlacklistRule({
+    case nullKw: Lit.Null => Violation(nullKw, "usage of null is forbidden")
+})
 ```
 (the `NoNull` rule of this example is actually implemented in `BlackListRules`, so in practice it should not
 be redefined)
-
-*Note:* the method `reportNull` is needed because simply writing `case nullKw: Lit.Null => BlacklistViolation(nullKw, NoNull)`
-gives a compile error since `NoNull` cannot be referenced in its own definition.
 
 ### Whitelisting language features
 To check a program using a whitelist-based approach, instantiate a `WhitelistChecker` with all the
