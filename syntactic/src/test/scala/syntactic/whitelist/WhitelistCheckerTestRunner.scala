@@ -63,7 +63,7 @@ object WhitelistCheckerTestRunner {
   }
 
   private val defaultDialect = dialects.Scala3
-  private val testResourcesDirectory = "src/test/res"
+  private val testResourcesDirectory = "syntactic/src/test/res"
   private val testFilesExtension = "scala"
 
   /**
@@ -83,13 +83,7 @@ object WhitelistCheckerTestRunner {
                        features: List[Feature]
                      ): Unit = {
     val checker = WhitelistChecker(features)
-    // FIXME should probably not be necessary to have both paths
-    val intellijTestFile = AbsolutePath(s"$testResourcesDirectory/$srcFileName.$testFilesExtension").toFile
-
-    def sbtTestFile = AbsolutePath(s"syntactic/$testResourcesDirectory/$srcFileName.$testFilesExtension").toFile
-
-    val file = if (intellijTestFile.exists()) intellijTestFile else sbtTestFile
-    val checkRes = checker.checkFile(dialect, file)
+    val checkRes = checker.checkFile(dialect, s"$testResourcesDirectory/$srcFileName.$testFilesExtension")
     assertionFunc(checkRes)
   }
 
