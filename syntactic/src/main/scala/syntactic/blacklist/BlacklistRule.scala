@@ -8,6 +8,9 @@ import scala.meta._
  * Specification of language constructs that are forbidden
  *
  * @param checkFunc PartialFunction reporting the forbidden constructs
+ *
+ * <b>Implementations should only be singleton objects</b>
+ *
  */
 abstract class BlacklistRule(val checkFunc: PartialFunction[Tree, Violation])
 

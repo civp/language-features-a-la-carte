@@ -41,6 +41,8 @@ object Feature {
    *
    * @param checkPF this function should return true when given a tree that is allowed and not be defined on other trees
    *                (or return false on them, but this is not necessary)
+   *
+   * <b>Implementations should only be singleton objects</b>
    */
   abstract class AtomicFeature(checkPF: PartialFunction[Tree, Boolean]) extends Feature {
     require(checkPF != null)
