@@ -8,6 +8,7 @@
 .lib/
 dist/*
 target/
+project/target
 lib_managed/
 src_managed/
 project/boot/
@@ -17,6 +18,7 @@ project/plugins/project/
 .scala_dependencies
 .worksheet
 .idea
+*.iml
 
 # ENSIME specific
 .ensime_cache/
@@ -27,3 +29,7 @@ project/plugins/project/
 .metals/
 .vscode/
 metals.sbt
+
+
+# Worksheets
+*.sc

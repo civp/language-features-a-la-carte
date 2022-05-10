@@ -12,7 +12,9 @@ lazy val syntactic = project
   .settings(
     moduleName := "syntactic",
     libraryDependencies ++= Seq(
-      scalameta
+      scalameta,
+      junit,
+      junitInterface
     )
   )
 
@@ -47,3 +49,4 @@ lazy val testsUnit = project
   )
   .enablePlugins(BuildInfoPlugin)
   .dependsOn(syntactic, testsOutput)
+

@@ -1,11 +1,10 @@
 package output.example
 
-import syntactic.Checker
-import syntactic.Rule
+import syntactic.blacklist.{BlacklistChecker, BlacklistRules}
 
 object NoVarNoWhileOutput extends Output (
 
-  Checker(Rule.NoVar, Rule.NoWhile),
+  BlacklistChecker(BlacklistRules.NoVar, BlacklistRules.NoWhile),
   List(
     (2, 2),
     (3, 2),

@@ -1,5 +1,5 @@
 package output.example
 
-import syntactic.Checker
+import syntactic.blacklist.BlacklistChecker
 
-case class Output(checker: Checker, expected: List[(Int, Int)])
+case class Output(checker: BlacklistChecker, expected: List[(Int, Int)])

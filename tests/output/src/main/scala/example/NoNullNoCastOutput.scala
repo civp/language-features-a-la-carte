@@ -1,11 +1,12 @@
 package output.example
 
-import syntactic.Checker
-import syntactic.Rule
+import syntactic.blacklist.BlacklistRules
+
+import syntactic.blacklist.{BlacklistChecker, BlacklistRule}
 
 object NoNullNoCastOutput extends Output (
 
-  Checker(Rule.NoNull, Rule.NoCast),
+  BlacklistChecker(BlacklistRules.NoNull, BlacklistRules.NoCast),
   List(
     (11, 48),
     (12, 51),
