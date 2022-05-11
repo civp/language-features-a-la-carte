@@ -13,7 +13,7 @@ object Rules {
     case m @ Method(
       AppliedType(
         TypeRef(
-          TermRef(PackageRef(SimpleName("scala")), SimpleName("package")),
+          _,
           TypeName(SimpleName("List"))),
         _),
       SimpleName("head"),
@@ -21,15 +21,30 @@ object Rules {
   }) 
 
   case object NoOptionGet extends Rule({
-    case m => Violation(m)
+    case m @ Method(
+      AppliedType(
+        TypeRef(
+          _,
+          TypeName(SimpleName("Option"))),
+        _),
+      SimpleName("get"),
+      _) => Violation(m, Some("Option#get is unsafe"))
   })
 
   case object NoPrintln extends Rule({
-    case m => Violation(m)
+    case m @ Method(
+      NoType,
+      SimpleName("println"),
+      _
+    ) => Violation(m, Some("println is not functional"))
   })
 
   case object NoIterableOnceOpsForeach extends Rule({
-    case m => Violation(m)
+    case m @ Method(
+      _, // TODO: is subtype
+      SimpleName("foreach"),
+      _
+    ) => Violation(m, Some("foreach is not functional"))
   })
 
 }

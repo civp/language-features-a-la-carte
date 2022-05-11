@@ -23,7 +23,7 @@ lazy val semantic = project
         assert(testSourcesProducts.size == 1)
         testSourcesProducts.map(_.getAbsolutePath).head
       }
-      s"-Dtest-resources=$testResources"
+      s"-Dsemantic-test-resources=$testResources"
     }
   )
   .dependsOn(tastyQueryJVM)

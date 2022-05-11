@@ -4,8 +4,8 @@ import java.nio.file.{Files, Paths}
 
 import tastyquery.ast.Trees._
 import tastyquery.ast.TypeTrees._
+import tastyquery.ast.Types._
 import tastyquery.ast.Names._
-import tastyquery.ast.Types.{Type, NoType}
 import tastyquery.Contexts.BaseContext
 import tastyquery.api.ProjectReader
 
@@ -30,44 +30,28 @@ class Checker private (rules: List[Rule]) {
     combinedCheckFunc.applyOrElse(method, defaultCheckFunc)
   }
 
-  private def typeOf(tree: Tree)(using BaseContext): Type =
-    try {
-      tree.tpe
-    } catch {
-      case e: TypeComputationError => NoType
-    }
-
-  private def collectType(tree: Tree)(using BaseContext): Map[Name, Type] = {
-    tree
-      .walkTree({
-        case ValDef(name, tpt, _, _) => (name, tpt.toType) :: Nil
-        case _ => Nil
-      })(_ ::: _, Nil)
-      .foldLeft(Map.empty) {
-        case (map, (k, v)) =>
-          map + (k -> v)
-      }
-  }
-
-  private def collectMethod(tree: Tree)(using BaseContext): List[Method] = {
-    val nameToType = collectType(tree)
+  private def collectMethods(tree: Tree)(using BaseContext): List[Method] = {
     tree.walkTree({
-      case t @ Select(qualifier, name: SimpleName) =>
-        val tpe = qualifier match {
-          case Ident(nme) => nameToType(nme)
-          case _ => qualifier.tpe
+      case tr @ Select(qual, name: SimpleName) =>
+        val tpe = qual.tpe match {
+          case tp: TermRef => tp.underlying
+          case tp => tp
         }
-        Method(tpe, name, t.span) :: Nil
-      case t @ Apply(Ident(dname: DerivedName), _) =>
-        Method(NoType, dname.underlying, t.span) :: Nil
-      case t @ Apply(Ident(name: SimpleName), _) =>
-        Method(NoType, name, t.span) :: Nil
+        Method(tpe, name, tr.span) :: Nil
+      case tr @ Apply(Ident(dname: DerivedName), _) =>
+        Method(NoType, dname.underlying, tr.span) :: Nil
+      case tr @ Apply(TypeApply(SelectIn(qual, name: SignedName, owner), _), _) =>
+        val tpe = qual.tpe match {
+          case tp: TermRef => tp.underlying
+          case tp => tp
+        }
+        Method(tpe, name.underlying, tr.span) :: Nil
       case _ => Nil
     })(_ ::: _, Nil)
   }
 
   def checkTree(tree: Tree)(using BaseContext): List[Violation] = {
-    collectMethod(tree).flatMap(checkMethod)
+    collectMethods(tree).flatMap(checkMethod)
   }
 
   def checkClass(className: String)(using BaseContext): List[Violation] = {
