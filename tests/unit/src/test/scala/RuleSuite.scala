@@ -1,27 +1,17 @@
-import org.junit.Assert._
-import org.scalatest.FunSuite
-import syntactic.CheckResult
+import testkit.RuleTest
+import testkit.TestPath
 
-import java.nio.charset.StandardCharsets
-import scala.meta._
-import scala.meta.internal.io.FileIO
 import scala.meta.io.AbsolutePath
 
-class RuleSuite extends FunSuite {
+class RuleSuite extends munit.FunSuite {
 
-  test("Example test") {
-    val path = AbsolutePath("tests/input/src/main/scala/example/Example.scala")
-    val sourceCode = FileIO.slurp(path, StandardCharsets.UTF_8)
-    import output.example.outputs
-    for (output <- outputs) {
-      println(output)
-      val checkResult = output.checker.checkCodeString(dialect = dialects.Scala213, sourceCode)
-      checkResult match {
-        case CheckResult.Valid => fail("should not be valid")
-        case CheckResult.Invalid(detectedViolations) =>
-          assertEquals(output.expected, detectedViolations.map(violation => (violation.pos.startLine, violation.pos.startColumn)))
-        case CheckResult.ParsingError(cause) => throw cause
-      }
-    }
+  private def getTestPath(name: String): TestPath = {
+    val path = AbsolutePath(s"${System.getProperty("tests-input")}/$name.scala")
+    new TestPath(name, path)
+  }
+  
+  test("no-null-no-cast") {
+    val path = getTestPath("example/NoNullNoCast")
+    assert(RuleTest.fromPath(path).run())
   }
 }

@@ -15,10 +15,10 @@ abstract class NoNullNoCast {
   def foo(str: String, bar: Option[String]): String = {
     if (str.length > 5){
       bar match {
-        case Some(value) => value ++ str ++ s"${null}" /* assert: noNull
+        case Some(value) => value ++ str ++ s"${null}" /* violation: NoNull
                                                 ^^^^
         null is blacklisted */
-        case None => if (str.length < 10) str else null /* assert: noNull
+        case None => if (str.length < 10) str else null /* violation: NoNull
                                                    ^^^^
         null is blacklisted */
       }
@@ -30,10 +30,10 @@ abstract class NoNullNoCast {
         y = 2
         while (y > -50){
           y = y - 1
-          val p = null /* assert: noNull
+          val p = null /* violatioin: NoNull
                   ^^^^
           null is blacklisted */
-          y = y + p.asInstanceOf[Int] /* assert: noCast
+          y = y + p.asInstanceOf[Int] /* violation: NoCast
                     ^^^^^^^^^^^^
           cast is disabled */
         }

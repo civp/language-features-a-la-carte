@@ -1,3 +1,8 @@
 package carte
 
-abstract class Span
+object Spans {
+
+  abstract class Span
+
+  object NoSpan extends Span
+}
