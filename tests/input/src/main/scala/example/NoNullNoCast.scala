@@ -1,6 +1,9 @@
 /*
-noNull = true
-noCast = true
+mode = blacklist
+rules = [
+  NoNull,
+  NoCast
+]
 */
 abstract class NoNullNoCast {
   private var w: Int = 0
@@ -30,7 +33,7 @@ abstract class NoNullNoCast {
           val p = null /* assert: noNull
                   ^^^^
           null is blacklisted */
-          y = y + p.asInstanceOf[Int] /* assert: noNull
+          y = y + p.asInstanceOf[Int] /* assert: noCast
                     ^^^^^^^^^^^^
           cast is disabled */
         }

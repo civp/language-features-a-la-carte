@@ -17,6 +17,24 @@ lazy val syntactic = project
       junitInterface
     )
   )
+  .dependsOn(shared)
+
+lazy val shared = project
+  .in(file("shared"))
+  .settings(
+    moduleName := "shared"
+  )
+
+lazy val testkit = project
+  .in(file("testkit"))
+  .settings(
+    moduleName := "testkit",
+    libraryDependencies ++= Seq(
+      scalameta,
+      scalaParserCombinators
+    )
+  )
+  .dependsOn(shared, syntactic, semantic)
 
 lazy val testsInput = project
   .in(file("tests/input"))

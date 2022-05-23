@@ -1,6 +1,9 @@
 /*
-noVar = true
-noWhile = true
+mode = blacklist
+rules = [
+  NoVar,
+  NoWhile
+]
 */
 abstract class NoVarNoWhile {
   private var w: Int = 0 /* assert: noVar
