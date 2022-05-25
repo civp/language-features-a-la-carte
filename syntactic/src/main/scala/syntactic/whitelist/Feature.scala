@@ -34,6 +34,8 @@ object Feature {
 
     override def allows(tree: Tree): Boolean = features.exists(_.allows(tree))
 
+    override def toString: String = features.map(_.toString).mkString(", ")
+
   }
 
   /**

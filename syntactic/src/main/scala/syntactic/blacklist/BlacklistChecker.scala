@@ -17,9 +17,7 @@ class BlacklistChecker private(rules: List[BlacklistRule]) extends Checker {
 
   private val combinedCheckFunc: PartialFunction[Tree, Option[Violation]] = {
     val checkFuncs = rules.map(_.checkFunc.andThen(Some(_)))
-    checkFuncs
-      .reduceLeft(_.orElse(_))
-      .orElse(defaultPartFunc)
+    checkFuncs.reduceLeft(_.orElse(_))
   }
 
   override def checkTree(tree: Tree): Option[Violation] = {

@@ -3,8 +3,6 @@ package testkit
 import carte.Rules.{Rule, NoRule}
 import carte.Violations.{Violation, NoViolation}
 import carte.Spans.{Span, NoSpan}
-import syntactic.{Rule => SyntacticRules}
-import syntactic.Rule.{Violation => _, _}
 
 import scala.meta._
 
