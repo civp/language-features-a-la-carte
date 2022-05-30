@@ -1,0 +1,13 @@
+/*
+mode = whitelist
+excludedFeatures = [
+  Extensions
+]
+*/
+
+extension(self: String){ /*
+^^^^^^^^^
+not in the allowed features: Metaprogramming, Laziness, Imports, LiteralFunctions, StringInterpolation, LiteralsAndExpressions, ADTs, BasicOopAddition, AdvancedOOPAddition, PolymorphicTypes, AlwaysAllowed, Annotations, Xml, ForExpr, Infixes, Inlines, Defs, ContextualConstructs, Packages, Exports, ADTs, Vals, ImperativeConstructs, Nulls, ADTs, BasicOopAddition */
+  def lastIndex: Int = self.size
+  def foo(n: Int): String = self.repeat(n)
+}

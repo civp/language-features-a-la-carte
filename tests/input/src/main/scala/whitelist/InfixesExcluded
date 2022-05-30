@@ -1,0 +1,10 @@
+/*
+mode = whitelist
+excludedFeatures = [
+  AdvancedOop
+]
+*/
+
+infix def foo(x: Int): Int = x /*
+^^^^^
+not in the allowed features: ForExpr, Metaprogramming, Extensions, Laziness, Imports, LiteralFunctions, StringInterpolation, LiteralsAndExpressions, ADTs, BasicOopAddition, AdvancedOOPAddition, PolymorphicTypes, AlwaysAllowed, Annotations, Xml, Inlines, Defs, ContextualConstructs, Packages, Exports, ADTs, Vals, ImperativeConstructs, Nulls, ADTs, BasicOopAddition */

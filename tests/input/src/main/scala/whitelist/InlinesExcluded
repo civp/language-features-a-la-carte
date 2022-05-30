@@ -1,0 +1,10 @@
+/*
+mode = whitelist
+excludedFeatures = [
+  Inlines
+]
+*/
+
+inline def foo(x: Int): Int = x /*
+^^^^^^
+not in the allowed features: Metaprogramming, Defs, Extensions, Laziness, Imports, LiteralFunctions, StringInterpolation, LiteralsAndExpressions, ADTs, BasicOopAddition, AdvancedOOPAddition, PolymorphicTypes, AlwaysAllowed, Annotations, Xml, ForExpr, Infixes, ContextualConstructs, Packages, Exports, ADTs, Vals, ImperativeConstructs, Nulls, ADTs, BasicOopAddition */

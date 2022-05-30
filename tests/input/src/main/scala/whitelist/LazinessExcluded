@@ -1,0 +1,13 @@
+/*
+mode = whitelist
+excludedFeatures = [
+  Laziness
+]
+*/
+
+lazy val x = 0 /*
+^^^^
+not in the allowed features: Metaprogramming, Extensions, Imports, LiteralFunctions, StringInterpolation, LiteralsAndExpressions, ADTs, BasicOopAddition, AdvancedOOPAddition, PolymorphicTypes, AlwaysAllowed, Annotations, Xml, ForExpr, Infixes, Inlines, Defs, ContextualConstructs, Packages, Exports, ADTs, Vals, ImperativeConstructs, Nulls, ADTs, BasicOopAddition */
+def f(arg: => String): Boolean = arg.isDefinedAt(99) /*
+           ^^^^^^^^^
+not in the allowed features: Metaprogramming, Extensions, Imports, LiteralFunctions, StringInterpolation, LiteralsAndExpressions, ADTs, BasicOopAddition, AdvancedOOPAddition, PolymorphicTypes, AlwaysAllowed, Annotations, Xml, ForExpr, Infixes, Inlines, Defs, ContextualConstructs, Packages, Exports, ADTs, Vals, ImperativeConstructs, Nulls, ADTs, BasicOopAddition */

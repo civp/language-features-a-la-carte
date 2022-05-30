@@ -2,7 +2,7 @@ import sbt._
 
 object Dependencies {
   val scalatestVersion = "3.0.8"
-  val scalametaVersion = "4.5.1"
+  val scalametaVersion = "4.5.8"
   val junitInterfaceVersion = "0.13.3"
   val junitVersion = "4.13.2"
   val funsuiteVersion = "3.2.11"

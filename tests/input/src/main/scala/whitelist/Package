@@ -1,0 +1,7 @@
+/*
+mode = whitelist
+excludedFeatures = [
+  AdvancedOop
+]
+*/
+package ch.epfl.foo.bar

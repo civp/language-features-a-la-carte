@@ -1,0 +1,43 @@
+/*
+mode = whitelist
+excludedFeatures = [
+  ImperativeConstructs
+]
+*/
+
+var x = 0 /*
+^^^
+not in the allowed features: Metaprogramming, Extensions, Laziness, Imports, LiteralFunctions, StringInterpolation, LiteralsAndExpressions, ADTs, BasicOopAddition, AdvancedOOPAddition, PolymorphicTypes, AlwaysAllowed, Annotations, Xml, Vals, ForExpr, Infixes, Inlines, Defs, ContextualConstructs, Packages, Exports, ADTs, Nulls, ADTs, BasicOopAddition */
+while (x < 1000){ /*
+^^^^^
+not in the allowed features: Metaprogramming, Extensions, Laziness, Imports, LiteralFunctions, StringInterpolation, LiteralsAndExpressions, ADTs, BasicOopAddition, AdvancedOOPAddition, PolymorphicTypes, AlwaysAllowed, Annotations, Xml, Vals, ForExpr, Infixes, Inlines, Defs, ContextualConstructs, Packages, Exports, ADTs, Nulls, ADTs, BasicOopAddition */
+  println(x)
+  x = x + 1 /*
+  ^^^^^^^^^
+  not in the allowed features: Metaprogramming, Extensions, Laziness, Imports, LiteralFunctions, StringInterpolation, LiteralsAndExpressions, ADTs, BasicOopAddition, AdvancedOOPAddition, PolymorphicTypes, AlwaysAllowed, Annotations, Xml, Vals, ForExpr, Infixes, Inlines, Defs, ContextualConstructs, Packages, Exports, ADTs, Nulls, ADTs, BasicOopAddition */
+}
+var y = 1 /*
+^^^
+not in the allowed features: Metaprogramming, Extensions, Laziness, Imports, LiteralFunctions, StringInterpolation, LiteralsAndExpressions, ADTs, BasicOopAddition, AdvancedOOPAddition, PolymorphicTypes, AlwaysAllowed, Annotations, Xml, Vals, ForExpr, Infixes, Inlines, Defs, ContextualConstructs, Packages, Exports, ADTs, Nulls, ADTs, BasicOopAddition */
+do { /*
+^^
+not in the allowed features: Metaprogramming, Extensions, Laziness, Imports, LiteralFunctions, StringInterpolation, LiteralsAndExpressions, ADTs, BasicOopAddition, AdvancedOOPAddition, PolymorphicTypes, AlwaysAllowed, Annotations, Xml, Vals, ForExpr, Infixes, Inlines, Defs, ContextualConstructs, Packages, Exports, ADTs, Nulls, ADTs, BasicOopAddition */
+  println(y)
+  y += 2
+} while(y < 500)
+
+def foo(y: Int): Int = {
+  if (y < 0) return 0 /*
+             ^^^^^^^^
+  not in the allowed features: Metaprogramming, Extensions, Laziness, Imports, LiteralFunctions, StringInterpolation, LiteralsAndExpressions, ADTs, BasicOopAddition, AdvancedOOPAddition, PolymorphicTypes, AlwaysAllowed, Annotations, Xml, Vals, ForExpr, Infixes, Inlines, Defs, ContextualConstructs, Packages, Exports, ADTs, Nulls, ADTs, BasicOopAddition */
+  var k = 2*y /*
+  ^^^
+  not in the allowed features: Metaprogramming, Extensions, Laziness, Imports, LiteralFunctions, StringInterpolation, LiteralsAndExpressions, ADTs, BasicOopAddition, AdvancedOOPAddition, PolymorphicTypes, AlwaysAllowed, Annotations, Xml, Vals, ForExpr, Infixes, Inlines, Defs, ContextualConstructs, Packages, Exports, ADTs, Nulls, ADTs, BasicOopAddition */
+  if (k / 5 == k * 5){
+    println("Scala!")
+    return -42 /*
+    ^^^^^^^^^^
+    not in the allowed features: Metaprogramming, Extensions, Laziness, Imports, LiteralFunctions, StringInterpolation, LiteralsAndExpressions, ADTs, BasicOopAddition, AdvancedOOPAddition, PolymorphicTypes, AlwaysAllowed, Annotations, Xml, Vals, ForExpr, Infixes, Inlines, Defs, ContextualConstructs, Packages, Exports, ADTs, Nulls, ADTs, BasicOopAddition */
+  }
+  if (k % 2 == 0) k else -1
+}

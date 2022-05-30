@@ -41,7 +41,7 @@ lazy val testkit = project
 lazy val testsInput = project
   .in(file("tests/input"))
   .settings(
-    scalaVersion := scala2Version,
+    scalaVersion := scala3Version
   )
 
 lazy val testsUnit = project

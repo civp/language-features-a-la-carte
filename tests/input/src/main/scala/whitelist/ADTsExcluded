@@ -1,0 +1,21 @@
+/*
+mode = whitelist
+excludedFeatures = [
+  ADTs
+]
+*/
+
+sealed trait Tree /*
+^^^^^^^^^^^^^^^^^
+not in the allowed features: Metaprogramming, Extensions, Laziness, Imports, LiteralFunctions, StringInterpolation, LiteralsAndExpressions, Exports, PolymorphicTypes, AlwaysAllowed, Annotations, Xml, Nulls, ForExpr, Infixes, Inlines, Defs, ContextualConstructs, Packages, Vals, ImperativeConstructs */
+
+object Tree { /*
+^^^^^^
+not in the allowed features: Metaprogramming, Extensions, Laziness, Imports, LiteralFunctions, StringInterpolation, LiteralsAndExpressions, Exports, PolymorphicTypes, AlwaysAllowed, Annotations, Xml, Nulls, ForExpr, Infixes, Inlines, Defs, ContextualConstructs, Packages, Vals, ImperativeConstructs */
+  case class Leaf(value: Int) extends Tree /*
+  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  not in the allowed features: Metaprogramming, Extensions, Laziness, Imports, LiteralFunctions, StringInterpolation, LiteralsAndExpressions, Exports, PolymorphicTypes, AlwaysAllowed, Annotations, Xml, Nulls, ForExpr, Infixes, Inlines, Defs, ContextualConstructs, Packages, Vals, ImperativeConstructs */
+  case class Fork(right: Tree, left: Tree) extends Tree /*
+  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  not in the allowed features: Metaprogramming, Extensions, Laziness, Imports, LiteralFunctions, StringInterpolation, LiteralsAndExpressions, Exports, PolymorphicTypes, AlwaysAllowed, Annotations, Xml, Nulls, ForExpr, Infixes, Inlines, Defs, ContextualConstructs, Packages, Vals, ImperativeConstructs */
+}

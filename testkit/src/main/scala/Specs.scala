@@ -5,14 +5,21 @@ import carte.Violations.{Violation, NoViolation}
 import carte.Spans.{Span, NoSpan}
 
 import scala.meta._
+import scala.meta.dialects.Scala3
 
+/**
+  * Specifications for test input in the form of comments
+  * The comment on the head specifies checker parameters.
+  * The other comments mark positions and messages of violations.
+  * Comments should be wrapped in /* */
+  */
 object Specs {
 
-  def fromPath(path: TestPath): List[String] = {
+  def fromPath(path: TestPath, dialect: Dialect = Scala3): List[String] = {
     val input = path.read
-    val tree = input.parse[Source].get
+    val tree = dialect(input).parse[Source].get
     val commentTokens = findAllComments(tree.tokens)
-    commentTokens.tail.map(tokenToString)
+    commentTokens.drop(1).map(tokenToString)
   }
 
   private def findAllComments(tokens: Tokens): List[Token] = {

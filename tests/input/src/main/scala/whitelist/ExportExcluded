@@ -1,0 +1,16 @@
+/*
+mode = whitelist
+excludedFeatures = [
+  Exports
+]
+*/
+
+class Foo(x: Int){
+  def getMulBy(y: Int): Int = x*y
+}
+
+class Bar(f: Foo){
+  export f.getMulBy /*
+  ^^^^^^
+  not in the allowed features: Metaprogramming, Extensions, Laziness, Imports, LiteralFunctions, StringInterpolation, LiteralsAndExpressions, ADTs, BasicOopAddition, AdvancedOOPAddition, ADTs, PolymorphicTypes, AlwaysAllowed, Annotations, Xml, ForExpr, Infixes, Inlines, Defs, ContextualConstructs, Packages, Vals, ImperativeConstructs, Nulls, ADTs, BasicOopAddition */
+}

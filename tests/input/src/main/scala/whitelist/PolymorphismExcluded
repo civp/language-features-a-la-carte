@@ -1,0 +1,29 @@
+/*
+mode = whitelist
+excludedFeatures = [
+  AdvancedOop
+]
+*/
+
+class Foo[T] /*
+          ^
+not in the allowed features: Metaprogramming, Extensions, Laziness, Imports, LiteralFunctions, StringInterpolation, LiteralsAndExpressions, ADTs, BasicOopAddition, AdvancedOOPAddition, AlwaysAllowed, Annotations, Xml, ForExpr, Infixes, Inlines, Defs, ContextualConstructs, Packages, Exports, ADTs, Vals, ImperativeConstructs, Nulls, ADTs, BasicOopAddition */
+
+trait Baz[U] { /*
+          ^
+not in the allowed features: Metaprogramming, Extensions, Laziness, Imports, LiteralFunctions, StringInterpolation, LiteralsAndExpressions, ADTs, BasicOopAddition, AdvancedOOPAddition, AlwaysAllowed, Annotations, Xml, ForExpr, Infixes, Inlines, Defs, ContextualConstructs, Packages, Exports, ADTs, Vals, ImperativeConstructs, Nulls, ADTs, BasicOopAddition */
+  def abcd(): U
+}
+case class Bar(x: Int) extends Baz[Int]{ /*
+                               ^^^^^^^^
+not in the allowed features: Metaprogramming, Extensions, Laziness, Imports, LiteralFunctions, StringInterpolation, LiteralsAndExpressions, ADTs, BasicOopAddition, AdvancedOOPAddition, AlwaysAllowed, Annotations, Xml, ForExpr, Infixes, Inlines, Defs, ContextualConstructs, Packages, Exports, ADTs, Vals, ImperativeConstructs, Nulls, ADTs, BasicOopAddition */
+  def abcd(): Int = 0
+}
+
+def wxyz[SomeType](st: SomeType): SomeType = st /*
+         ^^^^^^^^
+not in the allowed features: Metaprogramming, Extensions, Laziness, Imports, LiteralFunctions, StringInterpolation, LiteralsAndExpressions, ADTs, BasicOopAddition, AdvancedOOPAddition, AlwaysAllowed, Annotations, Xml, ForExpr, Infixes, Inlines, Defs, ContextualConstructs, Packages, Exports, ADTs, Vals, ImperativeConstructs, Nulls, ADTs, BasicOopAddition */
+
+def f() = wxyz[Int](0) /*
+          ^^^^^^^^^^^^
+not in the allowed features: Metaprogramming, Extensions, Laziness, Imports, LiteralFunctions, StringInterpolation, LiteralsAndExpressions, ADTs, BasicOopAddition, AdvancedOOPAddition, AlwaysAllowed, Annotations, Xml, ForExpr, Infixes, Inlines, Defs, ContextualConstructs, Packages, Exports, ADTs, Vals, ImperativeConstructs, Nulls, ADTs, BasicOopAddition */

@@ -1,0 +1,13 @@
+/*
+mode = whitelist
+excludedFeatures = [
+  Defs
+]
+*/
+
+def foo = 0 /*
+^^^
+not in the allowed features: Metaprogramming, Inlines, Extensions, Laziness, Imports, LiteralFunctions, StringInterpolation, LiteralsAndExpressions, ADTs, BasicOopAddition, AdvancedOOPAddition, PolymorphicTypes, AlwaysAllowed, Annotations, Xml, ForExpr, Infixes, ContextualConstructs, Packages, Exports, ADTs, Vals, ImperativeConstructs, Nulls, ADTs, BasicOopAddition */
+def f(x: Int): Int = 2*x - 1 /*
+^^^
+not in the allowed features: Metaprogramming, Inlines, Extensions, Laziness, Imports, LiteralFunctions, StringInterpolation, LiteralsAndExpressions, ADTs, BasicOopAddition, AdvancedOOPAddition, PolymorphicTypes, AlwaysAllowed, Annotations, Xml, ForExpr, Infixes, ContextualConstructs, Packages, Exports, ADTs, Vals, ImperativeConstructs, Nulls, ADTs, BasicOopAddition */

@@ -1,0 +1,8 @@
+/*
+mode = whitelist
+excludedFeatures = [
+  AdvancedOop
+]
+*/
+
+infix def foo(x: Int): Int = x

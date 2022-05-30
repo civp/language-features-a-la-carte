@@ -1,0 +1,28 @@
+/*
+mode = whitelist
+excludedFeatures = [
+  Annotations
+]
+*/
+
+@Test /*
+^^^^^
+not in the allowed features: Metaprogramming, Extensions, Laziness, Imports, LiteralFunctions, StringInterpolation, LiteralsAndExpressions, ADTs, BasicOopAddition, AdvancedOOPAddition, PolymorphicTypes, AlwaysAllowed, Xml, ForExpr, Infixes, Inlines, Defs, ContextualConstructs, Packages, Exports, ADTs, Vals, ImperativeConstructs, Nulls, ADTs, BasicOopAddition */
+def foo_test(): Unit = { fail("Not implemented") }
+
+@bar def someFunction(x: Int, y: String): Boolean = (x + y.length) % 2 == 0 /*
+^^^^
+not in the allowed features: Metaprogramming, Extensions, Laziness, Imports, LiteralFunctions, StringInterpolation, LiteralsAndExpressions, ADTs, BasicOopAddition, AdvancedOOPAddition, PolymorphicTypes, AlwaysAllowed, Xml, ForExpr, Infixes, Inlines, Defs, ContextualConstructs, Packages, Exports, ADTs, Vals, ImperativeConstructs, Nulls, ADTs, BasicOopAddition */
+
+@Annot1 /*
+^^^^^^^
+not in the allowed features: Metaprogramming, Extensions, Laziness, Imports, LiteralFunctions, StringInterpolation, LiteralsAndExpressions, ADTs, BasicOopAddition, AdvancedOOPAddition, PolymorphicTypes, AlwaysAllowed, Xml, ForExpr, Infixes, Inlines, Defs, ContextualConstructs, Packages, Exports, ADTs, Vals, ImperativeConstructs, Nulls, ADTs, BasicOopAddition */
+@Annot2 /*
+^^^^^^^
+not in the allowed features: Metaprogramming, Extensions, Laziness, Imports, LiteralFunctions, StringInterpolation, LiteralsAndExpressions, ADTs, BasicOopAddition, AdvancedOOPAddition, PolymorphicTypes, AlwaysAllowed, Xml, ForExpr, Infixes, Inlines, Defs, ContextualConstructs, Packages, Exports, ADTs, Vals, ImperativeConstructs, Nulls, ADTs, BasicOopAddition */
+case class XYZ(x: String)
+
+@deprecated("do not use") /*
+^^^^^^^^^^^^^^^^^^^^^^^^^
+not in the allowed features: Metaprogramming, Extensions, Laziness, Imports, LiteralFunctions, StringInterpolation, LiteralsAndExpressions, ADTs, BasicOopAddition, AdvancedOOPAddition, PolymorphicTypes, AlwaysAllowed, Xml, ForExpr, Infixes, Inlines, Defs, ContextualConstructs, Packages, Exports, ADTs, Vals, ImperativeConstructs, Nulls, ADTs, BasicOopAddition */
+def baz = 0

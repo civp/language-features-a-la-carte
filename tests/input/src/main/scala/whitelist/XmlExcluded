@@ -1,0 +1,13 @@
+/*
+mode = whitelist
+excludedFeatures = [
+  Xml
+]
+*/
+
+val x = <body>Hello</body> /*
+        ^^^^^^^^^^^^^^^^^^
+not in the allowed features: Metaprogramming, Extensions, Laziness, Imports, LiteralFunctions, StringInterpolation, LiteralsAndExpressions, ADTs, BasicOopAddition, AdvancedOOPAddition, PolymorphicTypes, AlwaysAllowed, Annotations, ForExpr, Infixes, Inlines, Defs, ContextualConstructs, Packages, Exports, ADTs, Vals, ImperativeConstructs, Nulls, ADTs, BasicOopAddition */
+val y = <head><b>Bold Hello</b></head> /*
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+not in the allowed features: Metaprogramming, Extensions, Laziness, Imports, LiteralFunctions, StringInterpolation, LiteralsAndExpressions, ADTs, BasicOopAddition, AdvancedOOPAddition, PolymorphicTypes, AlwaysAllowed, Annotations, ForExpr, Infixes, Inlines, Defs, ContextualConstructs, Packages, Exports, ADTs, Vals, ImperativeConstructs, Nulls, ADTs, BasicOopAddition */

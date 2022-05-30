@@ -1,0 +1,22 @@
+/*
+mode = whitelist
+excludedFeatures = [
+  ForExpr
+]
+*/
+
+def foo(): Unit = {
+  for (i <- 0 until 100){ /*
+  ^^^  ^^^^^^^^^^^^^^^^
+  not in the allowed features: Infixes, Metaprogramming, Extensions, Laziness, Imports, LiteralFunctions, StringInterpolation, LiteralsAndExpressions, ADTs, BasicOopAddition, AdvancedOOPAddition, PolymorphicTypes, AlwaysAllowed, Annotations, Xml, Inlines, Defs, ContextualConstructs, Packages, Exports, ADTs, Vals, ImperativeConstructs, Nulls, ADTs, BasicOopAddition */
+    for (j <- 0 until 50){ /*
+    ^^^  ^^^^^^^^^^^^^^^
+    not in the allowed features: Infixes, Metaprogramming, Extensions, Laziness, Imports, LiteralFunctions, StringInterpolation, LiteralsAndExpressions, ADTs, BasicOopAddition, AdvancedOOPAddition, PolymorphicTypes, AlwaysAllowed, Annotations, Xml, Inlines, Defs, ContextualConstructs, Packages, Exports, ADTs, Vals, ImperativeConstructs, Nulls, ADTs, BasicOopAddition */
+      for (k <- 0 until 80){ /*
+      ^^^  ^^^^^^^^^^^^^^^
+      not in the allowed features: Infixes, Metaprogramming, Extensions, Laziness, Imports, LiteralFunctions, StringInterpolation, LiteralsAndExpressions, ADTs, BasicOopAddition, AdvancedOOPAddition, PolymorphicTypes, AlwaysAllowed, Annotations, Xml, Inlines, Defs, ContextualConstructs, Packages, Exports, ADTs, Vals, ImperativeConstructs, Nulls, ADTs, BasicOopAddition */
+        ()
+      }
+    }
+  }
+}

@@ -40,11 +40,11 @@ abstract class NoVarNoWhile {
           y = y + p.asInstanceOf[Int]
         }
       }
-      do { /* violation: NoWhile
-      ^^
-      usage of while and do-while loops is forbidden */
-        y = y + 5
-      } while (y < 0)
+      // do { /* violation: NoWhile
+      // ^^
+      // usage of while and do-while loops is forbidden */
+      //   y = y + 5
+      // } while (y < 0)
       y.toString
     }
   }

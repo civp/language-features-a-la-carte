@@ -1,0 +1,15 @@
+/*
+mode = whitelist
+excludedFeatures = [
+  BasicOop,
+  AdvancedOop
+]
+*/
+
+trait Foo { /*
+^^^^^
+not in the allowed features: Metaprogramming, Extensions, Laziness, Imports, LiteralFunctions, StringInterpolation, LiteralsAndExpressions, PolymorphicTypes, AlwaysAllowed, Annotations, Xml, Nulls, ForExpr, Infixes, Inlines, Defs, ContextualConstructs, Packages, Exports, ADTs, Vals, ImperativeConstructs */
+  class Bar extends Foo /*
+  ^^^^^
+  not in the allowed features: Metaprogramming, Extensions, Laziness, Imports, LiteralFunctions, StringInterpolation, LiteralsAndExpressions, PolymorphicTypes, AlwaysAllowed, Annotations, Xml, Nulls, ForExpr, Infixes, Inlines, Defs, ContextualConstructs, Packages, Exports, ADTs, Vals, ImperativeConstructs */
+}

@@ -1,0 +1,9 @@
+/*
+mode = whitelist
+excludedFeatures = [
+  Imports
+]
+*/
+import ch.epfl.foo.Bar /*
+^^^^^^
+not in the allowed features: Metaprogramming, Extensions, Laziness, LiteralFunctions, StringInterpolation, LiteralsAndExpressions, ADTs, BasicOopAddition, AdvancedOOPAddition, PolymorphicTypes, AlwaysAllowed, Annotations, Xml, ForExpr, Infixes, Inlines, Defs, ContextualConstructs, Packages, Exports, ADTs, Vals, ImperativeConstructs, Nulls, ADTs, BasicOopAddition */

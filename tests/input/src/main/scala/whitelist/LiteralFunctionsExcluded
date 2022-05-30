@@ -1,0 +1,25 @@
+/*
+mode = whitelist
+excludedFeatures = [
+  LiteralFunctions
+]
+*/
+
+(x: Int) => 2*x /*
+^^^^^^^^^^^^^^^
+not in the allowed features: Metaprogramming, Extensions, Laziness, Imports, StringInterpolation, LiteralsAndExpressions, ADTs, BasicOopAddition, AdvancedOOPAddition, PolymorphicTypes, AlwaysAllowed, Annotations, Xml, ForExpr, Infixes, Inlines, Defs, ContextualConstructs, Packages, Exports, ADTs, Vals, ImperativeConstructs, Nulls, ADTs, BasicOopAddition */
+(x: Int, y: String) => if (x > 0) y.toUpperCase else y.toLowerCase /*
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+not in the allowed features: Metaprogramming, Extensions, Laziness, Imports, StringInterpolation, LiteralsAndExpressions, ADTs, BasicOopAddition, AdvancedOOPAddition, PolymorphicTypes, AlwaysAllowed, Annotations, Xml, ForExpr, Infixes, Inlines, Defs, ContextualConstructs, Packages, Exports, ADTs, Vals, ImperativeConstructs, Nulls, ADTs, BasicOopAddition */
+val f: Int => Double = _.toDouble /*
+                       ^^^^^^^^^^
+not in the allowed features: Metaprogramming, Extensions, Laziness, Imports, StringInterpolation, LiteralsAndExpressions, ADTs, BasicOopAddition, AdvancedOOPAddition, PolymorphicTypes, AlwaysAllowed, Annotations, Xml, ForExpr, Infixes, Inlines, Defs, ContextualConstructs, Packages, Exports, ADTs, Vals, ImperativeConstructs, Nulls, ADTs, BasicOopAddition */
+val g: (Int) => Int = (x) => 2*x /*
+                      ^^^^^^^^^^
+not in the allowed features: Metaprogramming, Extensions, Laziness, Imports, StringInterpolation, LiteralsAndExpressions, ADTs, BasicOopAddition, AdvancedOOPAddition, PolymorphicTypes, AlwaysAllowed, Annotations, Xml, ForExpr, Infixes, Inlines, Defs, ContextualConstructs, Packages, Exports, ADTs, Vals, ImperativeConstructs, Nulls, ADTs, BasicOopAddition */
+val h: (Double, Double) => Double = Math.hypot(_, _) /*
+                                    ^^^^^^^^^^^^^^^^
+not in the allowed features: Metaprogramming, Extensions, Laziness, Imports, StringInterpolation, LiteralsAndExpressions, ADTs, BasicOopAddition, AdvancedOOPAddition, PolymorphicTypes, AlwaysAllowed, Annotations, Xml, ForExpr, Infixes, Inlines, Defs, ContextualConstructs, Packages, Exports, ADTs, Vals, ImperativeConstructs, Nulls, ADTs, BasicOopAddition */
+val k: (String, String, Boolean) => String = (s1, s2, b) => if (b) s1 else s2 /*
+                                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+not in the allowed features: Metaprogramming, Extensions, Laziness, Imports, StringInterpolation, LiteralsAndExpressions, ADTs, BasicOopAddition, AdvancedOOPAddition, PolymorphicTypes, AlwaysAllowed, Annotations, Xml, ForExpr, Infixes, Inlines, Defs, ContextualConstructs, Packages, Exports, ADTs, Vals, ImperativeConstructs, Nulls, ADTs, BasicOopAddition */
