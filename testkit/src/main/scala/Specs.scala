@@ -35,7 +35,7 @@ object Specs {
     val str = token.syntax.stripPrefix("/*").stripSuffix("*/")
     val lines = str.split("\n")
     val column = lines(1).indexOf('^')
-    val msg = lines.last.strip()
+    val msg = lines.last.trim()
     s"${pos.startLine}:${column}: ${msg}"
   }
 
