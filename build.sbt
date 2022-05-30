@@ -20,6 +20,7 @@ lazy val syntactic = project
       junitInterface
     )
   )
+  .dependsOn(shared)
 
 lazy val shared = project
   .in(file("shared"))
