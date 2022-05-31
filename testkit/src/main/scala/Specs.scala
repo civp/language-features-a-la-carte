@@ -1,9 +1,5 @@
 package testkit
 
-import carte.Rules.{Rule, NoRule}
-import carte.Violations.{Violation, NoViolation}
-import carte.Spans.{Span, NoSpan}
-
 import scala.meta._
 import scala.meta.dialects.Scala3
 
