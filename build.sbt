@@ -18,6 +18,18 @@ lazy val syntactic = project
     )
   )
 
+lazy val functionalConverter = project
+  .in(file("functional-converter"))
+  .settings(
+    moduleName := "functional-converter",
+    libraryDependencies ++= Seq(
+      scalameta,
+      junit,
+      junitInterface
+    )
+  )
+  .dependsOn(syntactic)
+
 lazy val testsShared = project
   .in(file("tests/shared"))
 

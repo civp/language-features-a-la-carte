@@ -14,9 +14,9 @@ class WhitelistChecker private(allowedFeatures: List[Feature]) extends Checker {
 
   private object GroupedFeature extends CompositeFeature(AlwaysAllowed :: allowedFeatures)
 
-  override def checkTree(tree: Tree): Option[Violation] = {
-    if (GroupedFeature.allows(tree)) None
-    else Some(Violation(tree))
+  override def checkNode(node: Tree): Option[Violation] = {
+    if (GroupedFeature.allows(node)) None
+    else Some(Violation(node))
   }
 
 }

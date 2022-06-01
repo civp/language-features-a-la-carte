@@ -22,8 +22,8 @@ class BlacklistChecker private(rules: List[BlacklistRule]) extends Checker {
       .orElse(defaultPartFunc)
   }
 
-  override def checkTree(tree: Tree): Option[Violation] = {
-    combinedCheckFunc.applyOrElse(tree, defaultPartFunc)
+  override def checkNode(node: Tree): Option[Violation] = {
+    combinedCheckFunc.applyOrElse(node, defaultPartFunc)
   }
 
 }
