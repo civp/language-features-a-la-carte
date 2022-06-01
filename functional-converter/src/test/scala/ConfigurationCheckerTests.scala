@@ -85,4 +85,20 @@ class ConfigurationCheckerTests {
     assertTrue(reportedError.contains("Cannot convert method foo"))
   }
 
+  @Test
+  def function_should_be_rejected_when_a_name_may_be_disambiguated_to_another_one(): Unit = {
+    val src = parse(
+      """
+        |val y = 0
+        |val y_25 = 42
+        |""".stripMargin)
+    val reporter = new Reporter()
+    val configChecker = new TranslationConfigurationChecker(reporter)
+    assertFalse(configChecker.checkCanConvert(src))
+    val reportedErrors = reporter.getReportedErrors
+    assertEquals(1, reportedErrors.size)
+    val reportedError = reportedErrors.head
+    assertTrue(reportedError.contains("disambiguation of y may create a name conflict with y_25"))
+  }
+
 }

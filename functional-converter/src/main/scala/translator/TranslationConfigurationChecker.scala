@@ -3,7 +3,7 @@ package translator
 import syntactic.CheckResult
 import syntactic.whitelist.{WhitelistChecker, Features => F}
 
-import java.util.StringJoiner
+import scala.annotation.tailrec
 import scala.meta.{Decl, Defn, Name, Pat, Tree}
 
 class TranslationConfigurationChecker(reporter: Reporter) {
@@ -41,26 +41,47 @@ class TranslationConfigurationChecker(reporter: Reporter) {
 
     def findDeclarations(pats: List[Pat]): List[String] = pats.flatMap(_.collect { case Name(nameStr) => nameStr })
 
-    val namesDefinedInValOrVarDefOrDecl = tree.collect {
+    val methodName = extractMethodName(tree)
+
+    def checkMayBeDisambiguatedTo(initName: String, potentialDisambig: String): Boolean = {
+      val sp = potentialDisambig.split("[_]")
+      val result = sp.size == 2 && sp.head == initName && sp(1).forall(_.isDigit)
+      if (result){
+        reporter.addErrorMsg(
+          s"Cannot convert method $methodName: disambiguation of $initName may create a name conflict with $potentialDisambig"
+        )
+      }
+      result
+    }
+
+    def checkConflict(name1: String, name2: String): Boolean = {
+      if (name1 == name2){
+        reporter.addErrorMsg(s"Cannot convert method $methodName: variable shadowing on identifier $name1")
+        true
+      }
+      else {
+        val res1 = checkMayBeDisambiguatedTo(name1, name2)
+        val res2 = checkMayBeDisambiguatedTo(name2, name1)
+        res1 || res2
+      }
+    }
+
+    val definedNames = tree.collect {
       case v: Defn.Val => findDeclarations(v.pats)
       case v: Defn.Var => findDeclarations(v.pats)
       case v: Decl.Val => findDeclarations(v.pats)
       case v: Decl.Var => findDeclarations(v.pats)
     }.flatten
 
-    val methodName = extractMethodName(tree)
-    val duplicated = namesDefinedInValOrVarDefOrDecl.groupBy(identity).values.filter(_.size > 1).map(_.head).toList
-    val msgJoiner = new StringJoiner("\n")
-    if (duplicated.nonEmpty) {
-      msgJoiner.add(s"Cannot convert method $methodName:")
+    !allPairs(definedNames).exists(names => checkConflict(names._1, names._2))
+  }
+
+  @tailrec
+  private def allPairs(rem: List[String], acc: List[(String, String)] = Nil): List[(String, String)] = {
+    rem match {
+      case Nil => acc
+      case head :: tail => allPairs(tail, acc ++ (for (str <- tail) yield (head, str)))
     }
-    duplicated.foreach { name =>
-      msgJoiner.add(s"variable shadowing detected on identifier $name")
-    }
-    if (duplicated.nonEmpty) {
-      reporter.addErrorMsg(msgJoiner.toString)
-    }
-    duplicated.isEmpty
   }
 
   private def extractMethodName(tree: Tree) = {
@@ -73,7 +94,7 @@ class TranslationConfigurationChecker(reporter: Reporter) {
   private def limitToNCharacters(str: String, n: Int = 50): String = {
     require(n >= 4)
     if (str.length <= n) str
-    else s"${str.take(n-3)}..."
+    else s"${str.take(n - 3)}..."
   }
 
 }
