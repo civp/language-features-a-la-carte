@@ -14,10 +14,10 @@ class Translator(translationConfigurationChecker: TranslationConfigurationChecke
   // TODO use vals to avoid naming conflicts
 
   def translateSource(source: Source): Source = {
-    Source(translateStatsSequence(NamingContext.empty, source.stats).treesAsStats)
+    Source(translateStatsSequence(NamingContext.empty, makeAssignationsExplicit(source).asInstanceOf[Source].stats).treesAsStats)
   }
 
-  def translateMethod(method: Defn.Def): Defn.Def = translateFunDef(method)
+  def translateMethod(method: Defn.Def): Defn.Def = translateFunDef(makeAssignationsExplicit(method).asInstanceOf[Defn.Def])
 
   private case class TranslaterException(msg: String) extends Exception(msg)
 
