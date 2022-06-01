@@ -82,7 +82,7 @@ class ConfigurationCheckerTests {
     val reportedErrors = reporter.getReportedErrors
     assertEquals(1, reportedErrors.size)
     val reportedError = reportedErrors.head
-    assertTrue(reportedError.contains("Cannot convert method foo because of the following constructs"))
+    assertTrue(reportedError.contains("Cannot convert method foo"))
   }
 
 }

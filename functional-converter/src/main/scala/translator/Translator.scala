@@ -9,19 +9,39 @@ class Translator(translationConfigurationChecker: TranslationConfigurationChecke
   require(translationConfigurationChecker != null)
   require(reporter != null)
 
-  // TODO pattern match
-  // TODO return
   // TODO use vals to avoid naming conflicts
 
   def translateSource(source: Source): Source = {
-    Source(translateStatsSequence(NamingContext.empty, makeAssignationsExplicit(source).asInstanceOf[Source].stats).treesAsStats)
+    if (translationConfigurationChecker.checkCanConvert(source)) {
+      try {
+        makeAssignationsCompact(Source(
+          translateStatsSequence(NamingContext.empty, makeAssignationsExplicit(source).asInstanceOf[Source].stats).treesAsStats
+        )).asInstanceOf[Source]
+      } catch {
+        case TranslaterException(msg) =>
+          reporter.addErrorMsg(msg)
+          source
+      }
+    }
+    else source
   }
 
-  def translateMethod(method: Defn.Def): Defn.Def = translateFunDef(makeAssignationsExplicit(method).asInstanceOf[Defn.Def])
+  def translateMethod(method: Defn.Def): Defn.Def = {
+    if (translationConfigurationChecker.checkCanConvert(method)) {
+      try {
+        makeAssignationsCompact(translateMethodDef(makeAssignationsExplicit(method).asInstanceOf[Defn.Def])).asInstanceOf[Defn.Def]
+      } catch {
+        case TranslaterException(msg) =>
+          reporter.addErrorMsg(s"Cannot translate method ${method.name.value}: $msg")
+          method
+      }
+    }
+    else method
+  }
+
+  case class UnexpectedCaseException(obj: Any) extends Exception(s"unexpected: $obj")
 
   private case class TranslaterException(msg: String) extends Exception(msg)
-
-  private case class UnexpectedCaseException(obj: Any) extends Exception(s"unexpected: $obj")
 
   private case class VarInfo(rawName: String, disambigIdx: Int, typ: Type) {
     def toDisambiguatedName: Term.Name =
@@ -77,27 +97,18 @@ class Translator(translationConfigurationChecker: TranslationConfigurationChecke
     val empty: TranslationPartRes = TranslationPartRes(Nil, NamingContext.empty)
   }
 
-  private def takeUntilReturn(stats: List[Stat]): List[Stat] = {
-    val retFree = stats.takeWhile(!_.isInstanceOf[Term.Return])
-    if (retFree.size == stats.size) stats
-    else if (retFree.size == stats.size - 1) retFree :+ stats(retFree.size).asInstanceOf[Term.Return].expr
-    else retFree :+ stats(retFree.size).asInstanceOf[Term.Return] //.expr
-    // FIXME handle return
-  }
-
-  private def translateFunDef(defnDef: Defn.Def): Defn.Def = {
+  private def translateMethodDef(defnDef: Defn.Def): Defn.Def = {
     try {
       defnDef.copy(body = translateBlockOrUniqueStat(NamingContext.empty, defnDef.body).asInstanceOf[Term])
     } catch {
-      case e: TranslaterException =>
-        reporter.addErrorMsg(e.msg)
+      case TranslaterException(msg) =>
+        reporter.addErrorMsg(msg)
         defnDef
     }
   }
 
   private def translateStatsSequence(namingContext: NamingContext, stats: List[Stat]): TranslationPartRes = {
-    val meaningfulStats = takeUntilReturn(stats)
-    translateStatsFrom(TranslationPartRes(Nil, namingContext), previousStats = Nil, remStats = meaningfulStats)
+    translateStatsFrom(TranslationPartRes(Nil, namingContext), previousStats = Nil, remStats = stats)
   }
 
   private def translateBlockOrUniqueStat(namingContext: NamingContext, stat: Stat): Stat = {
@@ -111,7 +122,7 @@ class Translator(translationConfigurationChecker: TranslationConfigurationChecke
       case head :: tail => {
         val namingContext = initPartRes.namingContext
         val headTranslationRes = head match {
-          case funDef: Defn.Def => initPartRes.withNewTree(translateFunDef(funDef))
+          case funDef: Defn.Def => initPartRes.withNewTree(translateMethodDef(funDef))
           case varDefn@Defn.Var(mods, List(Pat.Var(Term.Name(nameStr))), tpeOpt, Some(rhs)) => {
             val tpe = tpeOpt match {
               case Some(t) => t
@@ -154,7 +165,7 @@ class Translator(translationConfigurationChecker: TranslationConfigurationChecke
           case forYield: Term.ForYield =>
             if (allModifiedVars(List(forYield)).isEmpty) initPartRes.copy(trees = initPartRes.trees :+ forYield)
             else throw TranslaterException("for-yield expressions are only supported if no var is updated in their body")
-          case patMat: Term.Match => throw TranslaterException("pattern match is not supported") // FIXME
+          case patMat: Term.Match => translatePatternMatch(initPartRes, patMat)
           case other => initPartRes.copy(trees = initPartRes.trees :+ renameWhereNeeded(other, initPartRes.namingContext))
         }
         translateStatsFrom(headTranslationRes, previousStats :+ head, tail)
@@ -234,9 +245,11 @@ class Translator(translationConfigurationChecker: TranslationConfigurationChecke
   }
 
   private def translateIf(initPartRes: TranslationPartRes, ifStat: Term.If): TranslationPartRes = {
-    val thenPartRes = translateStatsSequence(initPartRes.namingContext, makeStatsList(ifStat.thenp))
-    val elsePartRes = translateStatsSequence(initPartRes.namingContext, makeStatsList(ifStat.elsep))
-    val modifVars = (allModifiedVars(makeStatsList(ifStat.thenp)) ++ allModifiedVars(makeStatsList(ifStat.elsep))).toList
+    val thenStatsList = makeStatsList(ifStat.thenp)
+    val elseStatsList = makeStatsList(ifStat.elsep)
+    val thenPartRes = translateStatsSequence(initPartRes.namingContext, thenStatsList)
+    val elsePartRes = translateStatsSequence(initPartRes.namingContext, elseStatsList)
+    val modifVars = (allModifiedVars(thenStatsList) ++ allModifiedVars(elseStatsList)).toList
     val thenRetTuple = if (modifVars.nonEmpty) Some(Term.Tuple(modifVars.map(thenPartRes.namingContext.disambiguatedNameForVar))) else None
     val elseRetTuple = if (modifVars.nonEmpty) Some(Term.Tuple(modifVars.map(elsePartRes.namingContext.disambiguatedNameForVar))) else None
     val transformedIfStat = ifStat.copy(
@@ -248,6 +261,24 @@ class Translator(translationConfigurationChecker: TranslationConfigurationChecke
     initPartRes
       .withNewTree(if (modifVars.nonEmpty) externalVal else transformedIfStat)
       .copy(namingContext = namingCtxAfterIf)
+  }
+
+  private def translatePatternMatch(initPartRes: TranslationPartRes, patMat: Term.Match): TranslationPartRes = {
+    val statsListPerBranch = patMat.cases.map(cse => makeStatsList(cse.body))
+    val partResPerBranch = statsListPerBranch.map(statsLs => translateStatsSequence(initPartRes.namingContext, statsLs))
+    val modifVars = statsListPerBranch.foldLeft(Set.empty[String])(_ ++ allModifiedVars(_)).toList
+    val retTuplePerBranch = partResPerBranch.map(branchPartRes =>
+      if (modifVars.nonEmpty) Some(Term.Tuple(modifVars.map(branchPartRes.namingContext.disambiguatedNameForVar))) else None
+    )
+    val newCasesBodies = partResPerBranch.zip(retTuplePerBranch)
+      .map(prRt => asBlockOrUniqueStat(prRt._1.treesAsStats ++ (if (modifVars.nonEmpty) prRt._2.toList else Nil)).asInstanceOf[Term])
+    val newCases = patMat.cases.zip(newCasesBodies).map(patAndBody => patAndBody._1.copy(body = patAndBody._2))
+    val transformedPatMat = patMat.copy(cases = newCases)
+    val namingCtxAfterPatMatch = modifVars.foldLeft(initPartRes.namingContext)(_.updatedAlreadyExistingVar(_))
+    lazy val externalVal = Defn.Val(mods = Nil, pats = makeValPat(modifVars, namingCtxAfterPatMatch), decltpe = None, rhs = transformedPatMat)
+    initPartRes
+      .withNewTree(if (modifVars.nonEmpty) externalVal else transformedPatMat)
+      .copy(namingContext = namingCtxAfterPatMatch)
   }
 
   private def forDoIntoWhile(forDo: Term.For): List[Stat] = {

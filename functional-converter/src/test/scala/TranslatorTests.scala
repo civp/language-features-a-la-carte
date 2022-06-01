@@ -1,4 +1,4 @@
-import org.junit.Assert.assertEquals
+import org.junit.Assert.{assertEquals, assertTrue}
 import org.junit.Test
 import syntactic.CheckResult
 import syntactic.blacklist.{BlacklistChecker, BlacklistRules}
@@ -138,6 +138,42 @@ class TranslatorTests {
     testRedirectedPrintOut(sourceCode)
   }
 
+  @Test
+  def test7(): Unit = {
+    val sourceCode =
+      """
+        |val ls: List[Either[Int, String]] = List(Left(15), Right("Hello"), Right("World"), Left(-1))
+        |var x = 0
+        |for (e <- ls){
+        |  e match {
+        |    case Left(i) =>
+        |      x += i
+        |      System.out.println(s"$i, $x")
+        |    case Right(str) =>
+        |      x += str.size
+        |      System.out.println(s"[$x]")
+        |  }
+        |}
+        |println(x)
+        |""".stripMargin
+    testRedirectedPrintOut(sourceCode)
+  }
+
+  @Test
+  def test8(): Unit = {
+    val sourceCode =
+      """
+        |var x = 5
+        |while (x > 0){
+        |  case class Foo(bar: Int)
+        |  val f = new Foo(2)
+        |  x -= f.bar
+        |}
+        |println(x)
+        |""".stripMargin
+    testRedirectedPrintOut(sourceCode)
+  }
+
   private def testRedirectedPrintOut(imperativeSrcCode: String): Unit = {
     val toolBox = currentMirror.mkToolBox()
 
@@ -155,6 +191,9 @@ class TranslatorTests {
     println("----------------------------------------------------------")
     println(translationStr)
     println("----------------------------------------------------------")
+
+    reporter.getReportedErrors.foreach(println)
+    assertTrue(reporter.getReportedErrors.isEmpty)
 
     val checker = BlacklistChecker(BlacklistRules.NoVar, BlacklistRules.NoWhile)
     assertEquals(CheckResult.Valid, checker.checkTree(translationSource))
