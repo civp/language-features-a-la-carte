@@ -2,14 +2,20 @@ package translator
 
 import java.util.concurrent.atomic.AtomicLong
 import scala.annotation.tailrec
+import scala.meta.Mod.Annot
 import scala.meta.Term.{Block, While}
-import scala.meta.{Decl, Defn, Enumerator, Lit, Pat, Source, Stat, Term, Tree, Type}
+import scala.meta.{Decl, Defn, Enumerator, Init, Lit, Name, Pat, Source, Stat, Term, Transformer, Tree, Type}
 
 class Translator(translationConfigurationChecker: TranslationConfigurationChecker, reporter: Reporter) {
   require(translationConfigurationChecker != null)
   require(reporter != null)
 
-  // TODO use vals to avoid naming conflicts
+  private val methodTransformer = new Transformer {
+    override def apply(tree: Tree): Tree = tree match {
+      case method: Defn.Def => translateMethod(method)
+      case other => super.apply(other)
+    }
+  }
 
   def translateTopLevelOfSource(source: Source): Source = {
     if (translationConfigurationChecker.checkCanConvert(source)) {
@@ -29,7 +35,8 @@ class Translator(translationConfigurationChecker: TranslationConfigurationChecke
   def translateMethod(method: Defn.Def): Defn.Def = {
     if (translationConfigurationChecker.checkCanConvert(method)) {
       try {
-        makeAssignationsCompact(translateMethodDef(makeAssignationsExplicit(method).asInstanceOf[Defn.Def])).asInstanceOf[Defn.Def]
+        val treeWithExplicitAssig = makeAssignationsExplicit(method)
+        makeAssignationsCompact(translateMethodDef(treeWithExplicitAssig.asInstanceOf[Defn.Def])).asInstanceOf[Defn.Def]
       } catch {
         case TranslaterException(msg) =>
           reporter.addErrorMsg(s"Cannot translate method ${method.name.value}: $msg")
@@ -39,9 +46,7 @@ class Translator(translationConfigurationChecker: TranslationConfigurationChecke
     else method
   }
 
-  def translateMethodsIn(tree: Tree): Tree = {
-    tree.transform { case method: Defn.Def => translateMethodDef(method)}
-  }
+  def translateMethodsIn(tree: Tree): Tree = methodTransformer.apply(tree)
 
   case class UnexpectedCaseException(obj: Any) extends Exception(s"unexpected: $obj")
 
@@ -52,6 +57,7 @@ class Translator(translationConfigurationChecker: TranslationConfigurationChecke
       Term.Name(rawName + (if (disambigIdx == 0) "" else automaticNumerotationMarker + disambigIdx))
   }
 
+  // FIXME reinitialize count when starting new translation
   private object AutoGenMethodNameGenerator {
     val counter = new AtomicLong(0)
 
@@ -103,7 +109,10 @@ class Translator(translationConfigurationChecker: TranslationConfigurationChecke
 
   private def translateMethodDef(defnDef: Defn.Def): Defn.Def = {
     try {
-      defnDef.copy(body = translateBlockOrUniqueStat(NamingContext.empty, defnDef.body).asInstanceOf[Term])
+      val namingContext = defnDef.paramss.flatten.foldLeft(NamingContext.empty)(
+        (ctx, param) => ctx.updatedWithVal(param.name.value, param.decltpe)
+      )
+      defnDef.copy(body = translateBlockOrUniqueStat(namingContext, defnDef.body).asInstanceOf[Term])
     } catch {
       case TranslaterException(msg) =>
         reporter.addErrorMsg(msg)
@@ -230,7 +239,7 @@ class Translator(translationConfigurationChecker: TranslationConfigurationChecke
     )
     val methodBody = Term.If(whileLoop.expr, thenBranch, retVal)
     val methodDef = Defn.Def(
-      mods = Nil,
+      mods = Nil, // List(Annot(Init(Type.Name("tailrec"), Name.Anonymous(), Nil))),  TODO
       name = methodName,
       tparams = Nil,
       paramss = List(methodParams),
