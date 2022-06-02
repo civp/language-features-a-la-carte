@@ -11,7 +11,7 @@ class Translator(translationConfigurationChecker: TranslationConfigurationChecke
 
   // TODO use vals to avoid naming conflicts
 
-  def translateSource(source: Source): Source = {
+  def translateTopLevelOfSource(source: Source): Source = {
     if (translationConfigurationChecker.checkCanConvert(source)) {
       try {
         makeAssignationsCompact(Source(
@@ -37,6 +37,10 @@ class Translator(translationConfigurationChecker: TranslationConfigurationChecke
       }
     }
     else method
+  }
+
+  def translateMethodsIn(tree: Tree): Tree = {
+    tree.transform { case method: Defn.Def => translateMethodDef(method)}
   }
 
   case class UnexpectedCaseException(obj: Any) extends Exception(s"unexpected: $obj")
@@ -142,10 +146,7 @@ class Translator(translationConfigurationChecker: TranslationConfigurationChecke
           }
           case _: Decl.Var => throw TranslaterException("variables must be initialized when declared")
           case valDefn@Defn.Val(mods, List(Pat.Var(Term.Name(nameStr))), optType, rhs) => {
-            val inferredTypeOpt = optType match {
-              case t@Some(_) => t
-              case None => tryToInferType(rhs, namingContext)
-            }
+            val inferredTypeOpt = optType.orElse(tryToInferType(rhs, namingContext))
             TranslationPartRes(initPartRes.trees :+ valDefn, initPartRes.namingContext.updatedWithVal(nameStr, inferredTypeOpt))
           }
           case assig@Term.Assign(name@Term.Name(nameStr), rhs) if namingContext.currentlyReferencedVars.contains(nameStr) => {

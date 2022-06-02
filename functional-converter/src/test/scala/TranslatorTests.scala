@@ -185,7 +185,7 @@ class TranslatorTests {
 
     val reporter = new Reporter()
     val translator = Translator(reporter)
-    val translationSource = translator.translateSource(parse(imperativeSrcCode))
+    val translationSource = translator.translateTopLevelOfSource(parse(imperativeSrcCode))
     val translationStr = translationSource.toString()
 
     println("----------------------------------------------------------")
