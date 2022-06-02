@@ -35,7 +35,7 @@ class ConfigurationCheckerTests {
   }
 
   @Test
-  def variable_shadowing_should_be_rejected(): Unit = {
+  def variable_conflict_should_be_rejected(): Unit = {
     val src = parse(
       """
         |def foo(): Unit = {
@@ -57,7 +57,6 @@ class ConfigurationCheckerTests {
     assertEquals(1, reportedErrors.size)
     val reportedError = reportedErrors.head
     assertTrue(reportedError.contains("Cannot convert method foo"))
-    assertTrue(reportedError.contains("variable shadowing"))
     assertTrue(reportedError.contains("identifier x"))
   }
 

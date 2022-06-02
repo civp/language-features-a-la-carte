@@ -4,7 +4,7 @@ import syntactic.CheckResult
 import syntactic.whitelist.{WhitelistChecker, Features => F}
 
 import scala.annotation.tailrec
-import scala.meta.{Decl, Defn, Name, Pat, Tree}
+import scala.meta.{Decl, Defn, Name, Pat, Term, Tree}
 
 class TranslationConfigurationChecker(reporter: Reporter) {
   require(reporter != null)
@@ -56,7 +56,7 @@ class TranslationConfigurationChecker(reporter: Reporter) {
 
     def checkConflict(name1: String, name2: String): Boolean = {
       if (name1 == name2){
-        reporter.addErrorMsg(s"Cannot convert method $methodName: variable shadowing on identifier $name1")
+        reporter.addErrorMsg(s"Cannot convert method $methodName: identifier $name1 is used more than once")
         true
       }
       else {
@@ -71,9 +71,10 @@ class TranslationConfigurationChecker(reporter: Reporter) {
       case v: Defn.Var => findDeclarations(v.pats)
       case v: Decl.Val => findDeclarations(v.pats)
       case v: Decl.Var => findDeclarations(v.pats)
+      case p: Term.Param => List(p.name.value)
     }.flatten
 
-    !allPairs(definedNames).exists(names => checkConflict(names._1, names._2))
+    !allPairs(definedNames).map(names => checkConflict(names._1, names._2)).exists(identity)
   }
 
   @tailrec

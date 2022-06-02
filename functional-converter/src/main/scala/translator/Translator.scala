@@ -1,10 +1,12 @@
 package translator
 
-import java.util.concurrent.atomic.AtomicLong
+import translator.AssignationsHandler.{makeAssignationsCompact, makeAssignationsExplicit}
+import translator.NamesFinder.{allDeclaredVars, allModifiedVars, allReferencedVars}
+import translator.TypeInferrer.tryToInferType
+
 import scala.annotation.tailrec
-import scala.meta.Mod.Annot
 import scala.meta.Term.{Block, While}
-import scala.meta.{Decl, Defn, Enumerator, Init, Lit, Name, Pat, Source, Stat, Term, Transformer, Tree, Type}
+import scala.meta.{Decl, Defn, Enumerator, Lit, Pat, Source, Stat, Term, Transformer, Tree, Type}
 
 class Translator(translationConfigurationChecker: TranslationConfigurationChecker, reporter: Reporter) {
   require(translationConfigurationChecker != null)
@@ -21,7 +23,9 @@ class Translator(translationConfigurationChecker: TranslationConfigurationChecke
     if (translationConfigurationChecker.checkCanConvert(source)) {
       try {
         makeAssignationsCompact(Source(
-          translateStatsSequence(NamingContext.empty, makeAssignationsExplicit(source).asInstanceOf[Source].stats).treesAsStats
+          translateStatsSequence(
+            NamingContext.empty, makeAssignationsExplicit(source).asInstanceOf[Source].stats
+          )(new DisambigIndices()).treesAsStats
         )).asInstanceOf[Source]
       } catch {
         case TranslaterException(msg) =>
@@ -48,63 +52,10 @@ class Translator(translationConfigurationChecker: TranslationConfigurationChecke
 
   def translateMethodsIn(tree: Tree): Tree = methodTransformer.apply(tree)
 
-  case class UnexpectedCaseException(obj: Any) extends Exception(s"unexpected: $obj")
-
-  private case class TranslaterException(msg: String) extends Exception(msg)
-
-  private case class VarInfo(rawName: String, disambigIdx: Int, typ: Type) {
-    def toDisambiguatedName: Term.Name =
-      Term.Name(rawName + (if (disambigIdx == 0) "" else automaticNumerotationMarker + disambigIdx))
-  }
-
-  // FIXME reinitialize count when starting new translation
-  private object AutoGenMethodNameGenerator {
-    val counter = new AtomicLong(0)
-
-    def nextMethodName: Term.Name = Term.Name(s"autoGen$automaticNumerotationMarker${counter.getAndIncrement()}")
-  }
-
-  private object AutoGenIterableNameGenerator {
-    val counter = new AtomicLong(0)
-
-    def nextIteratorName: Term.Name = Term.Name(s"autoGenIter$automaticNumerotationMarker${counter.getAndIncrement()}")
-  }
-
-  private case class NamingContext(currentlyReferencedVars: Map[String, VarInfo], currentlyReferencedVals: Map[String, Option[Type]]) {
-    def updatedWithVar(name: String, tpe: Type): NamingContext = {
-      val idxAndTypeForName = currentlyReferencedVars.getOrElse(name, VarInfo(name, -1, tpe))
-      NamingContext(
-        currentlyReferencedVars.updated(name, idxAndTypeForName.copy(disambigIdx = idxAndTypeForName.disambigIdx + 1)),
-        currentlyReferencedVals
-      )
-    }
-
-    def updatedAlreadyExistingVar(name: String): NamingContext = {
-      updatedWithVar(name, currentlyReferencedVars(name).typ)
-    }
-
-    def disambiguatedNameForVar(name: String): Term.Name =
-      currentlyReferencedVars.get(name).map(_.toDisambiguatedName).getOrElse(Term.Name(name))
-
-    def updatedWithVal(name: String, optType: Option[Type]): NamingContext =
-      copy(currentlyReferencedVals = currentlyReferencedVals.updated(name, optType))
-
-    def mergedWith(that: NamingContext): NamingContext =
-      NamingContext(currentlyReferencedVars ++ that.currentlyReferencedVars, currentlyReferencedVals ++ that.currentlyReferencedVals)
-  }
-
-  private object NamingContext {
-    val empty: NamingContext = NamingContext(Map.empty, Map.empty)
-  }
-
   private case class TranslationPartRes(trees: List[Tree], namingContext: NamingContext) {
     def treesAsStats: List[Stat] = trees.map(_.asInstanceOf[Stat])
 
     def withNewTree(tree: Tree): TranslationPartRes = copy(trees = trees :+ tree)
-  }
-
-  private object TranslationPartRes {
-    val empty: TranslationPartRes = TranslationPartRes(Nil, NamingContext.empty)
   }
 
   private def translateMethodDef(defnDef: Defn.Def): Defn.Def = {
@@ -112,7 +63,8 @@ class Translator(translationConfigurationChecker: TranslationConfigurationChecke
       val namingContext = defnDef.paramss.flatten.foldLeft(NamingContext.empty)(
         (ctx, param) => ctx.updatedWithVal(param.name.value, param.decltpe)
       )
-      defnDef.copy(body = translateBlockOrUniqueStat(namingContext, defnDef.body).asInstanceOf[Term])
+      val di = new DisambigIndices()
+      defnDef.copy(body = translateBlockOrUniqueStat(namingContext, defnDef.body)(di).asInstanceOf[Term])
     } catch {
       case TranslaterException(msg) =>
         reporter.addErrorMsg(msg)
@@ -120,45 +72,38 @@ class Translator(translationConfigurationChecker: TranslationConfigurationChecke
     }
   }
 
-  private def translateStatsSequence(namingContext: NamingContext, stats: List[Stat]): TranslationPartRes = {
+  private def translateStatsSequence(namingContext: NamingContext, stats: List[Stat])(implicit di: DisambigIndices): TranslationPartRes = {
     translateStatsFrom(TranslationPartRes(Nil, namingContext), previousStats = Nil, remStats = stats)
   }
 
-  private def translateBlockOrUniqueStat(namingContext: NamingContext, stat: Stat): Stat = {
+  private def translateBlockOrUniqueStat(namingContext: NamingContext, stat: Stat)(implicit di: DisambigIndices): Stat = {
     asBlockOrUniqueStat(translateStatsSequence(namingContext, makeStatsList(stat)).treesAsStats)
   }
 
   @tailrec
-  private def translateStatsFrom(initPartRes: TranslationPartRes, previousStats: List[Stat], remStats: List[Stat]): TranslationPartRes = {
+  private def translateStatsFrom(initPartRes: TranslationPartRes, previousStats: List[Stat], remStats: List[Stat])(implicit di: DisambigIndices): TranslationPartRes = {
     remStats match {
       case Nil => initPartRes
       case head :: tail => {
         val namingContext = initPartRes.namingContext
         val headTranslationRes = head match {
-          case funDef: Defn.Def => initPartRes.withNewTree(translateMethodDef(funDef))
-          case varDefn@Defn.Var(mods, List(Pat.Var(Term.Name(nameStr))), tpeOpt, Some(rhs)) => {
-            val tpe = tpeOpt match {
-              case Some(t) => t
-              case None =>
-                tryToInferType(rhs, namingContext) match {
-                  case Some(t) => t
-                  case None => throw TranslaterException(s"cannot infer type of $rhs")
-                }
-            }
+          case methodDef: Defn.Def => initPartRes.withNewTree(translateMethodDef(methodDef))
+          case Defn.Var(mods, List(Pat.Var(Term.Name(nameStr))), tpeOpt, Some(rhs)) => {
+            val tpe = tpeOpt.getOrElse(
+              tryToInferType(rhs, namingContext).getOrElse(throw TranslaterException(s"cannot infer type of $rhs"))
+            )
             val newValDefn = Defn.Val(mods, List(Pat.Var(namingContext.disambiguatedNameForVar(nameStr))), tpeOpt, rhs)
             TranslationPartRes(initPartRes.trees :+ newValDefn, namingContext.updatedWithVar(nameStr, tpe))
           }
           case varDef@Defn.Var(mods, terms, tpe, rhs) if terms.size > 1 =>
             throw TranslaterException(s"not supported: $varDef")
-          case defnVar@Defn.Var(mods, terms, tpe, rhs) => {
-            throw UnexpectedCaseException(defnVar)
-          }
-          case _: Decl.Var => throw TranslaterException("variables must be initialized when declared")
+          case defnVar: Defn.Var => throw UnexpectedConstructException(defnVar)
+          case varDecl: Decl.Var => throw TranslaterException(s"variables must be initialized when declared: $varDecl")
           case valDefn@Defn.Val(mods, List(Pat.Var(Term.Name(nameStr))), optType, rhs) => {
             val inferredTypeOpt = optType.orElse(tryToInferType(rhs, namingContext))
             TranslationPartRes(initPartRes.trees :+ valDefn, initPartRes.namingContext.updatedWithVal(nameStr, inferredTypeOpt))
           }
-          case assig@Term.Assign(name@Term.Name(nameStr), rhs) if namingContext.currentlyReferencedVars.contains(nameStr) => {
+          case Term.Assign(Term.Name(nameStr), rhs) if namingContext.currentlyReferencedVars.contains(nameStr) => {
             val newNamingCtx = namingContext.updatedAlreadyExistingVar(nameStr)
             val newName = newNamingCtx.disambiguatedNameForVar(nameStr)
             val valDefn = Defn.Val(
@@ -169,9 +114,9 @@ class Translator(translationConfigurationChecker: TranslationConfigurationChecke
             )
             TranslationPartRes(initPartRes.trees :+ valDefn, newNamingCtx)
           }
-          case whileLoop: While => translateWhile(initPartRes, whileLoop, previousStats = previousStats, remStats = tail)
+          case whileLoop: While => translateWhile(initPartRes, whileLoop, remStats = tail)
           case ifStat: Term.If => translateIf(initPartRes, ifStat)
-          case forDo: Term.For => translateForDo(initPartRes, forDo)
+          case forDo: Term.For => translateForDo(initPartRes, forDo, remStats = tail)
           case forYield: Term.ForYield =>
             if (allModifiedVars(List(forYield)).isEmpty) initPartRes.copy(trees = initPartRes.trees :+ forYield)
             else throw TranslaterException("for-yield expressions are only supported if no var is updated in their body")
@@ -215,21 +160,19 @@ class Translator(translationConfigurationChecker: TranslationConfigurationChecke
   private def translateWhile(
                               initPartRes: TranslationPartRes,
                               whileLoop: While,
-                              previousStats: List[Stat],
                               remStats: List[Stat]
-                            ): TranslationPartRes = {
+                            )(implicit di: DisambigIndices): TranslationPartRes = {
     val bodyAsBlock = makeStatsList(whileLoop.body)
     val untypedMethodArgsSet = allModifiedVars(bodyAsBlock)
     val untypedMethodArgs = untypedMethodArgsSet.toList
-    val previouslyDeclaredInThisScope = allDeclaredVars(previousStats)
     val referencedInRestOfThisScope = allReferencedVars(remStats)
-    val needingToBeReturned = untypedMethodArgsSet.diff(previouslyDeclaredInThisScope.diff(referencedInRestOfThisScope)).toList
+    val needingToBeReturned = untypedMethodArgsSet.intersect(referencedInRestOfThisScope).toList
     val methodArgsAsUniqueNames = untypedMethodArgs
       .flatMap(initPartRes.namingContext.currentlyReferencedVars.get)
     val methodParams = methodArgsAsUniqueNames
       .map(u => Term.Param(mods = Nil, name = u.toDisambiguatedName, decltpe = Some(u.typ), default = None))
     val tupleReturnType = tupleTypeFor(needingToBeReturned.map(initPartRes.namingContext.currentlyReferencedVars))
-    val methodName = AutoGenMethodNameGenerator.nextMethodName
+    val methodName = di.incAndGetAutoGenMethodName()
     val methodCall = Term.Apply(methodName, methodArgsAsUniqueNames.map(_.toDisambiguatedName))
     val blockTranslationRes = translateStatsSequence(initPartRes.namingContext, bodyAsBlock)
     val retVal = tupleFor(needingToBeReturned)
@@ -254,7 +197,7 @@ class Translator(translationConfigurationChecker: TranslationConfigurationChecke
     )
   }
 
-  private def translateIf(initPartRes: TranslationPartRes, ifStat: Term.If): TranslationPartRes = {
+  private def translateIf(initPartRes: TranslationPartRes, ifStat: Term.If)(implicit di: DisambigIndices): TranslationPartRes = {
     val thenStatsList = makeStatsList(ifStat.thenp)
     val elseStatsList = makeStatsList(ifStat.elsep)
     val thenPartRes = translateStatsSequence(initPartRes.namingContext, thenStatsList)
@@ -273,7 +216,7 @@ class Translator(translationConfigurationChecker: TranslationConfigurationChecke
       .copy(namingContext = namingCtxAfterIf)
   }
 
-  private def translatePatternMatch(initPartRes: TranslationPartRes, patMat: Term.Match): TranslationPartRes = {
+  private def translatePatternMatch(initPartRes: TranslationPartRes, patMat: Term.Match)(implicit di: DisambigIndices): TranslationPartRes = {
     val statsListPerBranch = patMat.cases.map(cse => makeStatsList(cse.body))
     val partResPerBranch = statsListPerBranch.map(statsLs => translateStatsSequence(initPartRes.namingContext, statsLs))
     val modifVars = statsListPerBranch.foldLeft(Set.empty[String])(_ ++ allModifiedVars(_)).toList
@@ -291,14 +234,14 @@ class Translator(translationConfigurationChecker: TranslationConfigurationChecke
       .copy(namingContext = namingCtxAfterPatMatch)
   }
 
-  private def forDoIntoWhile(forDo: Term.For): List[Stat] = {
+  private def forDoIntoWhile(forDo: Term.For)(implicit di: DisambigIndices): (Defn.Var, While) = {
 
     def flattenEnumerator(enumerators: List[Enumerator]): List[Stat] = {
       enumerators match {
         case head :: tail =>
           head match {
             case Enumerator.Generator(pat, rhs) =>
-              val iterName = AutoGenIterableNameGenerator.nextIteratorName
+              val iterName = di.incAndGetIterableName()
               List(
                 Defn.Var(mods = Nil, pats = List(Pat.Var(iterName)), decltpe = None, rhs = Some(rhs)),
                 While(
@@ -311,7 +254,7 @@ class Translator(translationConfigurationChecker: TranslationConfigurationChecke
                 )
               )
             case Enumerator.Guard(term) => List(Term.If(cond = term, thenp = Block(flattenEnumerator(tail)), elsep = Lit.Unit()))
-            case _ => throw UnexpectedCaseException(head)
+            case _ => throw UnexpectedConstructException(head)
           }
         case Nil => forDo.body match {
           case Block(stats) => stats
@@ -320,11 +263,15 @@ class Translator(translationConfigurationChecker: TranslationConfigurationChecke
       }
     }
 
-    flattenEnumerator(forDo.enums)
+    val resAsList = flattenEnumerator(forDo.enums)
+    assert(resAsList.size == 2)
+    (resAsList.head.asInstanceOf[Defn.Var], resAsList(1).asInstanceOf[While])
   }
 
-  private def translateForDo(initPartRes: TranslationPartRes, forDo: Term.For): TranslationPartRes = {
-    val partResAfter = translateStatsSequence(initPartRes.namingContext, forDoIntoWhile(forDo))
+  private def translateForDo(initPartRes: TranslationPartRes, forDo: Term.For, remStats: List[Stat])(implicit di: DisambigIndices): TranslationPartRes = {
+    val (varDefn, whileLoop) = forDoIntoWhile(forDo)
+    val varTranslationRes = translateStatsSequence(initPartRes.namingContext, List(varDefn))
+    val partResAfter = translateWhile(varTranslationRes, whileLoop, remStats)
     TranslationPartRes(initPartRes.trees ++ partResAfter.trees, initPartRes.namingContext.mergedWith(partResAfter.namingContext))
   }
 
@@ -343,99 +290,6 @@ class Translator(translationConfigurationChecker: TranslationConfigurationChecke
       case _ => Type.Tuple(modifVars.map(_.typ))
     }
   }
-
-  private def inlineWherePossible(stats: List[Stat]): List[Stat] = {
-    // TODO inline args
-    if (stats.size < 2) stats
-    else {
-      stats.slice(stats.size - 2, stats.size) match {
-        case List(Defn.Val(mods, List(Pat.Var(Term.Name(name1))), optType, rhs), Term.Name(name2)) if name1 == name2 =>
-          stats.slice(0, stats.size - 2) :+ rhs
-        case _ => stats
-      }
-    }
-  }
-
-  /////// Basic type inference /////////////////////////////////////////////////////////////////////////////////
-
-  private def tryToInferType(expr: Term, namingContext: NamingContext): Option[Type] = {
-    expr match {
-      case Term.Name(nameStr) if namingContext.currentlyReferencedVals.contains(nameStr) =>
-        namingContext.currentlyReferencedVals(nameStr)
-      case Term.Name(nameStr) if namingContext.currentlyReferencedVars.contains(nameStr) =>
-        namingContext.currentlyReferencedVars.get(nameStr).map(_.typ)
-      case _: Lit.Int => Some(Type.Name("Int"))
-      case _: Lit.Boolean => Some(Type.Name("Boolean"))
-      case _: Lit.String => Some(Type.Name("String"))
-      case _: Lit.Unit => Some(Type.Name("Unit"))
-      // TODO more cases
-      case _ => None
-    }
-  }
-
-  /////// Find modified vars ///////////////////////////////////////////////////////////////////////////////////
-
-  private def allModifiedVars(stats: List[Stat]): Set[String] = {
-    val updatedVars = allUpdatedVars(stats)
-    val declaredVars = allDeclaredVars(stats)
-    updatedVars.diff(declaredVars)
-  }
-
-  private def allUpdatedVars(stats: List[Stat]): Set[String] = {
-    stats.flatMap(stat => {
-      stat.collect {
-        case Term.Assign(Term.Name(nameStr), _) => Some(nameStr)
-        case assign@Term.Assign(_, _) => throw UnexpectedCaseException(assign)
-        case _ => None
-      }.flatten
-    }).toSet
-  }
-
-  private def allDeclaredVars(stats: List[Stat]): Set[String] = {
-    stats.flatMap(stat => {
-      stat.collect {
-        case varDef@Defn.Var(mods, pats, optType, optTerm) if pats.size > 1 =>
-          throw TranslaterException(s"not supported: $varDef")
-        case Defn.Var(mods, List(Pat.Var(Term.Name(nameStr))), optType, optTerm) => Some(nameStr)
-        case defnVar: Defn.Var => throw UnexpectedCaseException(defnVar)
-        case _ => None
-      }.flatten
-    }).toSet
-  }
-
-  private def allReferencedVars(stats: List[Stat]): Set[String] = {
-    stats.flatMap(stat => {
-      stat.collect {
-        case Term.Name(nameStr) => Some(nameStr)
-        case _ => None
-      }.flatten
-    }).toSet
-  }
-
-  /////// += , -= , *= , etc. //////////////////////////////////////////////////////////////////////////////////
-
-  private def makeAssignationsExplicit(tree: Tree): Tree = {
-    tree.transform {
-      case Term.ApplyInfix(lhs, Term.Name(op), targs, args)
-        if op.length >= 2 && op.last == '=' && assignableOperators.contains(op.dropRight(1))
-      =>
-        Term.Assign(lhs, Term.ApplyInfix(lhs, Term.Name(op.init), targs, args))
-      case anyTree => anyTree
-    }
-  }
-
-  private def makeAssignationsCompact(tree: Tree): Tree = {
-    tree.transform {
-      case Term.Assign(lhs@Term.Name(lhs1), Term.ApplyInfix(Term.Name(lhs2), Term.Name(op), targs, args))
-        if lhs1 == lhs2 && assignableOperators.contains(op)
-      =>
-        Term.ApplyInfix(lhs, Term.Name(op + "="), targs, args)
-      case anyTree => anyTree
-    }
-  }
-
-  private val assignableOperators = List("+", "-", "*", "/", "%", "<<", ">>", "^", "&", "|")
-  private val automaticNumerotationMarker = "_"
 
 }
 
