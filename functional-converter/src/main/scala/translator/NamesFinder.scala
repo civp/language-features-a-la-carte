@@ -38,29 +38,33 @@ object NamesFinder {
 
   // TODO test
   def findValsToInline(stats: List[Stat]): Set[String] = {
-    val declared = Set.newBuilder[Term.Name]
-    val referenced = List.newBuilder[Term.Name]
+    val declaredBuilder = Set.newBuilder[Term.Name]
+    val referencedBuilder = List.newBuilder[Term.Name]
     stats.foreach(stat =>
       new Traverser {
         override def apply(tree: Tree): Unit = tree match {
           case _: Block => /* ignore children */
           case valDefn@Defn.Val(_, List(Pat.Var(name)), _, _) => {
-            declared += name
+            declaredBuilder += name
             super.apply(valDefn)
           }
           case name: Term.Name => {
-            referenced += name
+            referencedBuilder += name
             super.apply(name)
           }
+          case other => super.apply(other)
         }
       }.apply(stat)
     )
-    val referencedOnce = referenced.result()
-      .filter(!declared.result().contains(_))
-      .groupBy(identity)
+    val referenced = referencedBuilder.result()
+    val declared = declaredBuilder.result()
+    referenced
+      .filter(!declared.contains(_))
+      .groupBy(_.value)
       .filter(_._2.size == 1)
       .keys
-    referencedOnce.map(_.value).toSet
+      .toSet
+      .intersect(declared.map(_.value))
   }
 
 }
