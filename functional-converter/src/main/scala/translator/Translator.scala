@@ -170,7 +170,7 @@ class Translator(translationConfigurationChecker: TranslationConfigurationChecke
     val methodArgsAsUniqueNames = untypedMethodArgs
       .flatMap(initPartRes.namingContext.currentlyReferencedVars.get)
     val methodParams = methodArgsAsUniqueNames
-      .map(u => Term.Param(mods = Nil, name = u.toDisambiguatedName, decltpe = Some(u.typ), default = None))
+      .map(varInfo => Term.Param(mods = Nil, name = varInfo.toDisambiguatedName, decltpe = Some(varInfo.typ), default = None))
     val tupleReturnType = tupleTypeFor(needingToBeReturned.map(initPartRes.namingContext.currentlyReferencedVars))
     val methodName = di.incAndGetAutoGenMethodName()
     val methodCall = Term.Apply(methodName, methodArgsAsUniqueNames.map(_.toDisambiguatedName))
