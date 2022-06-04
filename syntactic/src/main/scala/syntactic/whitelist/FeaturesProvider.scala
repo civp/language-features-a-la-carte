@@ -14,7 +14,9 @@ trait FeaturesProvider {
       .members
       .filter(_.isPublic)
       .filter(_.isModule)
+      // TODO either one or the other of the two lines (and if relying on type then change the exception in the PF below)
       .filter(_.annotations.exists(_.tree.tpe =:= mirror.typeOf[ScalaFeature]))
+      //.filter(_.asModule.typeSignature <:< mirror.typeOf[Feature])
       .map(member => mirror.reflectModule(member.asModule).instance)
     val modules = modulesWithUncheckedType.map {
       case feature: Feature => feature
