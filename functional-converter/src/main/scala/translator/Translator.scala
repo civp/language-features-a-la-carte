@@ -1,7 +1,7 @@
 package translator
 
 import translator.AssignationsHandler.{makeAssignationsCompact, makeAssignationsExplicit}
-import translator.NamesFinder.{allDeclaredVars, allModifiedVars, allReferencedVars}
+import translator.NamesFinder.{allModifiedVars, allReferencedVars}
 import translator.TypeInferrer.tryToInferType
 
 import scala.annotation.tailrec
@@ -22,11 +22,16 @@ class Translator(translationConfigurationChecker: TranslationConfigurationChecke
   def translateTopLevelOfSource(source: Source): Source = {
     if (translationConfigurationChecker.checkCanConvert(source)) {
       try {
-        makeAssignationsCompact(Source(
-          translateStatsSequence(
-            NamingContext.empty, makeAssignationsExplicit(source).asInstanceOf[Source].stats
-          )(new DisambigIndices()).treesAsStats
-        )).asInstanceOf[Source]
+        val transformation =
+          (makeAssignationsExplicit: Tree => Tree)
+          .andThen { case Source(stats) => stats }
+          .andThen(translateStatsSequence(NamingContext.empty, _)(new DisambigIndices()))
+          .andThen(_.treesAsStats)
+          .andThen(Inliner.inlineTopLevel)
+          .andThen(Source(_))
+          .andThen(makeAssignationsCompact)
+          .andThen(_.asInstanceOf[Source])
+        transformation(source)
       } catch {
         case TranslaterException(msg) =>
           reporter.addErrorMsg(msg)
@@ -39,8 +44,14 @@ class Translator(translationConfigurationChecker: TranslationConfigurationChecke
   def translateMethod(method: Defn.Def): Defn.Def = {
     if (translationConfigurationChecker.checkCanConvert(method)) {
       try {
-        val treeWithExplicitAssig = makeAssignationsExplicit(method)
-        makeAssignationsCompact(translateMethodDef(treeWithExplicitAssig.asInstanceOf[Defn.Def])).asInstanceOf[Defn.Def]
+        val transformation =
+          (makeAssignationsExplicit: Tree => Tree)
+            .andThen(_.asInstanceOf[Defn.Def])
+            .andThen(translateMethodDef)
+            .andThen(Inliner.inlineInStatSequences)
+            .andThen(makeAssignationsCompact)
+            .andThen(_.asInstanceOf[Defn.Def])
+        transformation(method)
       } catch {
         case TranslaterException(msg) =>
           reporter.addErrorMsg(s"Cannot translate method ${method.name.value}: $msg")

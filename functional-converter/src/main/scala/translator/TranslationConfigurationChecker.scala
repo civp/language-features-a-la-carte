@@ -4,7 +4,7 @@ import syntactic.CheckResult
 import syntactic.whitelist.{WhitelistChecker, Features => F}
 
 import scala.annotation.tailrec
-import scala.meta.{Decl, Defn, Name, Pat, Term, Tree}
+import scala.meta.{Case, Decl, Defn, Name, Pat, Term, Tree}
 
 class TranslationConfigurationChecker(reporter: Reporter) {
   require(reporter != null)
@@ -72,6 +72,10 @@ class TranslationConfigurationChecker(reporter: Reporter) {
       case v: Decl.Val => findDeclarations(v.pats)
       case v: Decl.Var => findDeclarations(v.pats)
       case p: Term.Param => List(p.name.value)
+      case Case(Pat.Extract(_, pats), _, _) =>
+        assert(pats.forall(_.isInstanceOf[Pat.Var]))
+        pats.map { case Pat.Var(Term.Name(nameStr)) => nameStr }
+      case cse: Case => throw new AssertionError(s"unexpected: ${cse.pat.structure}")
     }.flatten
 
     !allPairs(definedNames).map(names => checkConflict(names._1, names._2)).exists(identity)

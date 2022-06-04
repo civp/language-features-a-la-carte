@@ -1,7 +1,5 @@
 package translator
 
-import scala.meta.Term.Block
-import scala.meta.transversers.Traverser
 import scala.meta.{Defn, Pat, Stat, Term, Tree}
 
 object NamesFinder {
@@ -34,37 +32,6 @@ object NamesFinder {
 
   def allReferencedVars(stats: List[Stat]): Set[String] = {
     allNodesMatching(stats) { case Term.Name(nameStr) => nameStr }.toSet
-  }
-
-  // TODO test
-  def findValsToInline(stats: List[Stat]): Set[String] = {
-    val declaredBuilder = Set.newBuilder[Term.Name]
-    val referencedBuilder = List.newBuilder[Term.Name]
-    stats.foreach(stat =>
-      new Traverser {
-        override def apply(tree: Tree): Unit = tree match {
-          case _: Block => /* ignore children */
-          case valDefn@Defn.Val(_, List(Pat.Var(name)), _, _) => {
-            declaredBuilder += name
-            super.apply(valDefn)
-          }
-          case name: Term.Name => {
-            referencedBuilder += name
-            super.apply(name)
-          }
-          case other => super.apply(other)
-        }
-      }.apply(stat)
-    )
-    val referenced = referencedBuilder.result()
-    val declared = declaredBuilder.result()
-    referenced
-      .filter(!declared.contains(_))
-      .groupBy(_.value)
-      .filter(_._2.size == 1)
-      .keys
-      .toSet
-      .intersect(declared.map(_.value))
   }
 
 }
