@@ -3,8 +3,15 @@ package syntactic.whitelist
 import java.lang.annotation.AnnotationTypeMismatchException
 import scala.annotation.ClassfileAnnotation
 
+/**
+ * When implemented by a class that defines Features, automatically provides a list of all the features
+ * defined in the class that are annotated with @ScalaFeature
+ */
 trait FeaturesProvider {
 
+  /**
+   * All the features defined in this class that are annotated with @ScalaFeature
+   */
   val allDefinedFeatures: List[Feature] = {
     val clazz = getClass
     val mirror = scala.reflect.runtime.universe.runtimeMirror(clazz.getClassLoader)
@@ -27,4 +34,9 @@ trait FeaturesProvider {
 
 }
 
+/**
+ * Marks the Features that should be considered by the automatic building of a list of defined Features
+ *
+ * Only intended to be used on singleton objects extending the Feature interface
+ */
 class ScalaFeature() extends ClassfileAnnotation
