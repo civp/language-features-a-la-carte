@@ -1,9 +1,9 @@
 import org.junit.Assert.assertEquals
 import org.junit.Test
-import syntactic.{CheckResult, Violation}
+import syntactic.CheckResult
 import syntactic.whitelist.{PredefFeatures, WhitelistChecker}
 
-import scala.meta.{Defn, Source, XtensionParseInputLike}
+import scala.meta.{Source, XtensionParseInputLike}
 
 class FeaturesSetComputerTest {
 
