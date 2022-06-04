@@ -18,6 +18,17 @@ lazy val syntactic = project
     )
   )
 
+lazy val featuresSetComputer = project
+  .in(file("features-set-computer"))
+  .settings(
+    moduleName := "features-set-computer",
+    libraryDependencies ++= Seq(
+      scalameta,
+      junit,
+      junitInterface
+    )
+  ).dependsOn(syntactic)
+
 lazy val testsShared = project
   .in(file("tests/shared"))
 
