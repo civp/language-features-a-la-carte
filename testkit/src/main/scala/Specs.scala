@@ -20,8 +20,8 @@ object Specs {
 
   private def findAllComments(tokens: Tokens): List[Token] = {
     tokens
-      .filter { x =>
-        x.is[Token.Comment] && x.syntax.startsWith("/*")
+      .filter { token =>
+        token.is[Token.Comment] && token.syntax.startsWith("/*")
       }
       .toList
   }
