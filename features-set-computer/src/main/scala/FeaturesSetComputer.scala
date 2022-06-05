@@ -43,6 +43,9 @@ class FeaturesSetComputer(availableFeatures: List[Feature]) {
   def minimalFeaturesSetFor(nodes: List[Tree]): Option[Set[Feature]] = {
 
     val availableFeaturesCnt = availableFeatures.size
+    /**
+     * Array s.t. authorizations(n)(f) == true iff feature at index f allows node at index n
+     */
     val authorizations = nodes.map(_ => new Array[Boolean](availableFeaturesCnt))
     for ((node, nIdx) <- nodes.zipWithIndex) {
       for ((feature, fIdx) <- availableFeatures.zipWithIndex) {
@@ -52,36 +55,45 @@ class FeaturesSetComputer(availableFeatures: List[Feature]) {
 
     def allows(featIdx: Int, nodeIdx: Int): Boolean = authorizations(nodeIdx)(featIdx)
 
-    case class SearchState(usedFeatures: Set[Int], remNodes: Set[Int]) {
-      def featureAdded(featIdx: Int): SearchState = {
-        SearchState(usedFeatures + featIdx, remNodes.filter(!allows(featIdx, _)))
+    /**
+     * @param usedFeatures indices of the features that have already been included
+     * @param remNodes     indices of the nodes that are not covered by the used features
+     */
+    case class SearchThread(usedFeatures: Set[Int], remNodes: Set[Int]) {
+      def featureAdded(featIdx: Int): SearchThread = {
+        SearchThread(usedFeatures + featIdx, remNodes.filter(!allows(featIdx, _)))
       }
 
+      def coversAllNodes: Boolean = remNodes.isEmpty
+
       override def toString: String = {
-        s"SearchState(${usedFeatures.map(availableFeatures(_))}, $remNodes)"
+        s"SearchThread(${usedFeatures.map(availableFeatures(_))}, $remNodes)"
       }
     }
 
     @tailrec
-    def search(currentAttempts: List[SearchState], currentFeatureIdx: Int): Option[Set[Int]] = {
+    def search(currentThreads: List[SearchThread], currentFeatureIdx: Int): Option[Set[Int]] = {
       if (currentFeatureIdx < availableFeaturesCnt) {
-        val newAttempts = currentAttempts.flatMap(attemptWithoutCurrFeat => {
-          val attemptWithCurrFeat = attemptWithoutCurrFeat.featureAdded(currentFeatureIdx)
-          if (attemptWithCurrFeat.remNodes.size < attemptWithoutCurrFeat.remNodes.size) {
-            List(attemptWithoutCurrFeat, attemptWithCurrFeat)
+        val newThreads = currentThreads.flatMap(attemptWithoutCurrFeat => {
+          if (attemptWithoutCurrFeat.coversAllNodes) List(attemptWithoutCurrFeat)
+          else {
+            val attemptWithCurrFeat = attemptWithoutCurrFeat.featureAdded(currentFeatureIdx)
+            if (attemptWithCurrFeat.remNodes.size < attemptWithoutCurrFeat.remNodes.size) {
+              List(attemptWithoutCurrFeat, attemptWithCurrFeat)
+            }
+            else List(attemptWithoutCurrFeat)
           }
-          else List(attemptWithoutCurrFeat)
         })
-        search(newAttempts, currentFeatureIdx + 1)
+        search(newThreads, currentFeatureIdx + 1)
       }
       else {
-        val possibilities = currentAttempts.filter(_.remNodes.isEmpty)
+        val possibilities = currentThreads.filter(_.remNodes.isEmpty)
         if (possibilities.isEmpty) None
         else Some(possibilities.map(_.usedFeatures).minBy(_.size))
       }
     }
 
-    val selectedFeatIndicesOpt = search(List(SearchState(Set.empty, nodes.indices.toSet)), 0)
+    val selectedFeatIndicesOpt = search(List(SearchThread(Set.empty, nodes.indices.toSet)), 0)
     selectedFeatIndicesOpt.map(selectedFeatIndices =>
       availableFeatures
         .zipWithIndex
