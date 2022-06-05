@@ -1,7 +1,8 @@
 /*
 mode = whitelist
-excludedFeatures = [
-  AdvancedOop
+allowedFeatures = [
+  Vals,
+  Xml
 ]
 */
 

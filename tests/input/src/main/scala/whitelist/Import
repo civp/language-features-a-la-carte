@@ -1,7 +1,7 @@
 /*
 mode = whitelist
-excludedFeatures = [
-  AdvancedOop
+allowedFeatures = [
+  Imports
 ]
 */
 import ch.epfl.foo.Bar

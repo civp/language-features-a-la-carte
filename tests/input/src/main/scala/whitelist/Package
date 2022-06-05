@@ -1,7 +1,7 @@
 /*
 mode = whitelist
-excludedFeatures = [
-  AdvancedOop
+allowedFeatures = [
+  Packages
 ]
 */
 package ch.epfl.foo.bar

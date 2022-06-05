@@ -1,6 +1,6 @@
 /*
 mode = whitelist
-excludedFeatures = [
+allowedFeatures = [
   LiteralsAndExpressions
 ]
 */

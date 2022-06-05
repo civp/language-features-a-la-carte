@@ -5,7 +5,7 @@ rules = [
   NoCast
 ]
 */
-abstract class NoNullNoCast {
+abstract class NoNullCast {
   private var w: Int = 0
   var y: Int
   val z: String

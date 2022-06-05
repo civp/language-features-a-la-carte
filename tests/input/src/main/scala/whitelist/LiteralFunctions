@@ -1,7 +1,9 @@
 /*
 mode = whitelist
 allowedFeatures = [
-  LiteralFunctions
+  LiteralFunctions,
+  LiteralsAndExpressions,
+  Vals
 ]
 */
 

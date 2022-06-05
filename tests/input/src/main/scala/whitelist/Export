@@ -1,7 +1,10 @@
 /*
 mode = whitelist
-excludedFeatures = [
-  AdvancedOop
+allowededFeatures = [
+  LiteralsAndExpressions,
+  BasicOop,
+  Defs,
+  Exports
 ]
 */
 

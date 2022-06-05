@@ -1,7 +1,11 @@
 /*
 mode = whitelist
 excludedFeatures = [
-  AdvancedOop
+  LiteralsAndExpressions,
+  Defs,
+  ContextualConstructs,
+  PolymorphicTypes,
+  Metaprogramming
 ]
 */
 

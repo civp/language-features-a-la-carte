@@ -5,7 +5,7 @@ rules = [
   NoWhile
 ]
 */
-abstract class NoVarNoWhile {
+abstract class NoVarWhile {
   private var w: Int = 0 /* violation: NoVar
   ^^^^^^^^^^^
   usage of var is forbidden */
