@@ -205,14 +205,67 @@ class TranslatorTests {
     testRedirectedPrintOut(codeStr)
   }
 
+  @Test
+  def test10(): Unit = {
+    val codeStr =
+      """
+        |val ls: List[Int] = (1 to 50).toList
+        |val ls2 = for (i <- ls) yield {
+        |  var s = 0
+        |  s += i
+        |  s += i
+        |  s
+        |}
+        |println(ls2)
+        |""".stripMargin
+    testRedirectedPrintOut(codeStr)
+  }
+
+  @Test
+  def shouldFail1(): Unit = {
+    val codeStr =
+      """
+        |val ls: List[Int] = (1 to 50).toList
+        |var s = 0
+        |val ls2 = for (i <- ls) yield {
+        |  s += i
+        |  i
+        |}
+        |println(ls2)
+        |println(s)
+        |""".stripMargin
+    testExpectingOneFailure(codeStr, "for-yield expressions are only supported if no external var is updated in their body")
+  }
+
+  @Test
+  def shouldFail2(): Unit = {
+    val codeStr =
+      """
+        |val ls: List[Int] = (1 to 50).toList
+        |var s = 0
+        |ls.foreach { i =>
+        |  s += i
+        |}
+        |println(s)
+        |""".stripMargin
+    testExpectingOneFailure(codeStr, "higher-order functions are only supported if no external var is updated in their body")
+  }
+
+  private def parse(str: String): Source = dialects.Sbt1(str).parse[Source].get
+
+  private def testExpectingOneFailure(codeStr: String, expectedErrorMsg: String): Unit = {
+    val reporter = new Reporter()
+    val translator = Translator(reporter)
+    translator.translateTopLevelOfSource(parse(codeStr))
+    assertEquals(List(expectedErrorMsg), reporter.getReportedErrors)
+  }
+
   private def testRedirectedPrintOut(imperativeSrcCode: String): Unit = {
     val toolBox = currentMirror.mkToolBox()
 
     def execute(codeStr: String): Any = {
       toolBox.eval(toolBox.parse(codeStr))
     }
-
-    def parse(str: String): Source = dialects.Sbt1(str).parse[Source].get
 
     val reporter = new Reporter()
     val translator = Translator(reporter)

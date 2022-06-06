@@ -15,9 +15,10 @@ class RestrictionsEnforcer(reporter: Reporter) {
 
   // checker for the Scala subset that can be translated
   private val checker = WhitelistChecker(
-    F.Vals, F.Defs, F.Nulls, F.LiteralsAndExpressions,
+    F.Vals,F.Defs, F.Nulls, F.LiteralsAndExpressions,
     F.Annotations, F.ForExpr, F.ImperativeConstructs, F.Laziness,
-    F.PolymorphicTypes, F.StringInterpolation, F.AdvancedOop
+    F.PolymorphicTypes, F.StringInterpolation, F.AdvancedOop,
+    F.LiteralFunctions
   )
 
   /**

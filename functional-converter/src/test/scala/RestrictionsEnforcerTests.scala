@@ -61,18 +61,11 @@ class RestrictionsEnforcerTests {
   }
 
   @Test
-  def higher_order_functions_should_be_rejected(): Unit = {
+  def implicits_should_be_rejected(): Unit = {
     val src = parse(
       """
-        |def foo(): Unit = {
-        |  val x = 0
-        |  var sum = 0
-        |  while(x < 100){
-        |    (0 to x).foreach { _ =>
-        |      sum += 5*i
-        |    }
-        |  }
-        |  println(sum)
+        |def foo(x: Int)(implicit ctx: Context): Unit = {
+        |  ctx.foo(x)
         |}
         |""".stripMargin)
     val reporter = new Reporter()

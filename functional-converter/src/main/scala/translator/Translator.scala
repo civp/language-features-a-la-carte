@@ -31,7 +31,7 @@ class Translator(translationConfigurationChecker: RestrictionsEnforcer, reporter
           (makeAssignationsExplicit: Tree => Tree)
             .andThen { case Source(stats) => stats }
             .andThen(translateStatsSequence(NamingContext.empty, _)(new DisambigIndices()))
-            .andThen(_.treesAsStats)
+            .andThen(_.stats)
             .andThen(Source(_))
             .andThen(Inliner.inlineInStatSequences)
             .andThen(makeAssignationsCompact)
@@ -88,13 +88,11 @@ class Translator(translationConfigurationChecker: RestrictionsEnforcer, reporter
   /**
    * Partial result of the translation
    *
-   * @param trees         the translated trees
-   * @param namingContext the NamingContext at the end of the translation of the list of trees
+   * @param stats         the translated stats
+   * @param namingContext the NamingContext at the end of the translation of the list of stats
    */
-  private case class TranslationPartRes(trees: List[Tree], namingContext: NamingContext) {
-    def treesAsStats: List[Stat] = trees.map(_.asInstanceOf[Stat])
-
-    def withNewTree(tree: Tree): TranslationPartRes = copy(trees = trees :+ tree)
+  private case class TranslationPartRes(stats: List[Stat], namingContext: NamingContext) {
+    def withNewStat(tree: Stat): TranslationPartRes = copy(stats = stats :+ tree)
   }
 
   /**
@@ -119,7 +117,7 @@ class Translator(translationConfigurationChecker: RestrictionsEnforcer, reporter
   }
 
   private def translateBlockOrUniqueStat(namingContext: NamingContext, stat: Stat)(implicit di: DisambigIndices): Stat = {
-    asBlockOrUniqueStat(translateStatsSequence(namingContext, makeStatsList(stat)).treesAsStats)
+    asBlockOrUniqueStat(translateStatsSequence(namingContext, makeStatsList(stat)).stats)
   }
 
   /**
@@ -139,14 +137,19 @@ class Translator(translationConfigurationChecker: RestrictionsEnforcer, reporter
         val namingContext = initPartRes.namingContext
         val headTranslationRes = head match {
 
-          case methodDef: Defn.Def => initPartRes.withNewTree(translateMethodDef(methodDef))
+          case methodDef: Defn.Def => initPartRes.withNewStat(translateMethodDef(methodDef))
 
           case Defn.Var(mods, List(Pat.Var(Term.Name(nameStr))), tpeOpt, Some(rhs)) => {
             val tpe = tpeOpt.getOrElse(
               tryToInferType(rhs, namingContext).getOrElse(throw TranslatorException(s"cannot infer type of $rhs"))
             )
-            val newValDefn = Defn.Val(mods, List(Pat.Var(namingContext.disambiguatedNameForVar(nameStr))), tpeOpt, rhs)
-            TranslationPartRes(initPartRes.trees :+ newValDefn, namingContext.updatedWithVar(nameStr, tpe))
+            val newValDefn = Defn.Val(
+              mods = mods,
+              pats = List(Pat.Var(namingContext.disambiguatedNameForVar(nameStr))),
+              decltpe = tpeOpt,
+              rhs = translateTerm(namingContext, rhs)
+            )
+            TranslationPartRes(initPartRes.stats :+ newValDefn, namingContext.updatedWithVar(nameStr, tpe))
           }
 
           case varDef@Defn.Var(_, terms, _, _) if terms.size > 1 =>
@@ -158,7 +161,10 @@ class Translator(translationConfigurationChecker: RestrictionsEnforcer, reporter
 
           case valDefn@Defn.Val(_, List(Pat.Var(Term.Name(nameStr))), optType, rhs) =>
             val inferredTypeOpt = optType.orElse(tryToInferType(rhs, namingContext))
-            TranslationPartRes(initPartRes.trees :+ valDefn, initPartRes.namingContext.updatedWithVal(nameStr, inferredTypeOpt))
+            TranslationPartRes(
+              initPartRes.stats :+ valDefn.copy(rhs = translateTerm(namingContext, rhs)),
+              initPartRes.namingContext.updatedWithVal(nameStr, inferredTypeOpt)
+            )
 
           case Term.Assign(Term.Name(nameStr), rhs) if namingContext.currentlyReferencedVars.contains(nameStr) =>
             val newNamingCtx = namingContext.updatedAlreadyExistingVar(nameStr)
@@ -169,25 +175,45 @@ class Translator(translationConfigurationChecker: RestrictionsEnforcer, reporter
               decltpe = None,
               rhs = renameWhereNeeded(rhs, initPartRes.namingContext).asInstanceOf[Term]
             )
-            TranslationPartRes(initPartRes.trees :+ valDefn, newNamingCtx)
+            TranslationPartRes(initPartRes.stats :+ valDefn, newNamingCtx)
 
           case whileLoop: While => translateWhile(initPartRes, whileLoop, statsAfterWhile = tail)
 
           case ifStat: Term.If => translateIf(initPartRes, ifStat)
 
-          case forDo: Term.For => translateForDo(initPartRes, forDo, remStats = tail)
-
-          case forYield: Term.ForYield =>
-            if (allModifiedVars(List(forYield)).isEmpty) initPartRes.copy(trees = initPartRes.trees :+ forYield)
-            else throw TranslatorException("for-yield expressions are only supported if no var is updated in their body")
-
           case patMat: Term.Match => translatePatternMatch(initPartRes, patMat)
 
-          case other => initPartRes.copy(trees = initPartRes.trees :+ renameWhereNeeded(other, initPartRes.namingContext))
+          case forDo: Term.For => translateForDo(initPartRes, forDo, remStats = tail)
+
+          case forYield @ Term.ForYield(_, body) =>
+            if (allModifiedVars(List(body)).isEmpty) {
+              initPartRes.withNewStat(forYield.copy(body = translateTerm(namingContext, body)))
+            }
+            else throw TranslatorException("for-yield expressions are only supported if no external var is updated in their body")
+
+          case func@Term.Function(_, body) =>
+            if (allModifiedVars(List(func)).isEmpty){
+              initPartRes.withNewStat(func.copy(body = translateTerm(namingContext, body)))
+            }
+            else throw TranslatorException("higher-order functions are only supported if no external var is updated in their body")
+
+          case Term.Apply(fun, args) => initPartRes.withNewStat(
+            Term.Apply(translateTerm(namingContext, fun), args.map(translateTerm(namingContext, _)))
+          )
+
+          case other => initPartRes.copy(
+            stats = initPartRes.stats :+ renameWhereNeeded(other, initPartRes.namingContext).asInstanceOf[Stat]
+          )
         }
         translateStatsFrom(headTranslationRes, previousStats :+ head, tail)
       }
     }
+  }
+
+  private def translateTerm(namingContext: NamingContext, expr: Term)(implicit di: DisambigIndices): Term = {
+    val statsList = makeStatsList(expr)
+    val transformed = translateStatsSequence(namingContext, statsList)
+    asBlockOrUniqueStat(transformed.stats).asInstanceOf[Term]
   }
 
   private def renameWhereNeeded(tree: Tree, namingContext: NamingContext): Tree = {
@@ -223,8 +249,8 @@ class Translator(translationConfigurationChecker: RestrictionsEnforcer, reporter
                               whileLoop: While,
                               statsAfterWhile: List[Stat]
                             )(implicit di: DisambigIndices): TranslationPartRes = {
-    val bodyAsBlock = makeStatsList(whileLoop.body)
-    val untypedMethodArgsSet = allModifiedVars(bodyAsBlock)
+    val bodyAsStatsList = makeStatsList(whileLoop.body)
+    val untypedMethodArgsSet = allModifiedVars(bodyAsStatsList)
     val namesReferencedInRestOfThisScope = allReferencedNames(statsAfterWhile)
     val argsThatNeedToBeReturned = untypedMethodArgsSet.intersect(namesReferencedInRestOfThisScope).toList
     val methodArgsAsUniqueNames = untypedMethodArgsSet
@@ -232,11 +258,11 @@ class Translator(translationConfigurationChecker: RestrictionsEnforcer, reporter
       .flatMap(initPartRes.namingContext.currentlyReferencedVars.get)
     val methodName = di.getAndIncrementAutoGenMethodName()
     val callToAutoGeneratedMethod = Term.Apply(methodName, methodArgsAsUniqueNames.map(_.toDisambiguatedName))
-    val blockTranslationRes = translateStatsSequence(initPartRes.namingContext, bodyAsBlock)
+    val blockTranslationRes = translateStatsSequence(initPartRes.namingContext, bodyAsStatsList)
     val methodBody = Term.If(
       cond = whileLoop.expr,
       thenp = Block(
-        blockTranslationRes.treesAsStats
+        blockTranslationRes.stats
           :+ renameWhereNeeded(callToAutoGeneratedMethod, blockTranslationRes.namingContext).asInstanceOf[Term]
       ),
       elsep = retValFor(argsThatNeedToBeReturned)
@@ -257,7 +283,7 @@ class Translator(translationConfigurationChecker: RestrictionsEnforcer, reporter
     val ctxAfterExternalCall = argsThatNeedToBeReturned.foldLeft(initPartRes.namingContext)(_.updatedAlreadyExistingVar(_))
     lazy val externalVal = Defn.Val(Nil, makeValPat(argsThatNeedToBeReturned, ctxAfterExternalCall), None, callToAutoGeneratedMethod)
     TranslationPartRes(
-      initPartRes.trees ++ List(methodDef, if (argsThatNeedToBeReturned.nonEmpty) externalVal else callToAutoGeneratedMethod),
+      initPartRes.stats ++ List(methodDef, if (argsThatNeedToBeReturned.nonEmpty) externalVal else callToAutoGeneratedMethod),
       ctxAfterExternalCall
     )
   }
@@ -270,13 +296,13 @@ class Translator(translationConfigurationChecker: RestrictionsEnforcer, reporter
     val modifVars = (allModifiedVars(thenStatsList) ++ allModifiedVars(elseStatsList)).toList
     val transformedIfStat = Term.If(
       cond = renameWhereNeeded(ifStat.cond, initPartRes.namingContext).asInstanceOf[Term],
-      thenp = asBlockOrUniqueStat(thenPartRes.treesAsStats ++ retValOrNone(modifVars, thenPartRes.namingContext)).asInstanceOf[Term],
-      elsep = asBlockOrUniqueStat(elsePartRes.treesAsStats ++ retValOrNone(modifVars, elsePartRes.namingContext)).asInstanceOf[Term]
+      thenp = asBlockOrUniqueStat(thenPartRes.stats ++ retValOrNone(modifVars, thenPartRes.namingContext)).asInstanceOf[Term],
+      elsep = asBlockOrUniqueStat(elsePartRes.stats ++ retValOrNone(modifVars, elsePartRes.namingContext)).asInstanceOf[Term]
     )
     val namingCtxAfterIf = modifVars.foldLeft(initPartRes.namingContext)(_.updatedAlreadyExistingVar(_))
     lazy val externalVal = Defn.Val(mods = Nil, pats = makeValPat(modifVars, namingCtxAfterIf), decltpe = None, rhs = transformedIfStat)
     initPartRes
-      .withNewTree(if (modifVars.nonEmpty) externalVal else transformedIfStat)
+      .withNewStat(if (modifVars.nonEmpty) externalVal else transformedIfStat)
       .copy(namingContext = namingCtxAfterIf)
   }
 
@@ -287,8 +313,15 @@ class Translator(translationConfigurationChecker: RestrictionsEnforcer, reporter
     val retTuplePerBranch = partResPerBranch.map(branchPartRes => retValOrNone(modifVars, branchPartRes.namingContext))
     val newCasesBodies = partResPerBranch
       .zip(retTuplePerBranch)
-      .map(prRt => asBlockOrUniqueStat(prRt._1.treesAsStats ++ prRt._2).asInstanceOf[Term])
-    val newCases = patMat.cases.zip(newCasesBodies).map(patAndBody => patAndBody._1.copy(body = patAndBody._2))
+      .map(prRt => asBlockOrUniqueStat(prRt._1.stats ++ prRt._2).asInstanceOf[Term])
+    val newCases = patMat.cases
+      .zip(newCasesBodies)
+      .map(patAndBody =>
+        patAndBody._1.copy(
+          cond = patAndBody._1.cond.map(translateTerm(initPartRes.namingContext, _)),
+          body = patAndBody._2
+        )
+      )
     val transformedPatMat = Term.Match(
       expr = renameWhereNeeded(patMat.expr, initPartRes.namingContext).asInstanceOf[Term],
       cases = newCases
@@ -296,20 +329,20 @@ class Translator(translationConfigurationChecker: RestrictionsEnforcer, reporter
     val namingCtxAfterPatMatch = modifVars.foldLeft(initPartRes.namingContext)(_.updatedAlreadyExistingVar(_))
     lazy val externalVal = Defn.Val(mods = Nil, pats = makeValPat(modifVars, namingCtxAfterPatMatch), decltpe = None, rhs = transformedPatMat)
     initPartRes
-      .withNewTree(if (modifVars.nonEmpty) externalVal else transformedPatMat)
+      .withNewStat(if (modifVars.nonEmpty) externalVal else transformedPatMat)
       .copy(namingContext = namingCtxAfterPatMatch)
   }
 
   /**
    * @return a pair (var, while) where while is the loop and var the iterable updated in the loop
    *
-   * Converts
+   *         Converts
    * {{{
    *   for (i <- ls if predicate(i)){
    *     println(i)
    *   }
    * }}}
-   * into
+   *         into
    * {{{
    *   var iterator_0 = ls
    *   while (iterator_0.nonEmpty){
@@ -345,7 +378,7 @@ class Translator(translationConfigurationChecker: RestrictionsEnforcer, reporter
           }
         case Nil => forDo.body match {
           case Block(stats) => stats
-          case _ => List(forDo.body).map(_.asInstanceOf[Stat])
+          case _ => List(forDo.body)
         }
       }
     }
@@ -363,7 +396,7 @@ class Translator(translationConfigurationChecker: RestrictionsEnforcer, reporter
     val (varDefn, whileLoop) = transformImperativeForIntoWhile(forDo)
     val varTranslationRes = translateStatsSequence(initPartRes.namingContext, List(varDefn))
     val partResAfter = translateWhile(varTranslationRes, whileLoop, remStats)
-    TranslationPartRes(initPartRes.trees ++ partResAfter.trees, initPartRes.namingContext.mergedWith(partResAfter.namingContext))
+    TranslationPartRes(initPartRes.stats ++ partResAfter.stats, initPartRes.namingContext.mergedWith(partResAfter.namingContext))
   }
 
   private def retValFor(modifVarsStr: List[String]): Term = {
