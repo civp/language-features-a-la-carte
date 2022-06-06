@@ -35,17 +35,17 @@ class SyntacticWhitelistSuite extends SyntacticSuite {
     Inlines
   )
   
-  private def checkWithFeaturesExcluded(pathStr: String, excludedFeatures: List[Feature], dialect: Dialect = Scala3) = {
-    val path = getTestPath(pathStr)
+  private def checkWithFeaturesExcluded(path: String, excludedFeatures: List[Feature], dialect: Dialect = Scala3) = {
+    val file = getTestFile(path)
     val allowedFeatures = allFeatures.filter(!excludedFeatures.contains(_))
     val checker = WhitelistChecker(allowedFeatures)
-    checkPath(checker, path, dialect)
+    checkFile(checker, file, dialect)
   }
 
-  private def checkWithFeaturesAllowed(pathStr: String, allowedFeatures: List[Feature], dialect: Dialect = Scala3) = {
-    val path = getTestPath(pathStr)
+  private def checkWithFeaturesAllowed(path: String, allowedFeatures: List[Feature], dialect: Dialect = Scala3) = {
+    val file = getTestFile(path)
     val checker = WhitelistChecker(allowedFeatures)
-    checkPath(checker, path, dialect)
+    checkFile(checker, file, dialect)
   }
 
   test("literals-allowed") {

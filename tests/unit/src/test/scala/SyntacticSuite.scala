@@ -1,6 +1,6 @@
 package tests
 
-import testkit.{TestPath, Specs}
+import testkit.{TestFile, Specs}
 import syntactic.Checker
 import syntactic.CheckResult
 import syntactic.Violation
@@ -10,9 +10,9 @@ import scala.meta.Dialect
 
 abstract class SyntacticSuite extends munit.FunSuite {
 
-  protected def getTestPath(name: String): TestPath = {
+  protected def getTestFile(name: String): TestFile = {
     val path = AbsolutePath(s"${System.getProperty("tests-input")}/$name")
-    new TestPath(name, path)
+    new TestFile(name, path)
   }
 
   private def mergeViolations(violations: List[Violation]): List[Violation] = {
@@ -41,9 +41,9 @@ abstract class SyntacticSuite extends munit.FunSuite {
       .sortBy(v => (v.startLine, v.startColumn))
   }
 
-  protected def checkPath(checker: Checker, path: TestPath, dialect: Dialect): Unit = {
-    val expectedViolations = Specs.fromPath(path, dialect)
-    checker.checkFile(dialect, path.toString) match {
+  protected def checkFile(checker: Checker, file: TestFile, dialect: Dialect): Unit = {
+    val expectedViolations = Specs.load(file, dialect)
+    checker.checkFile(dialect, file.toString) match {
       case CheckResult.ParsingError(e) => throw e
       case CheckResult.Valid =>
         assertEquals(List.empty[String], expectedViolations)

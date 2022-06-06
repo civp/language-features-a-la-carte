@@ -8,15 +8,15 @@ import scala.meta.dialects.Scala213
 class SyntacticBlacklistSuite extends SyntacticSuite {
   
   test("no-null-no-cast") {
-    val path = getTestPath("blacklist/NoNullCast")
+    val file = getTestFile("blacklist/NoNullCast")
     val checker = BlacklistChecker(NoNull, NoCast)
-    checkPath(checker, path, Scala213)
+    checkFile(checker, file, Scala213)
   }
 
   test("no-var-no-while") {
-    val path = getTestPath("blacklist/NoVarWhile")
+    val file = getTestFile("blacklist/NoVarWhile")
     val checker = BlacklistChecker(NoVar, NoWhile)
-    checkPath(checker, path, Scala213)
+    checkFile(checker, file, Scala213)
   }
 
 }

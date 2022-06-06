@@ -11,8 +11,8 @@ import scala.meta.dialects.Scala3
   */
 object Specs {
 
-  def fromPath(path: TestPath, dialect: Dialect = Scala3): List[String] = {
-    val input = path.read
+  def load(file: TestFile, dialect: Dialect = Scala3): List[String] = {
+    val input = file.read
     val tree = dialect(input).parse[Source].get
     val commentTokens = findAllComments(tree.tokens)
     commentTokens.drop(1).map(tokenToString)

@@ -16,7 +16,7 @@ class WhitelistChecker private(allowedFeatures: List[Feature]) extends Checker {
 
   override def checkTree(tree: Tree): Option[Violation] = {
     if (GroupedFeature.allows(tree)) None
-    else Some(Violation(tree, s"not in the allowed features: ${GroupedFeature.toString}"))
+    else Some(Violation(tree, s"not in the allowed features: ${GroupedFeature.show}"))
   }
 
 }
