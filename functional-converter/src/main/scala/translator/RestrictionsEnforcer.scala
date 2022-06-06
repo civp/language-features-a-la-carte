@@ -6,18 +6,32 @@ import syntactic.whitelist.{WhitelistChecker, Features => F}
 import scala.annotation.tailrec
 import scala.meta.{Case, Decl, Defn, Name, Pat, Term, Tree}
 
-class TranslationConfigurationChecker(reporter: Reporter) {
+/**
+ * The translator cannot translate any Scala programs, some restrictions apply. The ones that are
+ * checked before translation starts are checked by a RestrictionEnforcer
+ */
+class RestrictionsEnforcer(reporter: Reporter) {
   require(reporter != null)
 
+  // checker for the Scala subset that can be translated
   private val checker = WhitelistChecker(
     F.Vals, F.Defs, F.Nulls, F.LiteralsAndExpressions,
     F.Annotations, F.ForExpr, F.ImperativeConstructs, F.Laziness,
     F.PolymorphicTypes, F.StringInterpolation, F.AdvancedOop
   )
 
+  /**
+   * Checks whether the tree does not violate the following restrictions:
+   *  - Only a subset of Scala features is allowed
+   *  - No two distinct vals/vars can have the same name in the same method
+   *  - Names that may conflict after transformation are not allowed (e.g. `x` vs `x_1`)
+   * Writes the errors to the error reporter
+   * @return true iff the program contained in the given tree does not violate the restrictions
+   */
   def checkCanConvert(tree: Tree): Boolean =
     checkThatUsedConstructsAllowConversion(tree) && checkThatValAndVarNamesAllowConversion(tree)
 
+  // check that the tree contains only features from the allowed subset
   private def checkThatUsedConstructsAllowConversion(tree: Tree): Boolean = {
     val methodName = extractMethodName(tree)
     checker.checkTree(tree) match {
@@ -37,11 +51,12 @@ class TranslationConfigurationChecker(reporter: Reporter) {
     }
   }
 
+
   private def checkThatValAndVarNamesAllowConversion(tree: Tree): Boolean = {
 
-    def findDeclarations(pats: List[Pat]): List[String] = pats.flatMap(_.collect { case Name(nameStr) => nameStr })
-
     val methodName = extractMethodName(tree)
+
+    def findDeclarations(pats: List[Pat]): List[String] = pats.flatMap(_.collect { case Name(nameStr) => nameStr })
 
     def checkMayBeDisambiguatedTo(initName: String, potentialDisambig: String): Boolean = {
       val sp = potentialDisambig.split("[_]")
@@ -78,11 +93,14 @@ class TranslationConfigurationChecker(reporter: Reporter) {
       case cse: Case => throw new AssertionError(s"unexpected: ${cse.pat.structure}")
     }.flatten
 
+    // use map and then exists to avoid stopping at the first conflict because they must be written in the reporter
     !allPairs(definedNames).map(names => checkConflict(names._1, names._2)).exists(identity)
   }
 
-  @tailrec
-  private def allPairs(rem: List[String], acc: List[(String, String)] = Nil): List[(String, String)] = {
+  /**
+   * Creates the list of all pairs (a, b) of elements of rem s.t. a appears before b in rem
+   */
+  @tailrec private def allPairs(rem: List[String], acc: List[(String, String)] = Nil): List[(String, String)] = {
     rem match {
       case Nil => acc
       case head :: tail => allPairs(tail, acc ++ (for (str <- tail) yield (head, str)))

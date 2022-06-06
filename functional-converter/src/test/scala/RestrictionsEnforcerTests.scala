@@ -1,11 +1,11 @@
-import translator.{Reporter, TranslationConfigurationChecker}
+import translator.{Reporter, RestrictionsEnforcer}
 import org.junit.Test
 import org.junit.Assert.{assertEquals, assertFalse, assertTrue}
 
 import scala.meta.{Defn, Source, dialects}
 
 
-class ConfigurationCheckerTests {
+class RestrictionsEnforcerTests {
 
   private def parse(str: String): Source = dialects.Sbt1(str).parse[Source].get
 
@@ -29,7 +29,7 @@ class ConfigurationCheckerTests {
         |}
         |""".stripMargin)
     val reporter = new Reporter()
-    val configChecker = new TranslationConfigurationChecker(reporter)
+    val configChecker = new RestrictionsEnforcer(reporter)
     assertTrue(configChecker.checkCanConvert(headStatOf(src)))
     assertTrue(reporter.getReportedErrors.isEmpty)
   }
@@ -51,7 +51,7 @@ class ConfigurationCheckerTests {
         |}
         |""".stripMargin)
     val reporter = new Reporter()
-    val configChecker = new TranslationConfigurationChecker(reporter)
+    val configChecker = new RestrictionsEnforcer(reporter)
     assertFalse(configChecker.checkCanConvert(headStatOf(src)))
     val reportedErrors = reporter.getReportedErrors
     assertEquals(1, reportedErrors.size)
@@ -76,7 +76,7 @@ class ConfigurationCheckerTests {
         |}
         |""".stripMargin)
     val reporter = new Reporter()
-    val configChecker = new TranslationConfigurationChecker(reporter)
+    val configChecker = new RestrictionsEnforcer(reporter)
     assertFalse(configChecker.checkCanConvert(headStatOf(src)))
     val reportedErrors = reporter.getReportedErrors
     assertEquals(1, reportedErrors.size)
@@ -92,7 +92,7 @@ class ConfigurationCheckerTests {
         |val y_25 = 42
         |""".stripMargin)
     val reporter = new Reporter()
-    val configChecker = new TranslationConfigurationChecker(reporter)
+    val configChecker = new RestrictionsEnforcer(reporter)
     assertFalse(configChecker.checkCanConvert(src))
     val reportedErrors = reporter.getReportedErrors
     assertEquals(1, reportedErrors.size)
