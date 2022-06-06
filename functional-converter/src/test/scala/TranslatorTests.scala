@@ -174,6 +174,37 @@ class TranslatorTests {
     testRedirectedPrintOut(sourceCode)
   }
 
+  @Test
+  def test9(): Unit = {
+    val codeStr =
+      """def scalarProd(u: List[Int], v: List[Int]): Int = {
+        |  require(u.size == v.size)
+        |  var sum = 0
+        |  val zipped: List[(Int, Int)] = u.zip(v)
+        |  for ((un, vn) <- zipped){
+        |    sum += un * vn
+        |  }
+        |  sum
+        |}
+        |def computation(): Int = {
+        |  val vecLs: List[(List[Int], List[Int])] = List(
+        |    (List(2, 5, -1), List(3, -11, 7)),
+        |    (List(-2, -1, 1), List(4, 3)),
+        |    (List(2, 7), List(5, 10))
+        |  )
+        |  var sum2 = 0
+        |  for ((u, v) <- vecLs if u.size == v.size){
+        |    val currProd = scalarProd(u, v)
+        |    sum2 += currProd
+        |    System.out.println(currProd)
+        |  }
+        |  sum2
+        |}
+        |computation()
+        |""".stripMargin
+    testRedirectedPrintOut(codeStr)
+  }
+
   private def testRedirectedPrintOut(imperativeSrcCode: String): Unit = {
     val toolBox = currentMirror.mkToolBox()
 
