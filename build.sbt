@@ -3,11 +3,15 @@ import Dependencies._
 lazy val scala2Version = "2.13.8"
 lazy val scala3Version = "3.1.2"
 
+lazy val tastyQueryJVM = project
+  .in(file("tasty-query"))
+
 lazy val semantic = project
   .in(file("semantic"))
   .settings(
     scalaVersion := scala3Version
   )
+  .dependsOn(tastyQueryJVM)
 
 lazy val syntactic = project
   .in(file("syntactic"))
@@ -24,10 +28,7 @@ lazy val testkit = project
   .in(file("testkit"))
   .settings(
     scalaVersion := scala2Version,
-    libraryDependencies ++= Seq(
-      scalameta,
-      scalaParserCombinators
-    )
+    libraryDependencies += scalameta
   )
   .dependsOn(syntactic, semantic)
 
