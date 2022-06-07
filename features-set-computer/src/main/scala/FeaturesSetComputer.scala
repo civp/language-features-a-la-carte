@@ -46,7 +46,7 @@ class FeaturesSetComputer(availableFeatures: List[Feature]) {
     /**
      * Array s.t. authorizations(n)(f) == true iff feature at index f allows node at index n
      */
-    val authorizations = nodes.map(_ => new Array[Boolean](availableFeaturesCnt))
+    val authorizations: IndexedSeq[Array[Boolean]] = IndexedSeq.fill(nodes.size)(new Array[Boolean](availableFeaturesCnt))
     for ((node, nIdx) <- nodes.zipWithIndex) {
       for ((feature, fIdx) <- availableFeatures.zipWithIndex) {
         authorizations(nIdx)(fIdx) = WhitelistChecker(feature).checkTree(node).isEmpty
