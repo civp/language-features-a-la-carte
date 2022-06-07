@@ -1,9 +1,9 @@
 import FeaturesSetComputerTest.TestFeaturesProvider
-import org.junit.Assert.{assertEquals, fail}
+import org.junit.Assert.assertEquals
 import org.junit.Test
 import syntactic.CheckResult
 import syntactic.whitelist.Feature.{AtomicFeature, CompositeFeature}
-import syntactic.whitelist.{FeaturesProvider, PredefFeatures, ScalaFeature, WhitelistChecker}
+import syntactic.whitelist.{FeaturesProvider, PredefFeatures, WhitelistChecker}
 
 import scala.meta.{Defn, Source, Term, XtensionParseInputLike}
 
@@ -90,34 +90,28 @@ object FeaturesSetComputerTest {
 
   private object TestFeaturesProvider extends FeaturesProvider {
 
-    @ScalaFeature
     case object VarsFt extends AtomicFeature({
       case _ : Defn.Var => true
     })
 
-    @ScalaFeature
     case object VarsAndValsFt extends AtomicFeature({
       case _ : Defn.Var => true
       case _ : Defn.Val => true
     })
 
-    @ScalaFeature
     case object OopFt extends AtomicFeature({
       case _ : Defn.Object => true
       case _ : Defn.Class => true
       case _ : Defn.Trait => true
     })
 
-    @ScalaFeature
     case object DefFt extends AtomicFeature({
       case _ : Defn.Def => true
       case _ : Term.Param => true
     })
 
-    @ScalaFeature
     case object DefAndObjectFt extends CompositeFeature(DefFt, OopFt)
 
-    @ScalaFeature
     case object ImcompleteForFt extends AtomicFeature({
       case _ : Term.For => true
     })
