@@ -6,10 +6,25 @@ lazy val scala3Version = "3.1.2"
 lazy val tastyQueryJVM = project
   .in(file("tasty-query"))
 
+lazy val semanticTestResouces = project
+  .in(file("semantic/src/test/res"))
+  .settings(scalaVersion := scala3Version)
+
 lazy val semantic = project
   .in(file("semantic"))
   .settings(
-    scalaVersion := scala3Version
+    scalaVersion := scala3Version,
+    libraryDependencies += munit,
+    fork := true,
+    javaOptions += {
+      val testResources = {
+        val testSourcesProducts = (semanticTestResouces / Compile / products).value
+        // Only one output location expected
+        assert(testSourcesProducts.size == 1)
+        testSourcesProducts.map(_.getAbsolutePath).head
+      }
+      s"-Dtest-resources=$testResources"
+    }
   )
   .dependsOn(tastyQueryJVM)
 
