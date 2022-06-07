@@ -24,6 +24,7 @@ lazy val featuresSetComputer = project
   .in(file("features-set-computer"))
   .settings(
     moduleName := "features-set-computer",
+    scalaVersion := scala2Version,
     libraryDependencies ++= Seq(
       scalameta,
       junit,
