@@ -11,6 +11,7 @@ import scala.meta.Tree
  * @param availableFeatures the features that can be included in the computed set
  */
 class FeaturesSetComputer(availableFeatures: List[Feature]) {
+  private val availableFeaturesIndexedSeq = availableFeatures.toIndexedSeq
 
   /**
    * Computes the minimal set of Features needed by a WhitelistChecker to allow all the nodes in the given tree
@@ -55,15 +56,15 @@ class FeaturesSetComputer(availableFeatures: List[Feature]) {
      */
 
     val availableFeaturesCnt = availableFeatures.size
+    val nodesIndexedSeq = nodes.toIndexedSeq
+
     /**
-     * Array s.t. authorizations(n)(f) == true iff feature at index f allows node at index n
+     * Table s.t. authorizations(n)(f) == true iff feature at index f allows node at index n
      */
-    val authorizations: IndexedSeq[Array[Boolean]] = IndexedSeq.fill(nodes.size)(new Array[Boolean](availableFeaturesCnt))
-    for ((node, nIdx) <- nodes.zipWithIndex) {
-      for ((feature, fIdx) <- availableFeatures.zipWithIndex) {
-        authorizations(nIdx)(fIdx) = WhitelistChecker(feature).checkTree(node).isEmpty
+    val authorizations =
+      IndexedSeq.tabulate(nodes.size, availableFeatures.size) { (nIdx, fIdx) =>
+        WhitelistChecker(availableFeaturesIndexedSeq(fIdx)).checkTree(nodesIndexedSeq(nIdx)).isEmpty
       }
-    }
 
     def allows(featIdx: Int, nodeIdx: Int): Boolean = authorizations(nodeIdx)(featIdx)
 
