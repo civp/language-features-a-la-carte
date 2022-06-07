@@ -16,13 +16,22 @@ object TypeInferrer {
         namingContext.currentlyReferencedVals(nameStr)
       case Term.Name(nameStr) if namingContext.currentlyReferencedVars.contains(nameStr) =>
         namingContext.currentlyReferencedVars.get(nameStr).map(_.typ)
-      case _: Lit.Int => Some(Type.Name("Int"))
-      case _: Lit.Boolean => Some(Type.Name("Boolean"))
-      case _: Lit.String => Some(Type.Name("String"))
-      case _: Lit.Unit => Some(Type.Name("Unit"))
-      // TODO more cases
+      case _: Lit.Int => someType("Int")
+      case _: Lit.Boolean => someType("Boolean")
+      case _: Lit.String => someType("String")
+      case _: Lit.Unit => someType("Unit")
+      case _: Lit.Double => someType("Double")
+      case _: Lit.Float => someType("Float")
+      case _: Lit.Char => someType("Char")
+      case _: Lit.Long => someType("Long")
+      case _: Lit.Short => someType("Short")
+      case _: Lit.Byte => someType("Byte")
+      case _: Lit.Null => someType("Nothing")
       case _ => None
     }
   }
 
+  private def someType(float: String) = {
+    Some(Type.Name(float))
+  }
 }
