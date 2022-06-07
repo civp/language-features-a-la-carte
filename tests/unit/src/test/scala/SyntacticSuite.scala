@@ -11,7 +11,7 @@ import scala.meta.Dialect
 abstract class SyntacticSuite extends munit.FunSuite {
 
   protected def getTestFile(name: String): TestFile = {
-    val path = AbsolutePath(s"${System.getProperty("tests-input")}/$name")
+    val path = AbsolutePath(s"../input/res/$name.scala")
     new TestFile(name, path)
   }
 
