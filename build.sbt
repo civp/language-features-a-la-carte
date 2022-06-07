@@ -1,5 +1,4 @@
 import Dependencies._
-import sbtbuildinfo.BuildInfoPlugin
 
 lazy val scala2Version = "2.13.8"
 lazy val scala3Version = "3.1.2"
