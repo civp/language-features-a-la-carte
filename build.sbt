@@ -25,6 +25,7 @@ lazy val functionalConverter = project
   .in(file("functional-converter"))
   .settings(
     moduleName := "functional-converter",
+    scalaVersion := scala2Version,
     libraryDependencies ++= Seq(
       scalameta,
       junit,
