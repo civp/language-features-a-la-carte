@@ -1,16 +1,13 @@
 package syntactic.whitelist
 
-import java.lang.annotation.AnnotationTypeMismatchException
-import scala.annotation.ClassfileAnnotation
-
 /**
- * When implemented by a class that defines Features, automatically provides a list of all the features
- * defined in the class that are annotated with @ScalaFeature
+ * When implemented by an object that defines Features, automatically provides a list of all the features
+ * defined in the object (i.e. all public objects that extend the [[Feature]] trait)
  */
 trait FeaturesProvider {
 
   /**
-   * All the features defined in this class that are annotated with @ScalaFeature
+   * all the features defined in this (i.e. all public objects that extend the [[Feature]] trait)
    */
   val allDefinedFeatures: List[Feature] = {
     val clazz = getClass
@@ -21,26 +18,11 @@ trait FeaturesProvider {
       .members
       .filter(_.isPublic)
       .filter(_.isModule)
-
-      // TODO either one or the other of both lines
-      // first line relies on an annotation
-      // second line includes all public Features in the list (would require to change the exception type in the PF below)
-      .filter(_.annotations.exists(_.tree.tpe =:= mirror.typeOf[ScalaFeature]))
-      //.filter(_.asModule.typeSignature <:< mirror.typeOf[Feature])
+      .filter(_.asModule.typeSignature <:< mirror.typeOf[Feature])
       .map(member => mirror.reflectModule(member.asModule).instance)
 
-    val modules = modulesWithUncheckedType.map {
-      case feature: Feature => feature
-      case any => throw new AnnotationTypeMismatchException(null, any.getClass.getName)
-    }
-    modules.toList
+    assert(modulesWithUncheckedType.forall(_.isInstanceOf[Feature]))
+    modulesWithUncheckedType.map(_.asInstanceOf[Feature]).toList
   }
 
 }
-
-/**
- * Marks the Features that should be considered by the automatic building of a list of defined Features
- *
- * Only intended to be used on singleton objects extending the Feature interface
- */
-class ScalaFeature() extends ClassfileAnnotation
