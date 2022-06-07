@@ -15,7 +15,7 @@ import tastyquery.ast.Names._
 
 class SemanticSuite extends munit.FunSuite {
 
-  private val cpElem = Properties.propOrNone("semantic-test-resources").get
+  private val cpElem = Properties.propOrNone("tests-input-product").get
   private val classpath =
     ClasspathLoaders.read(List(cpElem), Set(ClasspathLoaders.FileKind.Tasty))
   given BaseContext = Contexts.init(classpath)

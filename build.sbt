@@ -6,25 +6,10 @@ lazy val scala3Version = "3.1.2"
 lazy val tastyQueryJVM = project
   .in(file("tasty-query"))
 
-lazy val semanticTestResouces = project
-  .in(file("semantic/src/test/res"))
-  .settings(scalaVersion := scala3Version)
-
 lazy val semantic = project
   .in(file("semantic"))
   .settings(
-    scalaVersion := scala3Version,
-    libraryDependencies += munit,
-    fork := true,
-    javaOptions += {
-      val testResources = {
-        val testSourcesProducts = (semanticTestResouces / Compile / products).value
-        // Only one output location expected
-        assert(testSourcesProducts.size == 1)
-        testSourcesProducts.map(_.getAbsolutePath).head
-      }
-      s"-Dsemantic-test-resources=$testResources"
-    }
+    scalaVersion := scala3Version
   )
   .dependsOn(tastyQueryJVM)
 
@@ -58,15 +43,19 @@ lazy val testsUnit = project
   .settings(
     scalaVersion := scala3Version,
     libraryDependencies += munit,
-    Compile / compile / compileInputs := {
-      (Compile / compile / compileInputs)
-        .dependsOn(testsInput / Compile / compile)
-        .value
-    },
     fork := true,
-    javaOptions += {
-      val testsInputProduct = (testsInput / Compile / scalaSource).value
-      s"-Dtests-input=$testsInputProduct"
+    javaOptions ++= {
+      val testsInputSource = (testsInput / Compile / scalaSource).value
+      val testsInputProduct = {
+        val testsInputProducts = (testsInput / Compile / products).value
+        // Only one output location expected
+        assert(testsInputProducts.size == 1)
+        testsInputProducts.map(_.getAbsolutePath).head
+      }
+      Seq(
+        s"-Dtests-input-source=$testsInputSource",
+        s"-Dtests-input-product=$testsInputProduct"
+      )
     }
   )
   .dependsOn(testkit)
