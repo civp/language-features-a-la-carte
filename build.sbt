@@ -1,16 +1,18 @@
 import Dependencies._
-import sbtbuildinfo.BuildInfoPlugin
+
+lazy val scala2Version = "2.13.8"
+lazy val scala3Version = "3.1.2"
 
 lazy val semantic = project
   .in(file("semantic"))
   .settings(
-    moduleName := "semantic",
+    scalaVersion := scala3Version
   )
 
 lazy val syntactic = project
   .in(file("syntactic"))
   .settings(
-    moduleName := "syntactic",
+    scalaVersion := scala2Version,
     libraryDependencies ++= Seq(
       scalameta,
       junit,
@@ -18,35 +20,37 @@ lazy val syntactic = project
     )
   )
 
-lazy val testsShared = project
-  .in(file("tests/shared"))
+lazy val testkit = project
+  .in(file("testkit"))
+  .settings(
+    scalaVersion := scala2Version,
+    libraryDependencies ++= Seq(
+      scalameta,
+      scalaParserCombinators
+    )
+  )
+  .dependsOn(syntactic, semantic)
 
 lazy val testsInput = project
   .in(file("tests/input"))
-
-lazy val testsOutput = project
-  .in(file("tests/output"))
-  .dependsOn(syntactic)
+  .settings(
+    scalaVersion := scala3Version
+  )
 
 lazy val testsUnit = project
   .in(file("tests/unit"))
   .settings(
-    buildInfoPackage := "tests",
-    buildInfoObject := "BuildInfo",
-    libraryDependencies ++= Seq(
-      scalatest,
-      funsuite,
-      scalametaTeskit
-    ),
+    scalaVersion := scala3Version,
+    libraryDependencies += munit,
     Compile / compile / compileInputs := {
       (Compile / compile / compileInputs)
-        .dependsOn(
-          testsShared / Compile / compile,
-          testsInput / Compile / compile
-        )
+        .dependsOn(testsInput / Compile / compile)
         .value
+    },
+    fork := true,
+    javaOptions += {
+      val testsInputProduct = (testsInput / Compile / scalaSource).value
+      s"-Dtests-input=$testsInputProduct"
     }
   )
-  .enablePlugins(BuildInfoPlugin)
-  .dependsOn(syntactic, testsOutput)
-
+  .dependsOn(testkit)

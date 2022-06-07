@@ -34,6 +34,13 @@ object Feature {
 
     override def allows(tree: Tree): Boolean = features.exists(_.allows(tree))
 
+    def show: String = features
+      .map(_.toString)
+      .filter(_ != "AlwaysAllowed") // Hide AlwaysAllowed
+      .toList
+      .sorted
+      .mkString(", ")
+
   }
 
   /**
