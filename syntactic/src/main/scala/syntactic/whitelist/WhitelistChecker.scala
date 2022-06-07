@@ -16,7 +16,7 @@ class WhitelistChecker private(allowedFeatures: List[Feature]) extends Checker {
 
   override def checkNode(node: Tree): Option[Violation] = {
     if (GroupedFeature.allows(node)) None
-    else Some(Violation(node))
+    else Some(Violation(node, s"not in the allowed features: ${GroupedFeature.show}"))
   }
 
 }
@@ -47,6 +47,8 @@ object WhitelistChecker {
     case _: Name.Anonymous => true
     case _: Init => true
     case _: Term.EndMarker => true
-  })
+  }) {
+    override def toString: String = "AlwaysAllowed"
+  }
 
 }
