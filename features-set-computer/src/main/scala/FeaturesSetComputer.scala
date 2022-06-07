@@ -42,6 +42,18 @@ class FeaturesSetComputer(availableFeatures: List[Feature]) {
    */
   def minimalFeaturesSetFor(nodes: List[Tree]): Option[Set[Feature]] = {
 
+    /*
+     * The algorithm is built around a set of SearchThreads. Each search thread contains
+     * a set of allowed features and the set of nodes that are not allowed by any of
+     * these features (both features and nodes are represented by their indices in
+     * `allowedFeatures` and `nodes`, respectively). We start with an empty set of
+     * SearchThreads, and then consider each feature and for each search thread we create
+     * a new one including the currently considered feature, if this new feature allows new
+     * nodes (we also keep the original SearchThread, because another feature considered later
+     * could lead to a better solution). At the end, we retain only the SearchThreads that
+     * have no disallowed node left and select the one with the least number of features.
+     */
+
     val availableFeaturesCnt = availableFeatures.size
     /**
      * Array s.t. authorizations(n)(f) == true iff feature at index f allows node at index n
