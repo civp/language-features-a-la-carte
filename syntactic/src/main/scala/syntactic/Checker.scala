@@ -11,20 +11,20 @@ trait Checker {
   /**
    * Check whether the input tree uses only allowed features
    *
-   * @param tree the tree to be checked
+   * @param node the tree to be checked
    * @return Some[Violation] if a violation was found, None o.w.
    */
-  def checkTree(tree: Tree): Option[Violation]
+  def checkNode(node: Tree): Option[Violation]
 
   /**
    * Check whether the input program (as a source) uses only allowed features
    *
-   * @param src the source to be checked
+   * @param tree the AST to be checked
    * @return a CheckResult (Valid, Invalid or ParsingError)
    */
-  final def checkSource(src: Source): CheckResult = {
-    val violations = src.collect {
-      case tree: Tree => checkTree(tree)
+  final def checkTree(tree: Tree): CheckResult = {
+    val violations = tree.collect {
+      case tree: Tree => checkNode(tree)
     }.flatten
     if (violations.isEmpty) CheckResult.Valid
     else CheckResult.Invalid(violations)
@@ -42,7 +42,7 @@ trait Checker {
     Try {
       inputWithDialect.parse[Source].get
     } match {
-      case Success(source) => checkSource(source)
+      case Success(source) => checkTree(source)
       case Failure(NonFatal(throwable)) => CheckResult.ParsingError(throwable)
       case Failure(fatal) => throw fatal
     }
