@@ -1,19 +1,18 @@
+/*
+mode = blacklist
+rules = [
+  NoPrintln
+]
+*/
+
 package res
 
 class Println {
   
-  def prtl(x: String): Unit = println(x)
+  def prtl(x: String): Unit = println(x) /*
+                              ^^^^^^^^^^
+  println is not functional */
 
-  def prtls(xs: List[String]): Unit = xs.foreach(println)
-
-}
-
-class MyPrintln {
-
-  def println(x: String): Unit = print(x + "\n")
-
-  def prtl(x: String): Unit = println(x)
-
-  def prtls(xs: List[String]): Unit = xs.foreach(println)
+  def prtls(xs: List[String]): Unit = xs.foreach(println) // has no span
 
 }

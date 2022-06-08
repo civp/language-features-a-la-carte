@@ -30,7 +30,6 @@ lazy val testkit = project
     scalaVersion := scala2Version,
     libraryDependencies += scalameta
   )
-  .dependsOn(syntactic, semantic)
 
 lazy val testsInput = project
   .in(file("tests/input"))
@@ -58,4 +57,4 @@ lazy val testsUnit = project
       )
     }
   )
-  .dependsOn(testkit)
+  .dependsOn(syntactic, semantic, testkit)

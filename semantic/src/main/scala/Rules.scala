@@ -17,7 +17,7 @@ object Rules {
           TypeName(SimpleName("List"))),
         _),
       SimpleName("head"),
-      _) => Violation(m, Some("List#head is unsafe"))
+      _) => Violation(m, "List#head is unsafe")
   }) 
 
   case object NoOptionGet extends Rule({
@@ -28,7 +28,7 @@ object Rules {
           TypeName(SimpleName("Option"))),
         _),
       SimpleName("get"),
-      _) => Violation(m, Some("Option#get is unsafe"))
+      _) => Violation(m, "Option#get is unsafe")
   })
 
   case object NoPrintln extends Rule({
@@ -36,7 +36,7 @@ object Rules {
       NoType,
       SimpleName("println"),
       _
-    ) => Violation(m, Some("println is not functional"))
+    ) => Violation(m, "println is not functional")
   })
 
   case object NoIterableOnceOpsForeach extends Rule({
@@ -44,7 +44,7 @@ object Rules {
       _, // TODO: is subtype
       SimpleName("foreach"),
       _
-    ) => Violation(m, Some("foreach is not functional"))
+    ) => Violation(m, "foreach is not functional")
   })
 
 }

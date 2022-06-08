@@ -32,14 +32,17 @@ class Checker private (rules: List[Rule]) {
 
   private def collectMethods(tree: Tree)(using BaseContext): List[Method] = {
     tree.walkTree({
+      // qual.name
       case tr @ Select(qual, name: SimpleName) =>
         val tpe = qual.tpe match {
           case tp: TermRef => tp.underlying
           case tp => tp
         }
         Method(tpe, name, tr.span) :: Nil
+      // name(...)
       case tr @ Apply(Ident(dname: DerivedName), _) =>
         Method(NoType, dname.underlying, tr.span) :: Nil
+      // qual.name(...)
       case tr @ Apply(TypeApply(SelectIn(qual, name: SignedName, owner), _), _) =>
         val tpe = qual.tpe match {
           case tp: TermRef => tp.underlying
@@ -50,11 +53,11 @@ class Checker private (rules: List[Rule]) {
     })(_ ::: _, Nil)
   }
 
-  def checkTree(tree: Tree)(using BaseContext): List[Violation] = {
+  final def checkTree(tree: Tree)(using BaseContext): List[Violation] = {
     collectMethods(tree).flatMap(checkMethod)
   }
 
-  def checkClass(className: String)(using BaseContext): List[Violation] = {
+  final def checkClass(className: String)(using BaseContext): List[Violation] = {
     val query = reader.read(className)
     // TODO: change the interface
     val tree = query.trees.trees.head
