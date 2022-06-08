@@ -1,7 +1,7 @@
 package syntactic.whitelist
 
 import org.junit.Test
-import syntactic.whitelist.Features._
+import syntactic.whitelist.PredefFeatures._
 import syntactic.whitelist.WhitelistCheckerTestRunner.{expectInvalidWhenExcludingFeatures, expectParsingError, expectValidWithFeatures}
 
 import scala.meta.dialects

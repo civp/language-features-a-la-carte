@@ -20,6 +20,17 @@ lazy val syntactic = project
     )
   )
 
+lazy val featuresSetComputer = project
+  .in(file("features-set-computer"))
+  .settings(
+    moduleName := "features-set-computer",
+    scalaVersion := scala2Version,
+    libraryDependencies ++= Seq(
+      scalameta,
+      junit,
+      junitInterface
+    )
+  ).dependsOn(syntactic)
 
 lazy val functionalConverter = project
   .in(file("functional-converter"))
@@ -31,8 +42,7 @@ lazy val functionalConverter = project
       junit,
       junitInterface
     )
-  )
-  .dependsOn(syntactic)
+  ).dependsOn(syntactic)
 
 lazy val testkit = project
   .in(file("testkit"))

@@ -1,7 +1,7 @@
 package tests
 
 import syntactic.whitelist.WhitelistChecker
-import syntactic.whitelist.Features._
+import syntactic.whitelist.PredefFeatures._
 import syntactic.whitelist.Feature
 
 import scala.meta.dialects.{Sbt1, Scala213, Scala3}

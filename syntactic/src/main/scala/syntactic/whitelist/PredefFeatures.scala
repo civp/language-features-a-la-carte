@@ -4,7 +4,7 @@ import syntactic.whitelist.Feature.{AtomicFeature, CompositeFeature}
 
 import scala.meta._
 
-object Features {
+object PredefFeatures extends FeaturesProvider {
 
   /**
    * Allows literals of basic types, including Unit and tuples, as well as expressions

@@ -1,7 +1,7 @@
 package syntactic.whitelist
 
 import org.junit.Assert.{assertEquals, assertTrue, fail}
-import syntactic.whitelist.Features._
+import syntactic.whitelist.PredefFeatures._
 import syntactic.{CheckResult, Violation}
 
 import java.util.StringJoiner
