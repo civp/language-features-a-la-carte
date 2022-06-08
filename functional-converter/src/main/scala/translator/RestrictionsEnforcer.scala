@@ -1,7 +1,7 @@
 package translator
 
 import syntactic.CheckResult
-import syntactic.whitelist.{WhitelistChecker, Features => F}
+import syntactic.whitelist.{WhitelistChecker, PredefFeatures => F}
 
 import scala.annotation.tailrec
 import scala.meta.{Case, Decl, Defn, Name, Pat, Term, Tree}

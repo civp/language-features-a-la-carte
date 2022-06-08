@@ -9,7 +9,7 @@ import scala.util.{Failure, Success, Try, Using}
 trait Checker {
 
   /**
-   * Check whether the input tree uses only allowed features
+   * Check whether the input tree node is allowed
    *
    * @param node the tree to be checked
    * @return Some[Violation] if a violation was found, None o.w.
@@ -17,7 +17,7 @@ trait Checker {
   def checkNode(node: Tree): Option[Violation]
 
   /**
-   * Check whether the input program (as a source) uses only allowed features
+   * Check whether the input program (as a tree) uses only allowed features
    *
    * @param tree the AST to be checked
    * @return a CheckResult (Valid, Invalid or ParsingError)

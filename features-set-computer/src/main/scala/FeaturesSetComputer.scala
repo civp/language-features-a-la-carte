@@ -63,7 +63,7 @@ class FeaturesSetComputer(availableFeatures: List[Feature]) {
      */
     val authorizations =
       IndexedSeq.tabulate(nodes.size, availableFeatures.size) { (nIdx, fIdx) =>
-        WhitelistChecker(availableFeaturesIndexedSeq(fIdx)).checkTree(nodesIndexedSeq(nIdx)).isEmpty
+        WhitelistChecker(availableFeaturesIndexedSeq(fIdx)).checkNode(nodesIndexedSeq(nIdx)).isEmpty
       }
 
     def allows(featIdx: Int, nodeIdx: Int): Boolean = authorizations(nodeIdx)(featIdx)

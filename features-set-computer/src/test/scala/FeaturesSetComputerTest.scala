@@ -49,7 +49,7 @@ class FeaturesSetComputerTest {
         |""".stripMargin
     val src = parse(codeStr)
     val initChecker = WhitelistChecker(PredefFeatures.LiteralsAndExpressions, PredefFeatures.ADTs)
-    val checkResult = initChecker.checkSource(src)
+    val checkResult = initChecker.checkTree(src)
     assert(checkResult.isInstanceOf[CheckResult.Invalid])
     val featuresSetComputer = new FeaturesSetComputer(PredefFeatures.allDefinedFeatures)
     val requiredFeatures = featuresSetComputer.minimalFeaturesSetToResolve(checkResult.asInstanceOf[CheckResult.Invalid].violations)
