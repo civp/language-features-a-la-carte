@@ -1,10 +1,11 @@
 package translator
 
 import syntactic.CheckResult
+import syntactic.whitelist.Feature.AtomicFeature
 import syntactic.whitelist.{WhitelistChecker, PredefFeatures => F}
 
 import scala.annotation.tailrec
-import scala.meta.{Case, Decl, Defn, Name, Pat, Term, Tree}
+import scala.meta.{Case, Decl, Defn, Mod, Name, Pat, Term, Tree}
 
 /**
  * The translator cannot translate any Scala programs, some restrictions apply. The ones that are
@@ -13,10 +14,24 @@ import scala.meta.{Case, Decl, Defn, Name, Pat, Term, Tree}
 class RestrictionsEnforcer(reporter: Reporter) {
   require(reporter != null)
 
+  private object AllowedImperativeConstructs extends AtomicFeature {
+    override val checkPF: PartialFunction[Tree, Boolean] = {
+      case Mod.VarParam() => true
+      case _: Decl.Var => true
+      case _: Defn.Var => true
+      case _: Term.Assign => true
+      case _: Term.Do => true
+      case _: Term.Throw => true
+      case _: Term.Try => true
+      case _: Term.TryWithHandler => true
+      case _: Term.While => true
+    }
+  }
+
   // checker for the Scala subset that can be translated
   private val checker = WhitelistChecker(
     F.Vals,F.Defs, F.Nulls, F.LiteralsAndExpressions,
-    F.ForExpr, F.ImperativeConstructs,
+    F.ForExpr, AllowedImperativeConstructs,
     F.PolymorphicTypes, F.StringInterpolation, F.AdvancedOop,
     F.LiteralFunctions
   )

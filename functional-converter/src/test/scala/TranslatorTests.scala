@@ -61,18 +61,19 @@ class TranslatorTests {
         |def fibonacci(n: Int): Int = {
         |  require(n >= 0)
         |  if (n <= 1){
-        |    return n
+        |    n
+        |  } else {
+        |    var i = 2
+        |    var oldest = 0
+        |    var old = 1
+        |    while (i <= n){
+        |      val curr = oldest + old
+        |      oldest = old
+        |      old = curr
+        |      i += 1
+        |    }
+        |    old
         |  }
-        |  var i = 2
-        |  var oldest = 0
-        |  var old = 1
-        |  while (i <= n){
-        |    val curr = oldest + old
-        |    oldest = old
-        |    old = curr
-        |    i += 1
-        |  }
-        |  old
         |}
         |fibonacci(11)
         |""".stripMargin
@@ -131,7 +132,7 @@ class TranslatorTests {
         |  for ((un, vn) <- zipped){
         |    sum += un * vn
         |  }
-        |  return sum
+        |  sum
         |}
         |scalarProd(List(-1, 3, 2), List(2, -2, 1))
         |""".stripMargin
