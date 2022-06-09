@@ -285,7 +285,7 @@ class Translator(translationConfigurationChecker: RestrictionsEnforcer, reporter
     val rawNameCallToAutoGenMethod = Term.Apply(methodName, methodArgsAsUniqueNames.map(vi => Term.Name(vi.rawName)))
     val blockTranslationRes = translateStatsSequence(initPartRes.namingContext, bodyAsStatsList)
     val renamedCallToAutogenMethod = renameWhereNeeded(rawNameCallToAutoGenMethod, blockTranslationRes.namingContext).asInstanceOf[Term]
-    val retVal = retValFor(argsThatNeedToBeReturned)
+    val retVal = retValFor(argsThatNeedToBeReturned.map(initPartRes.namingContext.disambiguatedNameForVar(_).value))
     val methodBodyStats = loopType match {
       case LoopType.WhileType =>
         List(Term.If(
