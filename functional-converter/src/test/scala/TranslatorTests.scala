@@ -222,6 +222,42 @@ class TranslatorTests {
   }
 
   @Test
+  def test11(): Unit = {
+    val codeStr =
+      """
+        |var x = -15
+        |var y = 20
+        |var alternate = false
+        |do {
+        |  if (alternate) x += 1
+        |  else y -= 1
+        |  alternate = !alternate
+        |  System.out.println(s"$alternate, $x, $y")
+        |} while (x < y)
+        |x
+        |""".stripMargin
+    testRedirectedPrintOut(codeStr)
+  }
+
+  @Test
+  def test12(): Unit = {
+    val codeStr =
+      """
+        |var x = 15
+        |var y = 10
+        |var alternate = false
+        |do {
+        |  if (alternate) x += 1
+        |  else y -= 1
+        |  alternate = !alternate
+        |  System.out.println(s"$alternate, $x, $y")
+        |} while (x < y)
+        |x
+        |""".stripMargin
+    testRedirectedPrintOut(codeStr)
+  }
+
+  @Test
   def shouldFail1(): Unit = {
     val codeStr =
       """
