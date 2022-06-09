@@ -12,9 +12,9 @@ trait Checker {
    * Check whether the input tree node is allowed
    *
    * @param node the tree to be checked
-   * @return Some[Violation] if a violation was found, None o.w.
+   * @return List[Violation] the violations found on this node
    */
-  def checkNode(node: Tree): Option[Violation]
+  def checkNode(node: Tree): List[Violation]
 
   /**
    * Check whether the input program (as a tree) uses only allowed features
@@ -24,7 +24,7 @@ trait Checker {
    */
   final def checkTree(tree: Tree): CheckResult = {
     val violations = tree.collect {
-      case tree: Tree => checkNode(tree)
+      case node: Tree => checkNode(node)
     }.flatten
     if (violations.isEmpty) CheckResult.Valid
     else CheckResult.Invalid(violations)

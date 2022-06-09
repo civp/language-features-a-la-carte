@@ -14,9 +14,9 @@ class WhitelistChecker private(allowedFeatures: List[Feature]) extends Checker {
 
   private object GroupedFeature extends CompositeFeature(AlwaysAllowed :: allowedFeatures)
 
-  override def checkNode(node: Tree): Option[Violation] = {
-    if (GroupedFeature.allows(node)) None
-    else Some(Violation(node, s"not in the allowed features: ${GroupedFeature.show}"))
+  override def checkNode(node: Tree): List[Violation] = {
+    if (GroupedFeature.allows(node)) Nil
+    else Violation(node, s"not in the allowed features: ${GroupedFeature.show}").toSingletonList
   }
 
 }
@@ -36,18 +36,21 @@ object WhitelistChecker {
   // Specification of the constructs that should always be allowed
   // These constructs do not allow to write any meaningful program on their own,
   // but they arise in many Features so it is easier to always allow them
-  private object AlwaysAllowed extends AtomicFeature({
-    case _: Source => true
-    case _: Template => true
-    case _: Term.Block => true
-    case _: Type.Name => true
-    case _: Term.Name => true
-    case _: Self => true
-    case _: Term.Select => true
-    case _: Name.Anonymous => true
-    case _: Init => true
-    case _: Term.EndMarker => true
-  }) {
+  private object AlwaysAllowed extends AtomicFeature {
+
+    override val checkPF: PartialFunction[Tree, Boolean] = {
+      case _: Source => true
+      case _: Template => true
+      case _: Term.Block => true
+      case _: Type.Name => true
+      case _: Term.Name => true
+      case _: Self => true
+      case _: Term.Select => true
+      case _: Name.Anonymous => true
+      case _: Init => true
+      case _: Term.EndMarker => true
+    }
+
     override def toString: String = "AlwaysAllowed"
   }
 

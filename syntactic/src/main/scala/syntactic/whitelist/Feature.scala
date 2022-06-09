@@ -10,10 +10,10 @@ sealed trait Feature {
   /**
    * Checks whether a tree is allowed by this feature
    *
-   * @param tree the tree to check
+   * @param node the tree to check
    * @return true iff it is allowed
    */
-  def allows(tree: Tree): Boolean
+  def allows(node: Tree): Boolean
 
 }
 
@@ -32,7 +32,7 @@ object Feature {
 
     def this(features: Feature*) = this(features.toSet)
 
-    override def allows(tree: Tree): Boolean = features.exists(_.allows(tree))
+    override def allows(node: Tree): Boolean = features.exists(_.allows(node))
 
     def show: String = features
       .map(_.toString)
@@ -46,16 +46,18 @@ object Feature {
   /**
    * Adapter to create a feature given the partialfunction describing it
    *
-   * @param checkPF this function should return true when given a tree that is allowed and not be defined on other trees
-   *                (or return false on them, but this is not necessary)
-   *
    * <b>Implementations should only be singleton objects</b>
    */
-  abstract class AtomicFeature(checkPF: PartialFunction[Tree, Boolean]) extends Feature {
-    require(checkPF != null)
+  trait AtomicFeature extends Feature {
 
-    override def allows(tree: Tree): Boolean = {
-      checkPF.applyOrElse(tree, (_: Tree) => false)
+    /**
+     * Returns true when given a tree that is allowed by this feature, is not defined on other trees
+     * (or returns false on them, but this is not necessary)
+     */
+    val checkPF: PartialFunction[Tree, Boolean]
+
+    override final def allows(node: Tree): Boolean = {
+      checkPF.applyOrElse(node, (_: Tree) => false)
     }
   }
 

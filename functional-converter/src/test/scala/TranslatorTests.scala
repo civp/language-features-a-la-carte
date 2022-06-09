@@ -1,7 +1,7 @@
 import org.junit.Assert.{assertEquals, assertTrue}
 import org.junit.Test
 import syntactic.CheckResult
-import syntactic.blacklist.{BlacklistChecker, BlacklistRules}
+import syntactic.blacklist.{BlacklistChecker, PredefBlacklistRules}
 import translator.{Reporter, Translator}
 
 import java.io.{ByteArrayOutputStream, PrintStream}
@@ -279,7 +279,7 @@ class TranslatorTests {
     reporter.getReportedErrors.foreach(println)
     assertTrue(reporter.getReportedErrors.isEmpty)
 
-    val checker = BlacklistChecker(BlacklistRules.NoVar, BlacklistRules.NoWhile)
+    val checker = BlacklistChecker(PredefBlacklistRules.NoVar, PredefBlacklistRules.NoWhile)
     assertEquals(CheckResult.Valid, checker.checkTree(translationSource))
 
     val imperativeResultBuffer = new ByteArrayOutputStream()

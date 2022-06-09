@@ -1,7 +1,7 @@
 package tests
 
 import syntactic.blacklist.BlacklistChecker
-import syntactic.blacklist.BlacklistRules._
+import syntactic.blacklist.PredefBlacklistRules._
 
 import scala.meta.dialects.Scala213
 
