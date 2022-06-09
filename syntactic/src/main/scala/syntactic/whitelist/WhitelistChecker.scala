@@ -3,7 +3,7 @@ package syntactic.whitelist
 import syntactic.whitelist.Feature.{AtomicFeature, CompositeFeature}
 import syntactic.{Checker, Violation}
 
-import scala.meta.{Init, Name, Self, Source, Template, Term, Tree, Type}
+import scala.meta.{Init, Name, Pat, Self, Source, Template, Term, Tree, Type}
 
 /**
  * A checker to enforce the features specification
@@ -49,6 +49,7 @@ object WhitelistChecker {
       case _: Name.Anonymous => true
       case _: Init => true
       case _: Term.EndMarker => true
+      case _: Pat.Var => true
     }
 
     override def toString: String = "AlwaysAllowed"

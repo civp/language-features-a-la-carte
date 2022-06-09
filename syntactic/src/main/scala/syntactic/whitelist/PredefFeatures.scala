@@ -49,7 +49,6 @@ object PredefFeatures extends FeaturesProvider {
     override val checkPF: PartialFunction[Tree, Boolean] = {
       case _: Decl.Val => true
       case _: Defn.Val => true
-      case _: Pat.Var => true
       case _: Term.Anonymous => true
     }
   }
@@ -97,7 +96,6 @@ object PredefFeatures extends FeaturesProvider {
       case _: Defn.RepeatedEnumCase => true
       case _: Pat.Tuple => true
       case _: Pat.Typed => true
-      case _: Pat.Var => true
       case _: Pat.Wildcard => true
       case _: Term.Match => true
       case _: Term.Param => true
@@ -137,7 +135,6 @@ object PredefFeatures extends FeaturesProvider {
       case _: Term.For => true
       case _: Term.ForYield => true
       case _: Enumerator => true
-      case _: Pat.Var => true
     }
   }
 
@@ -225,7 +222,6 @@ object PredefFeatures extends FeaturesProvider {
       case _: Term.Try => true
       case _: Term.TryWithHandler => true
       case _: Term.While => true
-      case _: Pat.Var => true
     }
   }
 
