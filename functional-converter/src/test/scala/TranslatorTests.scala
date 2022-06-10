@@ -259,6 +259,161 @@ class TranslatorTests {
   }
 
   @Test
+  def funProgFinalExam2020q8(): Unit = {
+    /*
+     * The code example used in this test is taken from the 2020 final exam of the functional programming class
+     * (CS-210), EPFL
+     * Source: https://gitlab.epfl.ch/lamp/cs210/-/blob/master/previous-exams/2020-final-exam/q8.md
+     */
+    val srcCode =
+      """
+        |def fImperative(nums: List[Int]): List[Int] = {
+        |    var i = 0
+        |    var j = 0
+        |    var res: List[Int] = List()
+        |
+        |    while (i < nums.size) {
+        |      var max = -1
+        |      var cnt = 0
+        |      j = i - 1
+        |      while (j >= 0) {
+        |        if(nums(j) > max) {
+        |          cnt = cnt + 1
+        |          max = nums(j)
+        |        }
+        |        j = j - 1
+        |      }
+        |      res = cnt :: res
+        |      i = i + 1
+        |    }
+        |    res.reverse
+        |  }
+        |fImperative(List(182, 160, 180, 178))
+        |""".stripMargin
+    testRedirectedPrintOut(srcCode)
+  }
+
+  @Test
+  def funProgFinalExam2020q10(): Unit = {
+    /*
+     * The code example used in this test is taken from the 2020 final exam of the functional programming class
+     * (CS-210), EPFL
+     * Source: https://gitlab.epfl.ch/lamp/cs210/-/blob/master/previous-exams/2020-final-exam/q10.md
+     */
+    val codeStr =
+      """
+        |def fImperative(elems: List[(Int, Int)]): List[Int] = {
+        |    var i = 0
+        |    var res: List[Int] = List()
+        |
+        |    while (i < elems.size) {
+        |      var j = 0
+        |      var cnt: Int = elems(i)._1
+        |      while (j < cnt) {
+        |        res = (elems(i)._2: Int) :: res
+        |        j = j + 1
+        |      }
+        |      i = i + 1
+        |    }
+        |    res.reverse
+        |}
+        |fImperative(List((-1,5),(2,7),(1,2)))
+        |""".stripMargin
+    testRedirectedPrintOut(codeStr)
+  }
+
+  @Test
+  def funProgFinalExam2020q6(): Unit = {
+    /*
+     * The code example used in this test is taken from the 2020 final exam of the functional programming class
+     * (CS-210), EPFL
+     * Source: https://gitlab.epfl.ch/lamp/cs210/-/blob/master/previous-exams/2020-final-exam/q6.md
+     */
+    val codeStr =
+      """
+        |def fImperative(chars: List[Char]): List[Char] = {
+        |    var i = 0
+        |    var n: Int = chars.size
+        |    var res: List[Char] = List()
+        |
+        |    while (i < n - 1 && chars(i) >= chars(i + 1)) {
+        |      res = chars(i) :: res
+        |      i = i + 1
+        |    }
+        |
+        |    i = i + 1
+        |
+        |    while (i < n) {
+        |      res = chars(i) :: res
+        |      i = i + 1
+        |    }
+        |
+        |    res.reverse
+        |}
+        |""".stripMargin
+    testRedirectedPrintOut(codeStr)
+  }
+
+  @Test
+  def funProgFinalExam2020q7(): Unit = {
+    /*
+     * The code example used in this test is taken from the 2020 final exam of the functional programming class
+     * (CS-210), EPFL
+     * Source: https://gitlab.epfl.ch/lamp/cs210/-/blob/master/previous-exams/2020-final-exam/q7.md
+     */
+    val codeStr =
+      """
+        |def fImperative(nums: List[Int]): List[(Int, Int)] = {
+        |    var cnt = 1
+        |    var i = 0
+        |    var res: List[(Int, Int)] = List()
+        |
+        |    while (i < nums.length - 1) {
+        |      if (nums(i) == nums(i + 1)) cnt = cnt + 1
+        |      else {
+        |        res = (cnt, nums(i)) :: res
+        |        cnt = 1
+        |      }
+        |      i = i + 1
+        |    }
+        |    if(nums.isEmpty) Nil
+        |    else ((cnt, nums(nums.length - 1)) :: res).reverse
+        |}
+        |""".stripMargin
+    testRedirectedPrintOut(codeStr)
+  }
+
+  @Test
+  def funProgFinalExam2020q9(): Unit = {
+    /*
+     * The code example used in this test is taken from the 2020 final exam of the functional programming class
+     * (CS-210), EPFL
+     * Source: https://gitlab.epfl.ch/lamp/cs210/-/blob/master/previous-exams/2020-final-exam/q9.md
+     */
+    val codeStr =
+      """
+        |def fImperative(l1: List[Char], l2: List[Char]): List[Char] = {
+        |    var i = 0
+        |    var res: List[Char] = List()
+        |
+        |    while (i < l1.size) {
+        |      var j = 0
+        |      while (j < l2.size) {
+        |        if(l2(j) == l1(i)) {
+        |          res = l2(j) :: res
+        |          j = l2.size
+        |        }
+        |        j = j + 1
+        |      }
+        |      i = i + 1
+        |    }
+        |    res.reverse
+        |}
+        |""".stripMargin
+    testRedirectedPrintOut(codeStr)
+  }
+
+  @Test
   def shouldFail1(): Unit = {
     val codeStr =
       """
