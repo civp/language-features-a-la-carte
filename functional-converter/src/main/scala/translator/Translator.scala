@@ -30,7 +30,7 @@ class Translator(translationConfigurationChecker: RestrictionsEnforcer, reporter
         val transformation =
           (makeAssignationsExplicit: Tree => Tree)
             .andThen { case Source(stats) => stats }
-            .andThen(translateStatsSequence(NamingContext.empty, _)(new DisambigIndices()))
+            .andThen(translateStatsSequence(NamingContext.empty, _)(new DisambigIndices(), Set.empty))
             .andThen(_.stats)
             .andThen(Source(_))
             .andThen(Inliner.inlineInStatSequences)
@@ -112,7 +112,7 @@ class Translator(translationConfigurationChecker: RestrictionsEnforcer, reporter
         (ctx, param) => ctx.updatedWithVal(param.name.value, param.decltpe)
       )
       val di = new DisambigIndices()
-      defnDef.copy(body = translateBlockOrUniqueStat(namingContext, defnDef.body)(di).asInstanceOf[Term])
+      defnDef.copy(body = translateBlockOrUniqueStat(namingContext, defnDef.body)(di, Set.empty).asInstanceOf[Term])
     } catch {
       case TranslatorException(msg) =>
         reporter.addErrorMsg(msg)
@@ -120,11 +120,11 @@ class Translator(translationConfigurationChecker: RestrictionsEnforcer, reporter
     }
   }
 
-  private def translateStatsSequence(namingContext: NamingContext, stats: List[Stat])(implicit di: DisambigIndices): TranslationPartRes = {
-    translateStatsFrom(TranslationPartRes(Nil, namingContext), previousStats = Nil, remStats = stats)
+  private def translateStatsSequence(namingContext: NamingContext, stats: List[Stat])(implicit di: DisambigIndices, varsToBeSaved: Set[String]): TranslationPartRes = {
+    translateStatsFrom(TranslationPartRes(Nil, namingContext), previousStats = Nil, remStats = stats, varsToBeSaved)
   }
 
-  private def translateBlockOrUniqueStat(namingContext: NamingContext, stat: Stat)(implicit di: DisambigIndices): Stat = {
+  private def translateBlockOrUniqueStat(namingContext: NamingContext, stat: Stat)(implicit di: DisambigIndices, varsToBeSaved: Set[String]): Stat = {
     asBlockOrUniqueStat(translateStatsSequence(namingContext, makeStatsList(stat)).stats)
   }
 
@@ -137,11 +137,13 @@ class Translator(translationConfigurationChecker: RestrictionsEnforcer, reporter
   @tailrec private def translateStatsFrom(
                                            initPartRes: TranslationPartRes,
                                            previousStats: List[Stat],
-                                           remStats: List[Stat]
+                                           remStats: List[Stat],
+                                           varsToBeSavedFromEnclosingScopes: Set[String]
                                          )(implicit di: DisambigIndices): TranslationPartRes = {
     remStats match {
       case Nil => initPartRes
       case head :: tail => {
+        implicit val varsToBeSaved: Set[String] = varsToBeSavedFromEnclosingScopes.union(allReferencedNames(tail))
         val namingContext = initPartRes.namingContext
         val headTranslationRes = head match {
 
@@ -189,8 +191,7 @@ class Translator(translationConfigurationChecker: RestrictionsEnforcer, reporter
               initPartRes,
               loopType = LoopType.WhileType,
               loopCond = cond,
-              loopBody = body,
-              statsAfterLoop = tail
+              loopBody = body
             )
 
           case Do(body, cond) =>
@@ -198,15 +199,15 @@ class Translator(translationConfigurationChecker: RestrictionsEnforcer, reporter
               initPartRes,
               loopType = LoopType.DoWhileType,
               loopCond = cond,
-              loopBody = body,
-              statsAfterLoop = tail
+              loopBody = body
             )
 
           case ifStat: Term.If => translateIf(initPartRes, ifStat)
 
           case patMat: Term.Match => translatePatternMatch(initPartRes, patMat)
 
-          case forDo: Term.For => translateForDo(initPartRes, forDo, remStats = tail)
+          case forDo: Term.For =>
+            translateForDo(initPartRes, forDo, remStats = tail)
 
           case forYield@Term.ForYield(_, body) =>
             if (allModifiedVars(List(body)).isEmpty) {
@@ -228,12 +229,12 @@ class Translator(translationConfigurationChecker: RestrictionsEnforcer, reporter
             stats = initPartRes.stats :+ renameWhereNeeded(other, initPartRes.namingContext).asInstanceOf[Stat]
           )
         }
-        translateStatsFrom(headTranslationRes, previousStats :+ head, tail)
+        translateStatsFrom(headTranslationRes, previousStats :+ head, tail, varsToBeSavedFromEnclosingScopes)
       }
     }
   }
 
-  private def translateTerm(namingContext: NamingContext, expr: Term)(implicit di: DisambigIndices): Term = {
+  private def translateTerm(namingContext: NamingContext, expr: Term)(implicit di: DisambigIndices, varsToBeSaved: Set[String]): Term = {
     val statsList = makeStatsList(expr)
     val transformed = translateStatsSequence(namingContext, statsList)
     asBlockOrUniqueStat(transformed.stats).asInstanceOf[Term]
@@ -271,19 +272,17 @@ class Translator(translationConfigurationChecker: RestrictionsEnforcer, reporter
                                        initPartRes: TranslationPartRes,
                                        loopType: LoopType,
                                        loopCond: Term,
-                                       loopBody: Term,
-                                       statsAfterLoop: List[Stat]
-                                     )(implicit di: DisambigIndices): TranslationPartRes = {
+                                       loopBody: Term
+                                     )(implicit di: DisambigIndices, varsToBeSaved: Set[String]): TranslationPartRes = {
     val bodyAsStatsList = makeStatsList(loopBody)
     val untypedMethodArgsSet = allModifiedVars(bodyAsStatsList)
-    val namesReferencedInRestOfThisScope = allReferencedNames(statsAfterLoop)
-    val argsThatNeedToBeReturned = untypedMethodArgsSet.intersect(namesReferencedInRestOfThisScope).toList
+    val argsThatNeedToBeReturned = untypedMethodArgsSet.intersect(varsToBeSaved).toList
     val methodArgsAsUniqueNames = untypedMethodArgsSet
       .toList
       .flatMap(initPartRes.namingContext.currentlyReferencedVars.get)
     val methodName = di.getAndIncrementAutoGenMethodName()
     val rawNameCallToAutoGenMethod = Term.Apply(methodName, methodArgsAsUniqueNames.map(vi => Term.Name(vi.rawName)))
-    val blockTranslationRes = translateStatsSequence(initPartRes.namingContext, bodyAsStatsList)
+    val blockTranslationRes = translateStatsSequence(initPartRes.namingContext, bodyAsStatsList)(di, varsToBeSaved)
     val renamedCallToAutogenMethod = renameWhereNeeded(rawNameCallToAutoGenMethod, blockTranslationRes.namingContext).asInstanceOf[Term]
     val retVal = retValFor(argsThatNeedToBeReturned.map(initPartRes.namingContext.disambiguatedNameForVar(_).value))
     val methodBodyStats = loopType match {
@@ -325,7 +324,8 @@ class Translator(translationConfigurationChecker: RestrictionsEnforcer, reporter
     )
   }
 
-  private def translateIf(initPartRes: TranslationPartRes, ifStat: Term.If)(implicit di: DisambigIndices): TranslationPartRes = {
+  private def translateIf(initPartRes: TranslationPartRes, ifStat: Term.If)
+                         (implicit di: DisambigIndices, varsToBeSaved: Set[String]): TranslationPartRes = {
     val thenStatsList = makeStatsList(ifStat.thenp)
     val elseStatsList = makeStatsList(ifStat.elsep)
     val thenPartRes = translateStatsSequence(initPartRes.namingContext, thenStatsList)
@@ -343,7 +343,8 @@ class Translator(translationConfigurationChecker: RestrictionsEnforcer, reporter
       .copy(namingContext = namingCtxAfterIf)
   }
 
-  private def translatePatternMatch(initPartRes: TranslationPartRes, patMat: Term.Match)(implicit di: DisambigIndices): TranslationPartRes = {
+  private def translatePatternMatch(initPartRes: TranslationPartRes, patMat: Term.Match)
+                                   (implicit di: DisambigIndices, varsToBeSaved: Set[String]): TranslationPartRes = {
     val statsListPerBranch = patMat.cases.map(cse => makeStatsList(cse.body))
     val partResPerBranch = statsListPerBranch.map(statsLs => translateStatsSequence(initPartRes.namingContext, statsLs))
     val modifVars = statsListPerBranch.foldLeft(Set.empty[String])(_ ++ allModifiedVars(_)).toList
@@ -429,10 +430,10 @@ class Translator(translationConfigurationChecker: RestrictionsEnforcer, reporter
                               initPartRes: TranslationPartRes,
                               forDo: Term.For,
                               remStats: List[Stat]
-                            )(implicit di: DisambigIndices): TranslationPartRes = {
+                            )(implicit di: DisambigIndices, varsToBeSaved: Set[String]): TranslationPartRes = {
     val (varDefn, whileLoop) = transformImperativeForIntoWhile(forDo)
-    val varTranslationRes = translateStatsSequence(initPartRes.namingContext, List(varDefn))
-    val partResAfter = translateWhileOrDoWhile(varTranslationRes, LoopType.WhileType, whileLoop.expr, whileLoop.body, remStats)
+    val varTranslationRes = translateStatsSequence(initPartRes.namingContext, List(varDefn))(di, varsToBeSaved)
+    val partResAfter = translateWhileOrDoWhile(varTranslationRes, LoopType.WhileType, whileLoop.expr, whileLoop.body)
     TranslationPartRes(initPartRes.stats ++ partResAfter.stats, initPartRes.namingContext.mergedWith(partResAfter.namingContext))
   }
 
