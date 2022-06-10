@@ -350,6 +350,7 @@ class TranslatorTests {
         |
         |    res.reverse
         |}
+        |fImperative(List('d', 'b', 'c'))
         |""".stripMargin
     testRedirectedPrintOut(codeStr)
   }
@@ -379,6 +380,7 @@ class TranslatorTests {
         |    if(nums.isEmpty) Nil
         |    else ((cnt, nums(nums.length - 1)) :: res).reverse
         |}
+        |fImperative(List(2,2,2,7,7,2))
         |""".stripMargin
     testRedirectedPrintOut(codeStr)
   }
@@ -409,6 +411,7 @@ class TranslatorTests {
         |    }
         |    res.reverse
         |}
+        |fImperative(List('o','t','h','e','r'), List('t','a','r','t','s'))
         |""".stripMargin
     testRedirectedPrintOut(codeStr)
   }
