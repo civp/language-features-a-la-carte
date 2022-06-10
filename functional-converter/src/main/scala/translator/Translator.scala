@@ -135,6 +135,9 @@ class Translator(translationConfigurationChecker: RestrictionsEnforcer, reporter
    *
    * More precisely, calls the appropriate method to translate the head of `remStats` (depending on its type) and then
    * recursively translates the remaining ones
+   *
+   * Propagates the set of variables whose value must be saved (i.e. that must be returned by the generated methods)
+   * because they are used at subsequent points of the program (`varsToBeSavedFromEnclosingScopes`)
    */
   @tailrec private def translateStatsFrom(
                                            initPartRes: TranslationPartRes,
@@ -145,7 +148,10 @@ class Translator(translationConfigurationChecker: RestrictionsEnforcer, reporter
     remStats match {
       case Nil => initPartRes
       case head :: tail => {
+
+        // given as an implicit parameter to all transformation methods called from here
         implicit val varsToBeSaved: Set[String] = varsToBeSavedFromEnclosingScopes.union(allReferencedNames(tail))
+
         val namingContext = initPartRes.namingContext
         val headTranslationRes = head match {
 
@@ -249,6 +255,10 @@ class Translator(translationConfigurationChecker: RestrictionsEnforcer, reporter
     }
   }
 
+  /**
+   * If `stat` is a block, returns the stats contained in it. If stat is another type of statement, returns a
+   * singleton list containing it
+   */
   private def makeStatsList(stat: Stat): List[Stat] = {
     stat match {
       case block: Block => block.stats
@@ -256,6 +266,9 @@ class Translator(translationConfigurationChecker: RestrictionsEnforcer, reporter
     }
   }
 
+  /**
+   * If `stats` contains only 1 element, no block is needed so return the stat. O.w. return a block containing the stats
+   */
   private def asBlockOrUniqueStat(stats: List[Stat]): Stat = {
     stats match {
       case List(stat) => stat
@@ -263,6 +276,11 @@ class Translator(translationConfigurationChecker: RestrictionsEnforcer, reporter
     }
   }
 
+  /**
+   * Should be used to create the `Pat` needed by a `Defn.Val`
+   *
+   * @return a `Pat.Var` if `varsAsStr` contains only 1 variable, otherwise a `Pat.Tuple`
+   */
   private def makeValPat(varsAsStr: List[String], context: NamingContext): List[Pat] = {
     require(varsAsStr.nonEmpty)
     List(
