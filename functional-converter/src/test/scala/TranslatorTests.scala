@@ -259,6 +259,93 @@ class TranslatorTests {
   }
 
   @Test
+  def test13(): Unit = {
+    val codeStr =
+      """
+        |def compute(x: Int): (Int, Int, Int) = {
+        |
+        |  val k = 2*x % 5
+        |
+        |  var t = 0
+        |
+        |  def aux(y: Int): Int = {
+        |    if (y % 2 == 0) k
+        |    else -k
+        |  }
+        |
+        |  var l = 100
+        |  while (l > 100){
+        |    System.out.println(l)
+        |
+        |    val ls: List[Int] = (1 to l).toList
+        |    for (z <- ls){
+        |
+        |      var p = 45
+        |      while (p < 200){
+        |        p += (p % 18) + 1
+        |        t += p
+        |      }
+        |
+        |      System.out.println(t)
+        |      System.out.println(p)
+        |
+        |      val s = (p + z) * l - (l % 20) + aux(p-l)
+        |      l = s
+        |    }
+        |
+        |  }
+        |
+        |  (t, k, l)
+        |}
+        |val res1 = compute(9999)
+        |val res2 = compute(999)
+        |val res3 = compute(214)
+        |List(res1, res2, res3)
+        |""".stripMargin
+    testRedirectedPrintOut(codeStr)
+  }
+
+  @Test
+  def test14(): Unit = {
+    val codeStr =
+      """
+        |object SomeObj {
+        |  def intervalsWhereAllValuesAreAtLeast(thres: Double, ls: List[Double]): List[(Int, Int)] = {
+        |    var intervals: List[(Int, Int)] = Nil
+        |    var currStart = -1
+        |    var currIdx = 0
+        |    for (d <- ls){
+        |      if (d >= thres && currStart == -1){
+        |        currStart = currIdx
+        |      }
+        |      else if (d < thres && currStart != -1){
+        |        intervals = (currStart, currIdx-1) :: intervals
+        |        currStart = -1
+        |      }
+        |      currIdx += 1
+        |    }
+        |    if (currIdx != -1){
+        |      intervals = (currStart, currIdx-1) :: intervals
+        |    }
+        |    intervals.reverse
+        |  }
+        |}
+        |
+        |def main(): Unit = {
+        |    val ls = List(7.41, 8.99, 77.4, 11, 28, 38.21, 95.5, 42.7, 89.0, 87.4, 32.22, 74.98, 0.8, -5, 101.45, 73.452, 31.91, 75.22)
+        |    var thres = -10.0
+        |    while (thres < 32){
+        |      System.out.println(s"At least $thres: ${SomeObj.intervalsWhereAllValuesAreAtLeast(thres, ls)}")
+        |      thres += 2.5
+        |    }
+        |}
+        |
+        |main()
+        |""".stripMargin
+    testRedirectedPrintOut(codeStr, _.translateMethodsIn(_).asInstanceOf[Source])
+  }
+
+  @Test
   def funProgFinalExam2020q8(): Unit = {
     /*
      * The code example used in this test is taken from the 2020 final exam of the functional programming class
@@ -455,7 +542,10 @@ class TranslatorTests {
     assertEquals(List(expectedErrorMsg), reporter.getReportedErrors)
   }
 
-  private def testRedirectedPrintOut(imperativeSrcCode: String): Unit = {
+  private def testRedirectedPrintOut(
+                                      imperativeSrcCode: String,
+                                      conversionMethod: (Translator, Source) => Source = _.translateTopLevelOfSource(_)
+                                    ): Unit = {
     val toolBox = currentMirror.mkToolBox()
 
     def execute(codeStr: String): Any = {
@@ -464,7 +554,7 @@ class TranslatorTests {
 
     val reporter = new Reporter()
     val translator = Translator(reporter)
-    val translationSource = translator.translateTopLevelOfSource(parse(imperativeSrcCode))
+    val translationSource = conversionMethod(translator, parse(imperativeSrcCode))
     val translationStr = translationSource.toString()
 
     println("----------------------------------------------------------")
