@@ -20,7 +20,6 @@ package object interfaces {
   @inline final val WhitelistChecker = whitelist.WhitelistChecker
 
   import syntactic.whitelist.PredefFeatures
-  private final val allFeatures = PredefFeatures.allDefinedFeatures
   @inline final val LiteralsAndExpressions = PredefFeatures.LiteralsAndExpressions
   @inline final val Nulls = PredefFeatures.Nulls
   @inline final val Vals = PredefFeatures.Vals

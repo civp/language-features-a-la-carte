@@ -2,18 +2,24 @@ package sbtlanguagefeatures
 
 import syntactic.{CheckResult, Violation}
 import java.io.File
+import java.nio.file.{Files, Paths}
 
 object Reporter {
 
   def report(file: File, result: CheckResult): Unit = {
-    print(s"${file.getAbsolutePath()}: ")
+    val path = file.getAbsolutePath()
+    val lines = Files.readAllLines(Paths.get(path))
     result match {
-      case CheckResult.ParsingError(e) => println(e)
-      case CheckResult.Valid => println("valid")
+      case CheckResult.ParsingError(e) =>
+        println(e.getMessage().replaceFirst("<input>", path))
+      case CheckResult.Valid =>
       case CheckResult.Invalid(violations) =>
-        println(s"${violations.length} violation(s)")
         violations
-          .map(v => s"${v.startLine + 1}:${v.startColumn + 1} => ${v.msg}")
+          .map { v =>
+            s"$path:${v.startLine + 1}: ${v.msg}\n" +
+            s"${lines.get(v.startLine)}\n" +
+            " " * v.startColumn + "^"
+          }
           .foreach(println)
     }
   }
