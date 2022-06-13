@@ -1,6 +1,7 @@
 package sbtlanguagefeatures
 
-import syntactic.{CheckResult, Violation}
+import syntactic.CheckResult
+
 import java.io.File
 import java.nio.file.{Files, Paths}
 

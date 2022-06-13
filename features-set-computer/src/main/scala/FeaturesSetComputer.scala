@@ -1,3 +1,5 @@
+package featuressetcomputer
+
 import syntactic.Violation
 import syntactic.whitelist.{Feature, WhitelistChecker}
 

@@ -60,7 +60,7 @@ lazy val sbtPlugin = project
     },
     scriptedBufferLog := false
   )
-  .dependsOn(syntactic)
+  .dependsOn(syntactic, featuresSetComputer)
 
 lazy val testkit = project
   .in(file("testkit"))

@@ -1,3 +1,5 @@
+package featuressetcomputer
+
 import FeaturesSetComputerTest.TestFeaturesProvider
 import org.junit.Assert.assertEquals
 import org.junit.Test
