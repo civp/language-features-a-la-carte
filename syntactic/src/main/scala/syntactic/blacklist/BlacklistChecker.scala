@@ -18,7 +18,7 @@ class BlacklistChecker private(rules: List[BlacklistRule]) extends Checker {
   private val checkFuncs = rules.map(_.checkFunc.orElse(defaultPartFunc))
 
   override def checkNode(node: Tree): List[Violation] = {
-    checkFuncs.map(_.apply(node)).foldLeft(List.empty[Violation])(_ ++ _)
+    checkFuncs.flatMap(_.apply(node))
   }
 
 }
