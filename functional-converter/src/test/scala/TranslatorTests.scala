@@ -1,7 +1,7 @@
 import org.junit.Assert.{assertEquals, assertTrue}
 import org.junit.Test
 import syntactic.CheckResult
-import syntactic.blacklist.{BlacklistChecker, BlacklistRules}
+import syntactic.blacklist.{BlacklistChecker, PredefBlacklistRules}
 import translator.{Reporter, Translator}
 
 import java.io.{ByteArrayOutputStream, PrintStream}
@@ -61,18 +61,19 @@ class TranslatorTests {
         |def fibonacci(n: Int): Int = {
         |  require(n >= 0)
         |  if (n <= 1){
-        |    return n
+        |    n
+        |  } else {
+        |    var i = 2
+        |    var oldest = 0
+        |    var old = 1
+        |    while (i <= n){
+        |      val curr = oldest + old
+        |      oldest = old
+        |      old = curr
+        |      i += 1
+        |    }
+        |    old
         |  }
-        |  var i = 2
-        |  var oldest = 0
-        |  var old = 1
-        |  while (i <= n){
-        |    val curr = oldest + old
-        |    oldest = old
-        |    old = curr
-        |    i += 1
-        |  }
-        |  old
         |}
         |fibonacci(11)
         |""".stripMargin
@@ -131,7 +132,7 @@ class TranslatorTests {
         |  for ((un, vn) <- zipped){
         |    sum += un * vn
         |  }
-        |  return sum
+        |  sum
         |}
         |scalarProd(List(-1, 3, 2), List(2, -2, 1))
         |""".stripMargin
@@ -222,6 +223,287 @@ class TranslatorTests {
   }
 
   @Test
+  def test11(): Unit = {
+    val codeStr =
+      """
+        |var x = -15
+        |var y = 20
+        |var alternate = false
+        |do {
+        |  if (alternate) x += 1
+        |  else y -= 1
+        |  alternate = !alternate
+        |  System.out.println(s"$alternate, $x, $y")
+        |} while (x < y)
+        |x
+        |""".stripMargin
+    testRedirectedPrintOut(codeStr)
+  }
+
+  @Test
+  def test12(): Unit = {
+    val codeStr =
+      """
+        |var x = 15
+        |var y = 10
+        |var alternate = false
+        |do {
+        |  if (alternate) x += 1
+        |  else y -= 1
+        |  alternate = !alternate
+        |  System.out.println(s"$alternate, $x, $y")
+        |} while (x < y)
+        |x
+        |""".stripMargin
+    testRedirectedPrintOut(codeStr)
+  }
+
+  @Test
+  def test13(): Unit = {
+    val codeStr =
+      """
+        |def compute(x: Int): (Int, Int, Int) = {
+        |
+        |  val k = 2*x % 5
+        |
+        |  var t = 0
+        |
+        |  def aux(y: Int): Int = {
+        |    if (y % 2 == 0) k
+        |    else -k
+        |  }
+        |
+        |  var l = 100
+        |  while (l > 100){
+        |    System.out.println(l)
+        |
+        |    val ls: List[Int] = (1 to l).toList
+        |    for (z <- ls){
+        |
+        |      var p = 45
+        |      while (p < 200){
+        |        p += (p % 18) + 1
+        |        t += p
+        |      }
+        |
+        |      System.out.println(t)
+        |      System.out.println(p)
+        |
+        |      val s = (p + z) * l - (l % 20) + aux(p-l)
+        |      l = s
+        |    }
+        |
+        |  }
+        |
+        |  (t, k, l)
+        |}
+        |val res1 = compute(9999)
+        |val res2 = compute(999)
+        |val res3 = compute(214)
+        |List(res1, res2, res3)
+        |""".stripMargin
+    testRedirectedPrintOut(codeStr)
+  }
+
+  @Test
+  def test14(): Unit = {
+    val codeStr =
+      """
+        |object SomeObj {
+        |  def intervalsWhereAllValuesAreAtLeast(thres: Double, ls: List[Double]): List[(Int, Int)] = {
+        |    var intervals: List[(Int, Int)] = Nil
+        |    var currStart = -1
+        |    var currIdx = 0
+        |    for (d <- ls){
+        |      if (d >= thres && currStart == -1){
+        |        currStart = currIdx
+        |      }
+        |      else if (d < thres && currStart != -1){
+        |        intervals = (currStart, currIdx-1) :: intervals
+        |        currStart = -1
+        |      }
+        |      currIdx += 1
+        |    }
+        |    if (currIdx != -1){
+        |      intervals = (currStart, currIdx-1) :: intervals
+        |    }
+        |    intervals.reverse
+        |  }
+        |}
+        |
+        |def main(): Unit = {
+        |    val ls = List(7.41, 8.99, 77.4, 11, 28, 38.21, 95.5, 42.7, 89.0, 87.4, 32.22, 74.98, 0.8, -5, 101.45, 73.452, 31.91, 75.22)
+        |    var thres = -10.0
+        |    while (thres < 32){
+        |      System.out.println(s"At least $thres: ${SomeObj.intervalsWhereAllValuesAreAtLeast(thres, ls)}")
+        |      thres += 2.5
+        |    }
+        |}
+        |
+        |main()
+        |""".stripMargin
+    testRedirectedPrintOut(codeStr, _.translateMethodsIn(_).asInstanceOf[Source])
+  }
+
+  @Test
+  def funProgFinalExam2020q8(): Unit = {
+    /*
+     * The code example used in this test is taken from the 2020 final exam of the functional programming class
+     * (CS-210), EPFL
+     * Source: https://gitlab.epfl.ch/lamp/cs210/-/blob/master/previous-exams/2020-final-exam/q8.md
+     */
+    val srcCode =
+      """
+        |def fImperative(nums: List[Int]): List[Int] = {
+        |    var i = 0
+        |    var j = 0
+        |    var res: List[Int] = List()
+        |
+        |    while (i < nums.size) {
+        |      var max = -1
+        |      var cnt = 0
+        |      j = i - 1
+        |      while (j >= 0) {
+        |        if(nums(j) > max) {
+        |          cnt = cnt + 1
+        |          max = nums(j)
+        |        }
+        |        j = j - 1
+        |      }
+        |      res = cnt :: res
+        |      i = i + 1
+        |    }
+        |    res.reverse
+        |  }
+        |fImperative(List(182, 160, 180, 178))
+        |""".stripMargin
+    testRedirectedPrintOut(srcCode)
+  }
+
+  @Test
+  def funProgFinalExam2020q10(): Unit = {
+    /*
+     * The code example used in this test is taken from the 2020 final exam of the functional programming class
+     * (CS-210), EPFL
+     * Source: https://gitlab.epfl.ch/lamp/cs210/-/blob/master/previous-exams/2020-final-exam/q10.md
+     */
+    val codeStr =
+      """
+        |def fImperative(elems: List[(Int, Int)]): List[Int] = {
+        |    var i = 0
+        |    var res: List[Int] = List()
+        |
+        |    while (i < elems.size) {
+        |      var j = 0
+        |      var cnt: Int = elems(i)._1
+        |      while (j < cnt) {
+        |        res = (elems(i)._2: Int) :: res
+        |        j = j + 1
+        |      }
+        |      i = i + 1
+        |    }
+        |    res.reverse
+        |}
+        |fImperative(List((-1,5),(2,7),(1,2)))
+        |""".stripMargin
+    testRedirectedPrintOut(codeStr)
+  }
+
+  @Test
+  def funProgFinalExam2020q6(): Unit = {
+    /*
+     * The code example used in this test is taken from the 2020 final exam of the functional programming class
+     * (CS-210), EPFL
+     * Source: https://gitlab.epfl.ch/lamp/cs210/-/blob/master/previous-exams/2020-final-exam/q6.md
+     */
+    val codeStr =
+      """
+        |def fImperative(chars: List[Char]): List[Char] = {
+        |    var i = 0
+        |    var n: Int = chars.size
+        |    var res: List[Char] = List()
+        |
+        |    while (i < n - 1 && chars(i) >= chars(i + 1)) {
+        |      res = chars(i) :: res
+        |      i = i + 1
+        |    }
+        |
+        |    i = i + 1
+        |
+        |    while (i < n) {
+        |      res = chars(i) :: res
+        |      i = i + 1
+        |    }
+        |
+        |    res.reverse
+        |}
+        |fImperative(List('d', 'b', 'c'))
+        |""".stripMargin
+    testRedirectedPrintOut(codeStr)
+  }
+
+  @Test
+  def funProgFinalExam2020q7(): Unit = {
+    /*
+     * The code example used in this test is taken from the 2020 final exam of the functional programming class
+     * (CS-210), EPFL
+     * Source: https://gitlab.epfl.ch/lamp/cs210/-/blob/master/previous-exams/2020-final-exam/q7.md
+     */
+    val codeStr =
+      """
+        |def fImperative(nums: List[Int]): List[(Int, Int)] = {
+        |    var cnt = 1
+        |    var i = 0
+        |    var res: List[(Int, Int)] = List()
+        |
+        |    while (i < nums.length - 1) {
+        |      if (nums(i) == nums(i + 1)) cnt = cnt + 1
+        |      else {
+        |        res = (cnt, nums(i)) :: res
+        |        cnt = 1
+        |      }
+        |      i = i + 1
+        |    }
+        |    if(nums.isEmpty) Nil
+        |    else ((cnt, nums(nums.length - 1)) :: res).reverse
+        |}
+        |fImperative(List(2,2,2,7,7,2))
+        |""".stripMargin
+    testRedirectedPrintOut(codeStr)
+  }
+
+  @Test
+  def funProgFinalExam2020q9(): Unit = {
+    /*
+     * The code example used in this test is taken from the 2020 final exam of the functional programming class
+     * (CS-210), EPFL
+     * Source: https://gitlab.epfl.ch/lamp/cs210/-/blob/master/previous-exams/2020-final-exam/q9.md
+     */
+    val codeStr =
+      """
+        |def fImperative(l1: List[Char], l2: List[Char]): List[Char] = {
+        |    var i = 0
+        |    var res: List[Char] = List()
+        |
+        |    while (i < l1.size) {
+        |      var j = 0
+        |      while (j < l2.size) {
+        |        if(l2(j) == l1(i)) {
+        |          res = l2(j) :: res
+        |          j = l2.size
+        |        }
+        |        j = j + 1
+        |      }
+        |      i = i + 1
+        |    }
+        |    res.reverse
+        |}
+        |fImperative(List('o','t','h','e','r'), List('t','a','r','t','s'))
+        |""".stripMargin
+    testRedirectedPrintOut(codeStr)
+  }
+
+  @Test
   def shouldFail1(): Unit = {
     val codeStr =
       """
@@ -260,7 +542,10 @@ class TranslatorTests {
     assertEquals(List(expectedErrorMsg), reporter.getReportedErrors)
   }
 
-  private def testRedirectedPrintOut(imperativeSrcCode: String): Unit = {
+  private def testRedirectedPrintOut(
+                                      imperativeSrcCode: String,
+                                      conversionMethod: (Translator, Source) => Source = _.translateTopLevelOfSource(_)
+                                    ): Unit = {
     val toolBox = currentMirror.mkToolBox()
 
     def execute(codeStr: String): Any = {
@@ -269,7 +554,7 @@ class TranslatorTests {
 
     val reporter = new Reporter()
     val translator = Translator(reporter)
-    val translationSource = translator.translateTopLevelOfSource(parse(imperativeSrcCode))
+    val translationSource = conversionMethod(translator, parse(imperativeSrcCode))
     val translationStr = translationSource.toString()
 
     println("----------------------------------------------------------")
@@ -279,7 +564,7 @@ class TranslatorTests {
     reporter.getReportedErrors.foreach(println)
     assertTrue(reporter.getReportedErrors.isEmpty)
 
-    val checker = BlacklistChecker(BlacklistRules.NoVar, BlacklistRules.NoWhile)
+    val checker = BlacklistChecker(PredefBlacklistRules.NoVar, PredefBlacklistRules.NoWhile)
     assertEquals(CheckResult.Valid, checker.checkTree(translationSource))
 
     val imperativeResultBuffer = new ByteArrayOutputStream()
