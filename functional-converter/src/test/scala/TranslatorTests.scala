@@ -346,6 +346,24 @@ class TranslatorTests {
   }
 
   @Test
+  def test15(): Unit = {
+    val srcCode =
+      """
+        |val ls: List[Int] = (1 to 10).toList
+        |var res: List[Int] = Nil
+        |for (x: Int <- ls){
+        |  var y = x
+        |  while (y < 100){
+        |    y *= 3
+        |  }
+        |  res = y :: res
+        |}
+        |res
+        |""".stripMargin
+    testRedirectedPrintOut(srcCode)
+  }
+
+  @Test
   def funProgFinalExam2020q8(): Unit = {
     /*
      * The code example used in this test is taken from the 2020 final exam of the functional programming class
@@ -531,6 +549,21 @@ class TranslatorTests {
         |println(s)
         |""".stripMargin
     testExpectingOneFailure(codeStr, "higher-order functions are only supported if no external var is updated in their body")
+  }
+
+  @Test
+  def shouldFail3(): Unit = {
+    val codeStr =
+      """
+        |val arg = 15
+        |var callCnt = 0
+        |def foo(x: Int): Int = {
+        |  callCnt += 1
+        |  2*x+1
+        |}
+        |foo(arg)
+        |""".stripMargin
+    testExpectingOneFailure(codeStr, "non top-level methods are not allowed if no external var is updated in their body")
   }
 
   private def parse(str: String): Source = dialects.Sbt1(str).parse[Source].get
