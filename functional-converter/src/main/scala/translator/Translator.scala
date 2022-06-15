@@ -234,7 +234,7 @@ class Translator(translationConfigurationChecker: RestrictionsEnforcer, reporter
           )
 
           case other => initPartRes.copy(
-            stats = initPartRes.stats :+ renameWhereNeeded(other, initPartRes.namingContext).asInstanceOf[Stat]
+            stats = initPartRes.stats :+ renameWhereNeeded(translateMethodsIn(other), initPartRes.namingContext).asInstanceOf[Stat]
           )
         }
         translateStatsFrom(headTranslationRes, previousStats :+ head, tail, varsToBeSavedFromEnclosingScopes)
