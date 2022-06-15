@@ -30,10 +30,9 @@ object Example {
       jtable.setValueAt(i, 0, rowCol)
     }
     var rowIdx = 0
-    for (row <- mulTable) {
+    for (row: List[Int] <- mulTable) {
       var colIdx = 0
-      val rowIter: List[Int] = row
-      for (entry <- rowIter) {
+      for (entry <- row) {
         jtable.setValueAt(entry, rowIdx + 1, colIdx + 1)
         colIdx += 1
       }
