@@ -87,8 +87,8 @@ object Example {
     computeButton.addActionListener(_ => drawTable(true))
     drawTable(removeOld = false)
     frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE)
-    frame.setSize(width, height)
-    frame.setResizable(false)
+    frame.setPreferredSize(new Dimension(width, height))
+    frame.pack()
     frame.setVisible(true)
   }
 
