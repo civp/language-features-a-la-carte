@@ -3,7 +3,7 @@ import Dependencies._
 lazy val scala212 = "2.12.15"
 lazy val scala213 = "2.13.8"
 lazy val scala3 = "3.1.2"
-lazy val crossVersions = Seq(scala212, scala213, scala3)
+lazy val crossVersions = Seq(scala212, scala213)
 
 lazy val semantic = project
   .in(file("semantic"))
