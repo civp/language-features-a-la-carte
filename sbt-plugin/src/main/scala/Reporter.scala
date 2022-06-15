@@ -21,6 +21,7 @@ object Reporter {
             s"${lines.get(v.startLine)}\n" +
             " " * v.startColumn + "^"
           }
+          .distinct
           .foreach(println)
     }
   }
