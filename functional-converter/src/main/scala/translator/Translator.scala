@@ -5,6 +5,7 @@ import translator.NamesFinder.{allModifiedVars, allReferencedNames}
 import translator.TypeInferrer.tryToInferType
 
 import scala.annotation.tailrec
+import scala.meta.Pat.Typed
 import scala.meta.Term.{Block, Do, While}
 import scala.meta.{Decl, Defn, Enumerator, Lit, Pat, Source, Stat, Term, Transformer, Tree, Type}
 
@@ -426,14 +427,18 @@ class Translator(translationConfigurationChecker: RestrictionsEnforcer, reporter
       enumerators match {
         case head :: tail =>
           head match {
-            case Enumerator.Generator(pat, rhs) =>
+            case Enumerator.Generator(rawPat, rhs) =>
+              val (pat, optType) = rawPat match {
+                case Typed(p, typ) => (p, Some(typ))
+                case _ => (rawPat, None)
+              }
               val iterName = di.getAndIncrementIterableName()
               List(
                 Defn.Var(mods = Nil, pats = List(Pat.Var(iterName)), decltpe = None, rhs = Some(rhs)),
                 While(
                   expr = Term.Select(iterName, Term.Name("nonEmpty")),
                   body = Block(
-                    Defn.Val(mods = Nil, pats = List(pat), decltpe = None, rhs = Term.Select(iterName, Term.Name("head")))
+                    Defn.Val(mods = Nil, pats = List(pat), decltpe = optType, rhs = Term.Select(iterName, Term.Name("head")))
                       +: flattenEnumerators(tail)
                       :+ Term.Assign(iterName, Term.Select(iterName, Term.Name("tail")))
                   )
