@@ -41,8 +41,6 @@ object Example {
     jtable
   }
 
-  ////// Uninteresting code for GUI //////////////////////////
-
   def main(args: Array[String]): Unit = {
     val width = 700
     val height = 350
