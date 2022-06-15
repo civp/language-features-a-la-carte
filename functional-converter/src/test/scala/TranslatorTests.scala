@@ -533,6 +533,21 @@ class TranslatorTests {
     testExpectingOneFailure(codeStr, "higher-order functions are only supported if no external var is updated in their body")
   }
 
+  @Test
+  def shouldFail3(): Unit = {
+    val codeStr =
+      """
+        |val arg = 15
+        |var callCnt = 0
+        |def foo(x: Int): Int = {
+        |  callCnt += 1
+        |  2*x+1
+        |}
+        |foo(arg)
+        |""".stripMargin
+    testExpectingOneFailure(codeStr, "non top-level methods are not allowed if no external var is updated in their body")
+  }
+
   private def parse(str: String): Source = dialects.Sbt1(str).parse[Source].get
 
   private def testExpectingOneFailure(codeStr: String, expectedErrorMsg: String): Unit = {

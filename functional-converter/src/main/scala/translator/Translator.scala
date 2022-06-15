@@ -155,7 +155,9 @@ class Translator(translationConfigurationChecker: RestrictionsEnforcer, reporter
         val namingContext = initPartRes.namingContext
         val headTranslationRes = head match {
 
-          case methodDef: Defn.Def => initPartRes.withNewStat(translateMethodDef(methodDef))
+          case methodDef: Defn.Def =>
+            if (allModifiedVars(List(methodDef.body)).isEmpty) initPartRes.withNewStat(translateMethodDef(methodDef))
+            else throw TranslatorException("non top-level methods are not allowed if no external var is updated in their body")
 
           case Defn.Var(mods, List(Pat.Var(Term.Name(nameStr))), tpeOpt, Some(rhs)) =>
             val tpe = tpeOpt.getOrElse(
