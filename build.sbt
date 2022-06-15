@@ -3,6 +3,16 @@ import Dependencies._
 lazy val scala2Version = "2.13.8"
 lazy val scala3Version = "3.1.2"
 
+lazy val demoValentin = project
+  .in(file("demo-valentin"))
+  .settings(
+    scalaVersion := scala2Version,
+    libraryDependencies ++= Seq(
+      scalameta
+    )
+  )
+  .dependsOn(syntactic, featuresSetComputer, functionalConverter)
+
 lazy val semantic = project
   .in(file("semantic"))
   .settings(
