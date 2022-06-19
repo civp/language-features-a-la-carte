@@ -7,9 +7,6 @@ lazy val crossVersions = Seq(scala212, scala213)
 
 lazy val semantic = project
   .in(file("semantic"))
-  .settings(
-    crossScalaVersions := crossVersions,
-  )
 
 lazy val syntactic = project
   .in(file("syntactic"))
@@ -52,7 +49,6 @@ lazy val sbtPlugin = project
   .in(file("sbt-plugin"))
   .enablePlugins(SbtPlugin)
   .settings(
-    // crossScalaVersions := Seq(scala212),
     name := "sbt-language-features",
     // For scripted tests
     scriptedLaunchOpts := { scriptedLaunchOpts.value ++
