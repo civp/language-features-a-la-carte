@@ -1,6 +1,3 @@
-import sbtlanguagefeatures.LanguageFeaturesConfig
-import sbtlanguagefeatures.interfaces._
-
 lazy val root = project
   .in(file("."))
   .settings(

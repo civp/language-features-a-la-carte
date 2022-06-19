@@ -5,7 +5,7 @@ import syntactic.CheckResult
 import java.io.File
 import java.nio.file.{Files, Paths}
 
-object Reporter {
+private[sbtlanguagefeatures] object Reporter {
 
   def report(file: File, result: CheckResult): Unit = {
     val path = file.getAbsolutePath()
