@@ -7,7 +7,7 @@ import syntactic.CheckResult
 import syntactic.whitelist.Feature.{AtomicFeature, CompositeFeature}
 import syntactic.whitelist.{FeaturesProvider, PredefFeatures, WhitelistChecker}
 
-import scala.meta.{Defn, Source, Term, XtensionParseInputLike}
+import scala.meta.{Defn, Source, Term, Tree, XtensionParseInputLike}
 
 class FeaturesSetComputerTest {
 
@@ -92,31 +92,41 @@ object FeaturesSetComputerTest {
 
   private object TestFeaturesProvider extends FeaturesProvider {
 
-    case object VarsFt extends AtomicFeature({
-      case _ : Defn.Var => true
-    })
+    case object VarsFt extends AtomicFeature {
+      override val checkPF: PartialFunction[Tree, Boolean] = {
+        case _ : Defn.Var => true
+      }
+    }
 
-    case object VarsAndValsFt extends AtomicFeature({
-      case _ : Defn.Var => true
-      case _ : Defn.Val => true
-    })
+    case object VarsAndValsFt extends AtomicFeature {
+      override val checkPF: PartialFunction[Tree, Boolean] = {
+        case _ : Defn.Var => true
+        case _ : Defn.Val => true
+      }
+    }
 
-    case object OopFt extends AtomicFeature({
-      case _ : Defn.Object => true
-      case _ : Defn.Class => true
-      case _ : Defn.Trait => true
-    })
+    case object OopFt extends AtomicFeature {
+      override val checkPF: PartialFunction[Tree, Boolean] = {
+        case _ : Defn.Object => true
+        case _ : Defn.Class => true
+        case _ : Defn.Trait => true
+      }
+    }
 
-    case object DefFt extends AtomicFeature({
-      case _ : Defn.Def => true
-      case _ : Term.Param => true
-    })
+    case object DefFt extends AtomicFeature {
+      override val checkPF: PartialFunction[Tree, Boolean] = {
+        case _ : Defn.Def => true
+        case _ : Term.Param => true
+      }
+    }
 
     case object DefAndObjectFt extends CompositeFeature(DefFt, OopFt)
 
-    case object ImcompleteForFt extends AtomicFeature({
-      case _ : Term.For => true
-    })
+    case object ImcompleteForFt extends AtomicFeature {
+      override val checkPF: PartialFunction[Tree, Boolean] = {
+        case _ : Term.For => true
+      }
+    }
 
   }
 

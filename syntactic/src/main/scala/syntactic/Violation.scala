@@ -18,4 +18,9 @@ case class Violation(forbiddenNode: Tree, msg: String) {
 
   def endColumn: Int = pos.endColumn
 
+  /**
+   * @return this violation wrapped into a singleton list
+   */
+  def toSingletonList: List[Violation] = List(this)
+
 }
