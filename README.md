@@ -88,3 +88,45 @@ case object Vals extends AtomicFeature(checkPF = {
 (the `Vals` feature of this example is actually implemented in `Features`, so in practice
 it should not be redefined)
 
+## Sbt plugin
+
+The sbt plugin provides an interface for project-wise language features checking.
+To use the plugin, first add the plugin to `project/plugins.sbt` and configure the checker
+in `buiild.sbt`. E.g.,
+
+```scala
+lazy val proj = project
+  .in(file("proj"))
+  .settings(
+    scalaVersion = "3.1.2",
+    languageFeaturesConfig := LanguageFeaturesConfig(
+      dialect = Scala3,
+      checker = WhitelistChecker(
+        LiteralsAndExpressions,
+        Defs,
+        BasicOop,
+        AdvancedOop,
+        PolymorphicTypes,
+      )
+    )
+```
+
+Then you will be able to run the task `languageFeaturesCheck` in sbt.
+
+To customize language features, define the new language features under the directory `project`.
+E.g., to add `UnionTypes` to the predefined features, we need to extend `FeaturesProvider`.
+For more details, have a look at [this test case](sbt-plugin/src/sbt-test/sbt-language-features/customized-features).
+
+```scala
+object CustomizedFeaturesProvider extends FeaturesProvider {
+
+  case object UnionTypes extends AtomicFeature({
+    case _: Type.Or => true
+    case _: Type.ApplyInfix => true
+  })
+
+}
+```
+
+At the moment, semantic checkers are not supported in the sbt plugin because
+they depend on TASTy Query which is only available in Scala 2.13/3.
