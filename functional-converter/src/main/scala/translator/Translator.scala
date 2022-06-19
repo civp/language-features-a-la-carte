@@ -5,7 +5,8 @@ import translator.NamesFinder.{allModifiedVars, allReferencedNames}
 import translator.TypeInferrer.tryToInferType
 
 import scala.annotation.tailrec
-import scala.meta.Term.{Block, While}
+import scala.meta.Pat.Typed
+import scala.meta.Term.{Block, Do, While}
 import scala.meta.{Decl, Defn, Enumerator, Lit, Pat, Source, Stat, Term, Transformer, Tree, Type}
 
 /**
@@ -30,7 +31,7 @@ class Translator(translationConfigurationChecker: RestrictionsEnforcer, reporter
         val transformation =
           (makeAssignationsExplicit: Tree => Tree)
             .andThen { case Source(stats) => stats }
-            .andThen(translateStatsSequence(NamingContext.empty, _)(new DisambigIndices()))
+            .andThen(translateStatsSequence(NamingContext.empty, _)(new DisambigIndices(), Set.empty))
             .andThen(_.stats)
             .andThen(Source(_))
             .andThen(Inliner.inlineInStatSequences)
@@ -95,6 +96,14 @@ class Translator(translationConfigurationChecker: RestrictionsEnforcer, reporter
     def withNewStat(tree: Stat): TranslationPartRes = copy(stats = stats :+ tree)
   }
 
+  private sealed trait LoopType
+
+  private object LoopType {
+    case object WhileType extends LoopType
+
+    case object DoWhileType extends LoopType
+  }
+
   /**
    * @return the translated method if it succeeds, the original one otherwise
    */
@@ -104,7 +113,7 @@ class Translator(translationConfigurationChecker: RestrictionsEnforcer, reporter
         (ctx, param) => ctx.updatedWithVal(param.name.value, param.decltpe)
       )
       val di = new DisambigIndices()
-      defnDef.copy(body = translateBlockOrUniqueStat(namingContext, defnDef.body)(di).asInstanceOf[Term])
+      defnDef.copy(body = translateBlockOrUniqueStat(namingContext, defnDef.body)(di, Set.empty).asInstanceOf[Term])
     } catch {
       case TranslatorException(msg) =>
         reporter.addErrorMsg(msg)
@@ -112,11 +121,13 @@ class Translator(translationConfigurationChecker: RestrictionsEnforcer, reporter
     }
   }
 
-  private def translateStatsSequence(namingContext: NamingContext, stats: List[Stat])(implicit di: DisambigIndices): TranslationPartRes = {
-    translateStatsFrom(TranslationPartRes(Nil, namingContext), previousStats = Nil, remStats = stats)
+  private def translateStatsSequence(namingContext: NamingContext, stats: List[Stat])
+                                    (implicit di: DisambigIndices, varsToBeSaved: Set[String]): TranslationPartRes = {
+    translateStatsFrom(TranslationPartRes(Nil, namingContext), previousStats = Nil, remStats = stats, varsToBeSaved)
   }
 
-  private def translateBlockOrUniqueStat(namingContext: NamingContext, stat: Stat)(implicit di: DisambigIndices): Stat = {
+  private def translateBlockOrUniqueStat(namingContext: NamingContext, stat: Stat)
+                                        (implicit di: DisambigIndices, varsToBeSaved: Set[String]): Stat = {
     asBlockOrUniqueStat(translateStatsSequence(namingContext, makeStatsList(stat)).stats)
   }
 
@@ -125,21 +136,31 @@ class Translator(translationConfigurationChecker: RestrictionsEnforcer, reporter
    *
    * More precisely, calls the appropriate method to translate the head of `remStats` (depending on its type) and then
    * recursively translates the remaining ones
+   *
+   * Propagates the set of variables whose value must be saved (i.e. that must be returned by the generated methods)
+   * because they are used at subsequent points of the program (`varsToBeSavedFromEnclosingScopes`)
    */
   @tailrec private def translateStatsFrom(
                                            initPartRes: TranslationPartRes,
                                            previousStats: List[Stat],
-                                           remStats: List[Stat]
+                                           remStats: List[Stat],
+                                           varsToBeSavedFromEnclosingScopes: Set[String]
                                          )(implicit di: DisambigIndices): TranslationPartRes = {
     remStats match {
       case Nil => initPartRes
       case head :: tail => {
+
+        // given as an implicit parameter to all transformation methods called from here
+        implicit val varsToBeSaved: Set[String] = varsToBeSavedFromEnclosingScopes.union(allReferencedNames(tail))
+
         val namingContext = initPartRes.namingContext
         val headTranslationRes = head match {
 
-          case methodDef: Defn.Def => initPartRes.withNewStat(translateMethodDef(methodDef))
+          case methodDef: Defn.Def =>
+            if (allModifiedVars(List(methodDef.body)).isEmpty) initPartRes.withNewStat(translateMethodDef(methodDef))
+            else throw TranslatorException("non top-level methods are not allowed if no external var is updated in their body")
 
-          case Defn.Var(mods, List(Pat.Var(Term.Name(nameStr))), tpeOpt, Some(rhs)) => {
+          case Defn.Var(mods, List(Pat.Var(Term.Name(nameStr))), tpeOpt, Some(rhs)) =>
             val tpe = tpeOpt.getOrElse(
               tryToInferType(rhs, namingContext).getOrElse(throw TranslatorException(s"cannot infer type of $rhs"))
             )
@@ -150,7 +171,6 @@ class Translator(translationConfigurationChecker: RestrictionsEnforcer, reporter
               rhs = translateTerm(namingContext, rhs)
             )
             TranslationPartRes(initPartRes.stats :+ newValDefn, namingContext.updatedWithVar(nameStr, tpe))
-          }
 
           case varDef@Defn.Var(_, terms, _, _) if terms.size > 1 =>
             throw TranslatorException(s"not supported: $varDef")
@@ -177,22 +197,37 @@ class Translator(translationConfigurationChecker: RestrictionsEnforcer, reporter
             )
             TranslationPartRes(initPartRes.stats :+ valDefn, newNamingCtx)
 
-          case whileLoop: While => translateWhile(initPartRes, whileLoop, statsAfterWhile = tail)
+          case While(cond, body) =>
+            translateWhileOrDoWhile(
+              initPartRes,
+              loopType = LoopType.WhileType,
+              loopCond = cond,
+              loopBody = body
+            )
+
+          case Do(body, cond) =>
+            translateWhileOrDoWhile(
+              initPartRes,
+              loopType = LoopType.DoWhileType,
+              loopCond = cond,
+              loopBody = body
+            )
 
           case ifStat: Term.If => translateIf(initPartRes, ifStat)
 
           case patMat: Term.Match => translatePatternMatch(initPartRes, patMat)
 
-          case forDo: Term.For => translateForDo(initPartRes, forDo, remStats = tail)
+          case forDo: Term.For =>
+            translateForDo(initPartRes, forDo, remStats = tail)
 
-          case forYield @ Term.ForYield(_, body) =>
+          case forYield@Term.ForYield(_, body) =>
             if (allModifiedVars(List(body)).isEmpty) {
               initPartRes.withNewStat(forYield.copy(body = translateTerm(namingContext, body)))
             }
             else throw TranslatorException("for-yield expressions are only supported if no external var is updated in their body")
 
           case func@Term.Function(_, body) =>
-            if (allModifiedVars(List(func)).isEmpty){
+            if (allModifiedVars(List(func)).isEmpty) {
               initPartRes.withNewStat(func.copy(body = translateTerm(namingContext, body)))
             }
             else throw TranslatorException("higher-order functions are only supported if no external var is updated in their body")
@@ -202,15 +237,16 @@ class Translator(translationConfigurationChecker: RestrictionsEnforcer, reporter
           )
 
           case other => initPartRes.copy(
-            stats = initPartRes.stats :+ renameWhereNeeded(other, initPartRes.namingContext).asInstanceOf[Stat]
+            stats = initPartRes.stats :+ renameWhereNeeded(translateMethodsIn(other), initPartRes.namingContext).asInstanceOf[Stat]
           )
         }
-        translateStatsFrom(headTranslationRes, previousStats :+ head, tail)
+        translateStatsFrom(headTranslationRes, previousStats :+ head, tail, varsToBeSavedFromEnclosingScopes)
       }
     }
   }
 
-  private def translateTerm(namingContext: NamingContext, expr: Term)(implicit di: DisambigIndices): Term = {
+  private def translateTerm(namingContext: NamingContext, expr: Term)
+                           (implicit di: DisambigIndices, varsToBeSaved: Set[String]): Term = {
     val statsList = makeStatsList(expr)
     val transformed = translateStatsSequence(namingContext, statsList)
     asBlockOrUniqueStat(transformed.stats).asInstanceOf[Term]
@@ -222,6 +258,10 @@ class Translator(translationConfigurationChecker: RestrictionsEnforcer, reporter
     }
   }
 
+  /**
+   * If `stat` is a block, returns the stats contained in it. If stat is another type of statement, returns a
+   * singleton list containing it
+   */
   private def makeStatsList(stat: Stat): List[Stat] = {
     stat match {
       case block: Block => block.stats
@@ -229,6 +269,9 @@ class Translator(translationConfigurationChecker: RestrictionsEnforcer, reporter
     }
   }
 
+  /**
+   * If `stats` contains only 1 element, no block is needed so return the stat. O.w. return a block containing the stats
+   */
   private def asBlockOrUniqueStat(stats: List[Stat]): Stat = {
     stats match {
       case List(stat) => stat
@@ -236,6 +279,11 @@ class Translator(translationConfigurationChecker: RestrictionsEnforcer, reporter
     }
   }
 
+  /**
+   * Should be used to create the `Pat` needed by a `Defn.Val`
+   *
+   * @return a `Pat.Var` if `varsAsStr` contains only 1 variable, otherwise a `Pat.Tuple`
+   */
   private def makeValPat(varsAsStr: List[String], context: NamingContext): List[Pat] = {
     require(varsAsStr.nonEmpty)
     List(
@@ -244,29 +292,41 @@ class Translator(translationConfigurationChecker: RestrictionsEnforcer, reporter
     )
   }
 
-  private def translateWhile(
-                              initPartRes: TranslationPartRes,
-                              whileLoop: While,
-                              statsAfterWhile: List[Stat]
-                            )(implicit di: DisambigIndices): TranslationPartRes = {
-    val bodyAsStatsList = makeStatsList(whileLoop.body)
+  private def translateWhileOrDoWhile(
+                                       initPartRes: TranslationPartRes,
+                                       loopType: LoopType,
+                                       loopCond: Term,
+                                       loopBody: Term
+                                     )(implicit di: DisambigIndices, varsToBeSaved: Set[String]): TranslationPartRes = {
+    val bodyAsStatsList = makeStatsList(loopBody)
     val untypedMethodArgsSet = allModifiedVars(bodyAsStatsList)
-    val namesReferencedInRestOfThisScope = allReferencedNames(statsAfterWhile)
-    val argsThatNeedToBeReturned = untypedMethodArgsSet.intersect(namesReferencedInRestOfThisScope).toList
+    val argsThatNeedToBeReturned = untypedMethodArgsSet.intersect(varsToBeSaved).toList
     val methodArgsAsUniqueNames = untypedMethodArgsSet
       .toList
       .flatMap(initPartRes.namingContext.currentlyReferencedVars.get)
     val methodName = di.getAndIncrementAutoGenMethodName()
-    val callToAutoGeneratedMethod = Term.Apply(methodName, methodArgsAsUniqueNames.map(_.toDisambiguatedName))
-    val blockTranslationRes = translateStatsSequence(initPartRes.namingContext, bodyAsStatsList)
-    val methodBody = Term.If(
-      cond = whileLoop.expr,
-      thenp = Block(
-        blockTranslationRes.stats
-          :+ renameWhereNeeded(callToAutoGeneratedMethod, blockTranslationRes.namingContext).asInstanceOf[Term]
-      ),
-      elsep = retValFor(argsThatNeedToBeReturned)
-    )
+    val rawNameCallToAutoGenMethod = Term.Apply(methodName, methodArgsAsUniqueNames.map(vi => Term.Name(vi.rawName)))
+    val blockTranslationRes = translateStatsSequence(initPartRes.namingContext, bodyAsStatsList)(di, varsToBeSaved)
+    val renamedCallToAutogenMethod =
+      renameWhereNeeded(rawNameCallToAutoGenMethod, blockTranslationRes.namingContext).asInstanceOf[Term]
+    val retVal = retValFor(argsThatNeedToBeReturned.map(initPartRes.namingContext.disambiguatedNameForVar(_).value))
+    val methodBodyStats = loopType match {
+      case LoopType.WhileType =>
+        List(Term.If(
+          cond = renameWhereNeeded(loopCond, initPartRes.namingContext).asInstanceOf[Term],
+          thenp = Block(
+            blockTranslationRes.stats
+              :+ renamedCallToAutogenMethod
+          ),
+          elsep = retVal
+        ))
+      case LoopType.DoWhileType =>
+        blockTranslationRes.stats :+ Term.If(
+          cond = renameWhereNeeded(loopCond, blockTranslationRes.namingContext).asInstanceOf[Term],
+          thenp = renamedCallToAutogenMethod,
+          elsep = retVal
+        )
+    }
     val methodDef = Defn.Def(
       mods = Nil,
       name = methodName,
@@ -277,18 +337,22 @@ class Translator(translationConfigurationChecker: RestrictionsEnforcer, reporter
             Term.Param(mods = Nil, name = varInfo.toDisambiguatedName, decltpe = Some(varInfo.typ), default = None)
           )
       ),
-      decltpe = Some(tupleTypeFor(argsThatNeedToBeReturned.map(initPartRes.namingContext.currentlyReferencedVars))),
-      body = Block(List(methodBody))
+      decltpe = Some(retTypeFor(argsThatNeedToBeReturned.map(initPartRes.namingContext.currentlyReferencedVars))),
+      body = Block(methodBodyStats)
     )
-    val ctxAfterExternalCall = argsThatNeedToBeReturned.foldLeft(initPartRes.namingContext)(_.updatedAlreadyExistingVar(_))
-    lazy val externalVal = Defn.Val(Nil, makeValPat(argsThatNeedToBeReturned, ctxAfterExternalCall), None, callToAutoGeneratedMethod)
+    val ctxAfterExternalCall =
+      argsThatNeedToBeReturned.foldLeft(initPartRes.namingContext)(_.updatedAlreadyExistingVar(_))
+    val externalCallToAutoGeneratedMethod = Term.Apply(methodName, methodArgsAsUniqueNames.map(_.toDisambiguatedName))
+    lazy val externalVal =
+      Defn.Val(Nil, makeValPat(argsThatNeedToBeReturned, ctxAfterExternalCall), None, externalCallToAutoGeneratedMethod)
     TranslationPartRes(
-      initPartRes.stats ++ List(methodDef, if (argsThatNeedToBeReturned.nonEmpty) externalVal else callToAutoGeneratedMethod),
+      initPartRes.stats ++ List(methodDef, if (argsThatNeedToBeReturned.nonEmpty) externalVal else externalCallToAutoGeneratedMethod),
       ctxAfterExternalCall
     )
   }
 
-  private def translateIf(initPartRes: TranslationPartRes, ifStat: Term.If)(implicit di: DisambigIndices): TranslationPartRes = {
+  private def translateIf(initPartRes: TranslationPartRes, ifStat: Term.If)
+                         (implicit di: DisambigIndices, varsToBeSaved: Set[String]): TranslationPartRes = {
     val thenStatsList = makeStatsList(ifStat.thenp)
     val elseStatsList = makeStatsList(ifStat.elsep)
     val thenPartRes = translateStatsSequence(initPartRes.namingContext, thenStatsList)
@@ -300,13 +364,15 @@ class Translator(translationConfigurationChecker: RestrictionsEnforcer, reporter
       elsep = asBlockOrUniqueStat(elsePartRes.stats ++ retValOrNone(modifVars, elsePartRes.namingContext)).asInstanceOf[Term]
     )
     val namingCtxAfterIf = modifVars.foldLeft(initPartRes.namingContext)(_.updatedAlreadyExistingVar(_))
-    lazy val externalVal = Defn.Val(mods = Nil, pats = makeValPat(modifVars, namingCtxAfterIf), decltpe = None, rhs = transformedIfStat)
+    lazy val externalVal =
+      Defn.Val(mods = Nil, pats = makeValPat(modifVars, namingCtxAfterIf), decltpe = None, rhs = transformedIfStat)
     initPartRes
       .withNewStat(if (modifVars.nonEmpty) externalVal else transformedIfStat)
       .copy(namingContext = namingCtxAfterIf)
   }
 
-  private def translatePatternMatch(initPartRes: TranslationPartRes, patMat: Term.Match)(implicit di: DisambigIndices): TranslationPartRes = {
+  private def translatePatternMatch(initPartRes: TranslationPartRes, patMat: Term.Match)
+                                   (implicit di: DisambigIndices, varsToBeSaved: Set[String]): TranslationPartRes = {
     val statsListPerBranch = patMat.cases.map(cse => makeStatsList(cse.body))
     val partResPerBranch = statsListPerBranch.map(statsLs => translateStatsSequence(initPartRes.namingContext, statsLs))
     val modifVars = statsListPerBranch.foldLeft(Set.empty[String])(_ ++ allModifiedVars(_)).toList
@@ -327,7 +393,8 @@ class Translator(translationConfigurationChecker: RestrictionsEnforcer, reporter
       cases = newCases
     )
     val namingCtxAfterPatMatch = modifVars.foldLeft(initPartRes.namingContext)(_.updatedAlreadyExistingVar(_))
-    lazy val externalVal = Defn.Val(mods = Nil, pats = makeValPat(modifVars, namingCtxAfterPatMatch), decltpe = None, rhs = transformedPatMat)
+    lazy val externalVal =
+      Defn.Val(mods = Nil, pats = makeValPat(modifVars, namingCtxAfterPatMatch), decltpe = None, rhs = transformedPatMat)
     initPartRes
       .withNewStat(if (modifVars.nonEmpty) externalVal else transformedPatMat)
       .copy(namingContext = namingCtxAfterPatMatch)
@@ -360,14 +427,18 @@ class Translator(translationConfigurationChecker: RestrictionsEnforcer, reporter
       enumerators match {
         case head :: tail =>
           head match {
-            case Enumerator.Generator(pat, rhs) =>
+            case Enumerator.Generator(rawPat, rhs) =>
+              val (pat, optType) = rawPat match {
+                case Typed(p, typ) => (p, Some(typ))
+                case _ => (rawPat, None)
+              }
               val iterName = di.getAndIncrementIterableName()
               List(
                 Defn.Var(mods = Nil, pats = List(Pat.Var(iterName)), decltpe = None, rhs = Some(rhs)),
                 While(
                   expr = Term.Select(iterName, Term.Name("nonEmpty")),
                   body = Block(
-                    Defn.Val(mods = Nil, pats = List(pat), decltpe = None, rhs = Term.Select(iterName, Term.Name("head")))
+                    Defn.Val(mods = Nil, pats = List(pat), decltpe = optType, rhs = Term.Select(iterName, Term.Name("head")))
                       +: flattenEnumerators(tail)
                       :+ Term.Assign(iterName, Term.Select(iterName, Term.Name("tail")))
                   )
@@ -392,10 +463,10 @@ class Translator(translationConfigurationChecker: RestrictionsEnforcer, reporter
                               initPartRes: TranslationPartRes,
                               forDo: Term.For,
                               remStats: List[Stat]
-                            )(implicit di: DisambigIndices): TranslationPartRes = {
+                            )(implicit di: DisambigIndices, varsToBeSaved: Set[String]): TranslationPartRes = {
     val (varDefn, whileLoop) = transformImperativeForIntoWhile(forDo)
-    val varTranslationRes = translateStatsSequence(initPartRes.namingContext, List(varDefn))
-    val partResAfter = translateWhile(varTranslationRes, whileLoop, remStats)
+    val varTranslationRes = translateStatsSequence(initPartRes.namingContext, List(varDefn))(di, varsToBeSaved)
+    val partResAfter = translateWhileOrDoWhile(varTranslationRes, LoopType.WhileType, whileLoop.expr, whileLoop.body)
     TranslationPartRes(initPartRes.stats ++ partResAfter.stats, initPartRes.namingContext.mergedWith(partResAfter.namingContext))
   }
 
@@ -415,7 +486,7 @@ class Translator(translationConfigurationChecker: RestrictionsEnforcer, reporter
     }
   }
 
-  private def tupleTypeFor(modifVars: List[VarInfo]): Type = {
+  private def retTypeFor(modifVars: List[VarInfo]): Type = {
     modifVars match {
       case Nil => Type.Name("Unit")
       case List(tpe) => tpe.typ

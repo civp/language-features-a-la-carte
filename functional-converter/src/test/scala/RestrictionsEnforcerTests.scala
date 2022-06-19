@@ -93,4 +93,34 @@ class RestrictionsEnforcerTests {
     assertTrue(reportedError.contains("disambiguation of y may create a name conflict with y_25"))
   }
 
+  @Test
+  def method_named_autoGen0_should_be_rejected(): Unit = {
+    val src = parse(
+      """
+        |def autoGen_0(): Unit = ()
+        |""".stripMargin)
+    val reporter = new Reporter()
+    val configChecker = new RestrictionsEnforcer(reporter)
+    assertFalse(configChecker.checkCanConvert(src))
+    val reportedErrors = reporter.getReportedErrors
+    assertEquals(1, reportedErrors.size)
+    val reportedError = reportedErrors.head
+    assertTrue(reportedError.contains("may conflict with auto-generated"))
+  }
+
+  @Test
+  def variable_named_iterable_0_should_be_rejected(): Unit = {
+    val src = parse(
+      """
+        |val iterable_0 = 25
+        |""".stripMargin)
+    val reporter = new Reporter()
+    val configChecker = new RestrictionsEnforcer(reporter)
+    assertFalse(configChecker.checkCanConvert(src))
+    val reportedErrors = reporter.getReportedErrors
+    assertEquals(1, reportedErrors.size)
+    val reportedError = reportedErrors.head
+    assertTrue(reportedError.contains("may conflict with auto-generated"))
+  }
+
 }
