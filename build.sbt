@@ -90,4 +90,4 @@ lazy val testsUnit = project
       s"-Dtests-input=$testsInputProduct"
     }
   )
-  .dependsOn(syntactic, semantic, testkit)
+  .dependsOn(syntactic, testkit)
