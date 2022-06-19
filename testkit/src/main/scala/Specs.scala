@@ -32,7 +32,7 @@ object Specs {
     val lines = str.split("\n")
     val column = lines(1).indexOf('^')
     val msg = lines.last.trim()
-    s"${pos.startLine}:${column}: ${msg}"
+    Report.format(pos.startLine, column, msg)
   }
 
 }

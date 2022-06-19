@@ -1,0 +1,3 @@
+[submodule "tasty-query"]
+	path = tasty-query
+	url = git@github.com:civp/tasty-query.git

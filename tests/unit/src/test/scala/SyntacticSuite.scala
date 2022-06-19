@@ -1,6 +1,6 @@
 package tests
 
-import testkit.{TestFile, Specs}
+import testkit.{TestFile, Specs, Report}
 import syntactic.Checker
 import syntactic.CheckResult
 import syntactic.Violation
@@ -43,13 +43,15 @@ abstract class SyntacticSuite extends munit.FunSuite {
 
   protected def checkFile(checker: Checker, file: TestFile, dialect: Dialect): Unit = {
     val expectedViolations = Specs.load(file, dialect)
-    checker.checkFile(dialect, file.toString) match {
+    checker.checkFile(dialect, file.getPath) match {
       case CheckResult.ParsingError(e) => throw e
       case CheckResult.Valid =>
         assertEquals(List.empty[String], expectedViolations)
       case CheckResult.Invalid(violations) =>
         assertEquals(
-          mergeViolations(violations).map(v => s"${v.startLine}:${v.startColumn}: ${v.msg}"),
+          mergeViolations(violations).map { v =>
+            Report.format(v.startLine, v.startColumn, v.msg)
+          },
           expectedViolations
         )
     }

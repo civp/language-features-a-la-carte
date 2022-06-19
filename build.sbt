@@ -3,11 +3,15 @@ import Dependencies._
 lazy val scala2Version = "2.13.8"
 lazy val scala3Version = "3.1.2"
 
+lazy val tastyQueryJVM = project
+  .in(file("tasty-query"))
+
 lazy val semantic = project
   .in(file("semantic"))
   .settings(
     scalaVersion := scala3Version
   )
+  .dependsOn(tastyQueryJVM)
 
 lazy val syntactic = project
   .in(file("syntactic"))
@@ -48,12 +52,8 @@ lazy val testkit = project
   .in(file("testkit"))
   .settings(
     scalaVersion := scala2Version,
-    libraryDependencies ++= Seq(
-      scalameta,
-      scalaParserCombinators
-    )
+    libraryDependencies += scalameta
   )
-  .dependsOn(syntactic, semantic)
 
 lazy val testsInput = project
   .in(file("tests/input"))
@@ -66,15 +66,21 @@ lazy val testsUnit = project
   .settings(
     scalaVersion := scala3Version,
     libraryDependencies += munit,
-    Compile / compile / compileInputs := {
-      (Compile / compile / compileInputs)
-        .dependsOn(testsInput / Compile / compile)
-        .value
-    },
     fork := true,
-    javaOptions += {
-      val testsInputProduct = (testsInput / Compile / scalaSource).value
-      s"-Dtests-input=$testsInputProduct"
+    javaOptions ++= {
+      val testsInputSource = (testsInput / Compile / scalaSource).value
+      val testsInputProduct = {
+        val testsInputProducts = (testsInput / Compile / products).value
+        // Only one output location expected
+        assert(testsInputProducts.size == 1)
+        testsInputProducts.map(_.getAbsolutePath).head
+      }
+      Seq(
+        // Source files contain test specifications
+        s"-Dtests-input-source=$testsInputSource",
+        // TASTy files are required by semantic checkers
+        s"-Dtests-input-product=$testsInputProduct"
+      )
     }
   )
-  .dependsOn(testkit)
+  .dependsOn(syntactic, semantic, testkit)
