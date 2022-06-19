@@ -52,7 +52,9 @@ lazy val testsUnit = project
         testsInputProducts.map(_.getAbsolutePath).head
       }
       Seq(
+        // Source files contain test specifications
         s"-Dtests-input-source=$testsInputSource",
+        // TASTy files are required by semantic checkers
         s"-Dtests-input-product=$testsInputProduct"
       )
     }
