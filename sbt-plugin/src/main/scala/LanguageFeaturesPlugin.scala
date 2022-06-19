@@ -92,6 +92,15 @@ object LanguageFeaturesPlugin extends AutoPlugin {
         Some(new FeaturesSetComputer(allFeatures))
     }
 
+  /** Update messages of whitelist violations with missing features
+    *
+    * @param featuresSetComputerOpt
+    *   Used to compute required features
+    * @param results
+    *   CheckResults with default messages
+    * @return
+    *   The updated CheckResults (with updated messages)
+    */
   private def updated(
       featuresSetComputerOpt: Option[FeaturesSetComputer],
       results: List[CheckResult]
@@ -101,34 +110,30 @@ object LanguageFeaturesPlugin extends AutoPlugin {
       case Some(computer) => results.map(updated(computer, _))
     }
 
-  /** Update messages of whitelist violations with missing features
-    *
-    * @param featuresSetComputer
-    *   Used to compute required features
-    * @param result
-    *   CheckResult with default messages
-    * @return
-    *   The updated CheckResult (with updated messages)
-    */
   private def updated(
       featuresSetComputer: FeaturesSetComputer,
       result: CheckResult
   ): CheckResult = {
     result match {
       case CheckResult.Invalid(violations) =>
-        val requiredFeatures =
-          featuresSetComputer.minimalFeaturesSetToResolve(violations) match {
-            case Some(features) => features
-            case None           => List.empty[Feature]
-          }
-        val updatedMsg = "missing feature(s): " +
-          requiredFeatures.map(_.toString).mkString(", ")
-        val updatedViolations = violations.map { case Violation(tree, _) =>
-          Violation(tree, updatedMsg)
-        }
+        val updatedViolations = violations.map(updated(featuresSetComputer, _))
         CheckResult.Invalid(updatedViolations)
       case _ => result
     }
+  }
+
+  private def updated(
+      featuresSetComputer: FeaturesSetComputer,
+      violation: Violation
+  ): Violation = {
+    val requiredFeatures =
+      featuresSetComputer.minimalFeaturesSetToResolve(List(violation)) match {
+        case Some(features) => features
+        case None           => List.empty[Feature]
+      }
+    val updatedMsg = "missing feature(s): " +
+      requiredFeatures.map(_.toString).mkString(", ")
+    Violation(violation.forbiddenNode, updatedMsg)
   }
 
   override lazy val projectSettings: Seq[Setting[_]] = Seq(
