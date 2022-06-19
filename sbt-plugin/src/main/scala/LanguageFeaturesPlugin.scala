@@ -89,7 +89,6 @@ object LanguageFeaturesPlugin extends AutoPlugin {
         // Extends predefined features
         val allFeatures = PredefFeatures.allDefinedFeatures ++
           cfg.featuresProvider.allDefinedFeatures
-        println(allFeatures)
         Some(new FeaturesSetComputer(allFeatures))
     }
 
@@ -134,6 +133,7 @@ object LanguageFeaturesPlugin extends AutoPlugin {
 
   override lazy val projectSettings: Seq[Setting[_]] = Seq(
     languageFeaturesCheck := {
+      val log = streams.value.log
       val LanguageFeaturesConfig(dialect, checker) =
         languageFeaturesConfig.value
       val featuresSetComputerOpt: Option[FeaturesSetComputer] =
@@ -142,8 +142,13 @@ object LanguageFeaturesPlugin extends AutoPlugin {
       val sourceFiles = getScalaFiles(sourceDir)
       val results = sourceFiles.map(checker.checkFile(dialect, _))
       val updatedResults = updated(featuresSetComputerOpt, results)
-      sourceFiles.zip(updatedResults).foreach { case (file, result) =>
-        Reporter.report(file, result)
+      sourceFiles.zip(updatedResults).flatMap { case (file, result) =>
+        Reporter.format(file, result)
+      } match {
+        case Nil =>
+        case messages =>
+          messages.foreach(log.error(_))
+          throw new CheckFailed(s"${messages.size} violation(s) found")
       }
     }
   )

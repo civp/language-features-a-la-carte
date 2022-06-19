@@ -1,2 +1,2 @@
-# test if check succeeds
-> languageFeaturesCheck
+# expects check to fail
+-> languageFeaturesCheck

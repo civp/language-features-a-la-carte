@@ -1,2 +1,2 @@
-# expect a parsing error
-> languageFeaturesCheck
+# expects parsing error
+-> languageFeaturesCheck
