@@ -31,11 +31,11 @@ object LanguageFeaturesPlugin extends AutoPlugin {
     import syntactic.blacklist
     @inline final val BlacklistChecker = blacklist.BlacklistChecker
 
-    import blacklist.BlacklistRules
-    @inline final val NoCast = BlacklistRules.NoCast
-    @inline final val NoNull = BlacklistRules.NoNull
-    @inline final val NoVar = BlacklistRules.NoVar
-    @inline final val NoWhile = BlacklistRules.NoWhile
+    import blacklist.PredefBlacklistRules
+    @inline final val NoCast = PredefBlacklistRules.NoCast
+    @inline final val NoNull = PredefBlacklistRules.NoNull
+    @inline final val NoVar = PredefBlacklistRules.NoVar
+    @inline final val NoWhile = PredefBlacklistRules.NoWhile
 
     import syntactic.whitelist
     @inline final val WhitelistChecker = whitelist.WhitelistChecker
