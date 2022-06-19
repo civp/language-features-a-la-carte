@@ -16,10 +16,12 @@ object LanguageFeaturesPlugin extends AutoPlugin {
   override def trigger = allRequirements
 
   object autoImport {
-    val languageFeaturesConfig = settingKey[LanguageFeaturesConfig]("Configuration of the checker.")
+    val languageFeaturesConfig =
+      settingKey[LanguageFeaturesConfig]("Configuration of the checker.")
     val languageFeaturesCheck = taskKey[Unit]("Check language features.")
 
-    @inline final val LanguageFeaturesConfig = sbtlanguagefeatures.LanguageFeaturesConfig
+    @inline final val LanguageFeaturesConfig =
+      sbtlanguagefeatures.LanguageFeaturesConfig
 
     import scala.meta.dialects
     @inline final val Scala3 = dialects.Scala3
@@ -29,7 +31,7 @@ object LanguageFeaturesPlugin extends AutoPlugin {
     import syntactic.blacklist
     @inline final val BlacklistChecker = blacklist.BlacklistChecker
 
-    import syntactic.blacklist.BlacklistRules
+    import blacklist.BlacklistRules
     @inline final val NoCast = BlacklistRules.NoCast
     @inline final val NoNull = BlacklistRules.NoNull
     @inline final val NoVar = BlacklistRules.NoVar
@@ -38,8 +40,9 @@ object LanguageFeaturesPlugin extends AutoPlugin {
     import syntactic.whitelist
     @inline final val WhitelistChecker = whitelist.WhitelistChecker
 
-    import syntactic.whitelist.PredefFeatures
-    @inline final val LiteralsAndExpressions = PredefFeatures.LiteralsAndExpressions
+    import whitelist.PredefFeatures
+    @inline final val LiteralsAndExpressions =
+      PredefFeatures.LiteralsAndExpressions
     @inline final val Nulls = PredefFeatures.Nulls
     @inline final val Vals = PredefFeatures.Vals
     @inline final val Defs = PredefFeatures.Defs
@@ -65,37 +68,59 @@ object LanguageFeaturesPlugin extends AutoPlugin {
   }
 
   import autoImport._
-  
+
   // Get files with .scala extension under the directory
   private def getScalaFiles(dir: File): List[File] = {
     val files = dir.listFiles.toList
     files.filter { file =>
       file.getName.split("\\.").lastOption match {
         case Some("scala") => true
-        case _ => false
+        case _             => false
       }
     } ++ files.filter(_.isDirectory).flatMap(getScalaFiles)
   }
 
-  // TODO: support FeatureProvider
-  private val featuresSetComputer = new FeaturesSetComputer(PredefFeatures.allDefinedFeatures)
+  private def getFeaturesSetComputerOpt(
+      config: LanguageFeaturesConfig
+  ): Option[FeaturesSetComputer] =
+    config match {
+      case _: BlacklistFeaturesConfig => None
+      case cfg: WhitelistFeaturesConfig =>
+        // Extends predefined features
+        val allFeatures = PredefFeatures.allDefinedFeatures ++
+          cfg.featuresProvider.allDefinedFeatures
+        println(allFeatures)
+        Some(new FeaturesSetComputer(allFeatures))
+    }
 
-  private def updated(results: List[CheckResult]): List[CheckResult] =
-    results.map(updated)
-  
-  /**
-    * Update messages of whitelist violations with missing features
+  private def updated(
+      featuresSetComputerOpt: Option[FeaturesSetComputer],
+      results: List[CheckResult]
+  ): List[CheckResult] =
+    featuresSetComputerOpt match {
+      case None           => results
+      case Some(computer) => results.map(updated(computer, _))
+    }
+
+  /** Update messages of whitelist violations with missing features
     *
-    * @param result CheckResult with default messages
-    * @return The updated CheckResult (with updated messages)
+    * @param featuresSetComputer
+    *   Used to compute required features
+    * @param result
+    *   CheckResult with default messages
+    * @return
+    *   The updated CheckResult (with updated messages)
     */
-  private def updated(result: CheckResult): CheckResult = {
+  private def updated(
+      featuresSetComputer: FeaturesSetComputer,
+      result: CheckResult
+  ): CheckResult = {
     result match {
       case CheckResult.Invalid(violations) =>
         val requiredFeatures =
           featuresSetComputer.minimalFeaturesSetToResolve(violations) match {
             case Some(features) => features
-            case None => List.empty[Feature]
+            case None           => List.empty[Feature]
           }
         val updatedMsg = "missing feature(s): " +
           requiredFeatures.map(_.toString).mkString(", ")
@@ -109,14 +134,14 @@ object LanguageFeaturesPlugin extends AutoPlugin {
 
   override lazy val projectSettings: Seq[Setting[_]] = Seq(
     languageFeaturesCheck := {
-      val LanguageFeaturesConfig(dialect, checker) = languageFeaturesConfig.value
+      val LanguageFeaturesConfig(dialect, checker) =
+        languageFeaturesConfig.value
+      val featuresSetComputerOpt: Option[FeaturesSetComputer] =
+        getFeaturesSetComputerOpt(languageFeaturesConfig.value)
       val sourceDir = (Compile / scalaSource).value
       val sourceFiles = getScalaFiles(sourceDir)
       val results = sourceFiles.map(checker.checkFile(dialect, _))
-      val updatedResults = checker match {
-        case _: BlacklistChecker => results
-        case _: WhitelistChecker => updated(results)
-      }
+      val updatedResults = updated(featuresSetComputerOpt, results)
       sourceFiles.zip(updatedResults).foreach { case (file, result) =>
         Reporter.report(file, result)
       }
