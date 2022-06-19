@@ -11,11 +11,11 @@ class Foreach {
   def printList(xs: List[Int]): Unit =
     xs.foreach(println) /*
     ^^^^^^^^^^^^^^^^^^^
-    foreach is not functional */
+    foreach performs side-effects */
 
   def printMatrix(mtx: List[List[Int]]): Unit =
     mtx.foreach(_.foreach(println)) /*
     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-    foreach is not functional */
+    foreach performs side-effects */
 
 }

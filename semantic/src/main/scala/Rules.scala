@@ -36,7 +36,7 @@ object Rules {
       NoType,
       SimpleName("println"),
       _
-    ) => Violation(m, "println is not functional")
+    ) => Violation(m, "println performs side-effects")
   })
 
   case object NoIterableOnceOpsForeach extends Rule({
@@ -44,7 +44,7 @@ object Rules {
       _, // TODO: is subtype
       SimpleName("foreach"),
       _
-    ) => Violation(m, "foreach is not functional")
+    ) => Violation(m, "foreach performs side-effects")
   })
 
 }

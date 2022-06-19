@@ -11,7 +11,7 @@ class Println {
   
   def prtl(x: String): Unit = println(x) /*
                               ^^^^^^^^^^
-  println is not functional */
+  println performs side-effects */
 
   def prtls(xs: List[String]): Unit = xs.foreach(println) // has no span
 
