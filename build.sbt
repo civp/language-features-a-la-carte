@@ -3,7 +3,7 @@ import Dependencies._
 lazy val scala212 = "2.12.15"
 lazy val scala213 = "2.13.8"
 lazy val scala3 = "3.1.2"
-lazy val crossVersions = Seq(scala212, scala213)
+lazy val scala212And213 = Seq(scala212, scala213)
 
 lazy val semantic = project
   .in(file("semantic"))
@@ -11,7 +11,7 @@ lazy val semantic = project
 lazy val syntactic = project
   .in(file("syntactic"))
   .settings(
-    crossScalaVersions := crossVersions,
+    crossScalaVersions := scala212And213,
     libraryDependencies ++= Seq(
       scalameta,
       junit,
@@ -23,7 +23,7 @@ lazy val featuresSetComputer = project
   .in(file("features-set-computer"))
   .settings(
     moduleName := "features-set-computer",
-    crossScalaVersions := crossVersions,
+    crossScalaVersions := scala212And213,
     libraryDependencies ++= Seq(
       scalameta,
       junit,
@@ -36,7 +36,7 @@ lazy val functionalConverter = project
   .in(file("functional-converter"))
   .settings(
     moduleName := "functional-converter",
-    crossScalaVersions := crossVersions,
+    crossScalaVersions := scala212And213,
     libraryDependencies ++= Seq(
       scalameta,
       junit,
@@ -61,7 +61,7 @@ lazy val sbtPlugin = project
 lazy val testkit = project
   .in(file("testkit"))
   .settings(
-    crossScalaVersions := crossVersions,
+    crossScalaVersions := scala212And213,
     libraryDependencies ++= Seq(
       scalameta,
       scalaParserCombinators
@@ -71,13 +71,13 @@ lazy val testkit = project
 lazy val testsInput = project
   .in(file("tests/input"))
   .settings(
-    crossScalaVersions := crossVersions,
+    crossScalaVersions := scala212And213,
   )
 
 lazy val testsUnit = project
   .in(file("tests/unit"))
   .settings(
-    crossScalaVersions := crossVersions,
+    crossScalaVersions := scala212And213,
     libraryDependencies += munit,
     Compile / compile / compileInputs := {
       (Compile / compile / compileInputs)
