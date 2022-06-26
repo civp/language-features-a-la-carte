@@ -69,17 +69,6 @@ object LanguageFeaturesPlugin extends AutoPlugin {
 
   import autoImport._
 
-  // Get files with .scala extension under the directory
-  private def getScalaFiles(dir: File): List[File] = {
-    val files = dir.listFiles.toList
-    files.filter { file =>
-      file.getName.split("\\.").lastOption match {
-        case Some("scala") => true
-        case _             => false
-      }
-    } ++ files.filter(_.isDirectory).flatMap(getScalaFiles)
-  }
-
   private def getFeaturesSetComputerOpt(
       config: LanguageFeaturesConfig
   ): Option[FeaturesSetComputer] =
@@ -103,8 +92,8 @@ object LanguageFeaturesPlugin extends AutoPlugin {
     */
   private def updated(
       featuresSetComputerOpt: Option[FeaturesSetComputer],
-      results: List[CheckResult]
-  ): List[CheckResult] =
+      results: Seq[CheckResult]
+  ): Seq[CheckResult] =
     featuresSetComputerOpt match {
       case None           => results
       case Some(computer) => results.map(updated(computer, _))
@@ -143,10 +132,13 @@ object LanguageFeaturesPlugin extends AutoPlugin {
         languageFeaturesConfig.value
       val featuresSetComputerOpt: Option[FeaturesSetComputer] =
         getFeaturesSetComputerOpt(languageFeaturesConfig.value)
+
       val sourceDir = (Compile / scalaSource).value
-      val sourceFiles = getScalaFiles(sourceDir)
+      val sourceFiles = (sourceDir ** "*.scala").get
+
       val results = sourceFiles.map(checker.checkFile(dialect, _))
       val updatedResults = updated(featuresSetComputerOpt, results)
+
       sourceFiles.zip(updatedResults).flatMap { case (file, result) =>
         Reporter.format(file, result)
       } match {
