@@ -248,10 +248,12 @@ For more details, have a look at [this test case](sbt-plugin/src/sbt-test/sbt-la
 ```scala
 object CustomizedFeaturesProvider extends FeaturesProvider {
 
-  case object UnionTypes extends AtomicFeature({
-    case _: Type.Or => true
-    case _: Type.ApplyInfix => true
-  })
+  case object UnionTypes extends AtomicFeature {
+    override val checkPF: PartialFunction[Tree, Boolean] = {
+      case _: Type.Or => true
+      case _: Type.ApplyInfix => true
+    }
+  }
 
 }
 ```
